@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Poker — Menu</title>
+  <link rel="stylesheet" href="../css/poker.css"/>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1>Poker — Lobby</h1>
+        <span id="userPill" style="display: none;">-</span>
+      </div>
+      <div style="text-align:right">
+        <div class="buttons" style="justify-content:flex-end">
+          <!-- ✅ Balance à côté du bouton Lobby -->
+          <div class="pill mono balancePill" title="Crédits">
+          Crédits <span id="balancePill">—</span>
+          </div>
+          <button type="button" id="backDashboardBtn">Dashboard</button>
+        </div>
+        <div class="status" id="topStatus"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 style="margin:0 0 10px 0;">Créer une table</h2>
+
+        <div class="row"><label>Buy-in</label><input id="buyIn" type="number" value="1000"></div>
+        <div class="row"><label>Small blind</label><input id="sb" type="number" value="10"></div>
+        <div class="row"><label>Big blind</label><input id="bb" type="number" value="20"></div>
+        <div class="row"><label>Max players</label><input id="maxPlayers" type="number" value="6"></div>
+
+        <div class="row">
+          <label>Visibility</label>
+          <select id="visibility">
+            <option value="PRIVATE">PRIVATE (code)</option>
+            <option value="PUBLIC">PUBLIC (sans code)</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>Ajout bots</label>
+          <select id="fillBots">
+            <option value="false">false</option>
+            <option value="true">true</option>
+          </select>
+          <div class="small" style="grid-column:2;">(désactivé en compétition)</div>
+        </div>
+
+        <div class="buttons">
+          <button id="createBtn" class="primary">Créer (casual)</button>
+          <button id="createCompBtn" class="warn">Créer (competition)</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line);">
+          <h2 style="margin:0 0 10px 0;">Rejoindre une table</h2>
+
+          <div class="row"><label>Code</label><input id="joinCode" placeholder="ex: ABCDEF"></div>
+          <div class="buttons">
+            <button id="joinPrivateBtn" class="primary">Join (code)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+          <div>
+            <div style="font-weight:900;">Tables publiques</div>
+          </div>
+          <button id="refreshBtn">Refresh</button>
+        </div>
+
+        <div id="publicList" class="tableList scroll" style="margin-top:10px; max-height: 520px; overflow:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/poker-menu.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</body>
+</html>

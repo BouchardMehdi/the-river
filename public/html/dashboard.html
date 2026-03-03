@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard — THE RIVER</title>
+  <link rel="stylesheet" href="../css/dashboard.css"/>
+</head>
+<body>
+  <div class="page">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <img class="brand-logo" src="../assets/img/logo-the-river.png" alt="logo">
+
+      <div class="topbarLeft">
+        <h1 class="dashTitle">Bienvenue, <span id="username">—</span></h1>
+        <div class="statsPills">
+          <span class="pill" id="creditsPill">Crédits: —</span>
+          <span class="pill" id="pointsPill">Points: —</span>
+          <span class="pill" id="statusPill" style="opacity: 0;">—</span>
+        </div>
+      </div>
+
+      <div class="topbarRight">
+        <div class="topbarBtns">
+          <button id="questsBtn" class="warn questsBtn">
+            Quêtes
+            <span id="questsBadge" class="btnBadge hidden" aria-hidden="true">0</span>
+          </button>
+
+          <button id="toggleLbBtn" class="warn">Leaderboard: ON</button>
+          <button id="logoutBtn" class="danger">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="main">
+        <!-- PERF CARD -->
+        <div class="card">
+          <div class="cardHead">
+            <div class="cardTitle">Performances (10 dernières par jeu)</div><br>
+
+            <div class="filters" id="filters">
+              <label class="cbox">
+                <input type="checkbox" data-series="POKER" checked>
+                <span class="box"></span>
+                Poker
+              </label>
+              <label class="cbox">
+                <input type="checkbox" data-series="BLACKJACK" checked>
+                <span class="box"></span>
+                Blackjack
+              </label>
+              <label class="cbox">
+                <input type="checkbox" data-series="ROULETTE" checked>
+                <span class="box"></span>
+                Roulette
+              </label>
+              <label class="cbox">
+                <input type="checkbox" data-series="SLOTS" checked>
+                <span class="box"></span>
+                Slots
+              </label>
+              <label class="cbox">
+                <input type="checkbox" data-series="POINTS" checked>
+                <span class="box"></span>
+                Points
+              </label>
+            </div>
+          </div><br>
+
+          <div class="chartWrap" id="chartWrap">
+            <canvas id="perfChart" width="1000" height="320" aria-label="Graph performances"></canvas>
+            <div id="chartTip" class="chartTip hidden"></div>
+          </div>
+
+          <div class="legend" id="legend"></div>
+        </div>
+
+        <!-- GAMES CARD -->
+        <div class="card gamesCard">
+          <div class="cardTitle">Jeux</div>
+
+          <div class="gameTiles">
+            <a class="gameTile poker" href="../html/poker-menu.html">
+              <div class="gtTop">
+                <div class="gtTitle">Poker Texas Hold’em</div>
+                <div class="gtTag">principal</div>
+              </div>
+              <div class="gtDesc">Tables publiques/privées • compétition • bots • chat temps réel</div>
+              <div class="gtFooter">
+                <div class="gtMeta">Mode compétition</div>
+                <div class="gtCta">Ouvrir →</div>
+              </div>
+            </a>
+
+            <a class="gameTile blackjack" href="../html/blackjack-lobby.html">
+              <div class="gtTop">
+                <div class="gtTitle">Blackjack</div>
+                <div class="gtTag">rapide</div>
+              </div>
+              <div class="gtDesc">Lobby • rejoindre une table • partie interactive</div>
+              <div class="gtFooter">
+                <div class="gtMeta">Tables</div>
+                <div class="gtCta">Ouvrir →</div>
+              </div>
+            </a>
+
+            <a class="gameTile roulette" href="../html/roulette.html">
+              <div class="gtTop">
+                <div class="gtTitle">Roulette</div>
+                <div class="gtTag">classique</div>
+              </div>
+              <div class="gtDesc">Mises • animation • résultats instantanés</div>
+              <div class="gtFooter">
+                <div class="gtMeta">Mises multiples</div>
+                <div class="gtCta">Ouvrir →</div>
+              </div>
+            </a>
+
+            <a class="gameTile slots" href="../html/slot.html">
+              <div class="gtTop">
+                <div class="gtTitle">Slot machine</div>
+                <div class="gtTag">arcade</div>
+              </div>
+              <div class="gtDesc">Machines • spins • panel d’infos • historique</div>
+              <div class="gtFooter">
+                <div class="gtMeta">Multiplicateurs</div>
+                <div class="gtCta">Ouvrir →</div>
+              </div>
+            </a>
+            <a id="easterEggTile" class="gameTile easter hidden" href="/easter-egg">
+      <div class="gtTop">
+        <div class="gtTitle">Easter Egg</div>
+        <div class="gtTag">secret</div>
+      </div>
+      <div class="gtDesc">Accès au nouveau mini-jeu débloqué.</div>
+      <div class="gtFooter">
+        <div class="gtMeta">Craps</div>
+        <div class="gtCta">Ouvrir →</div>
+      </div>
+    </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <aside class="panel leaderboardPanel scroll" id="leaderboardPanel">
+        <div class="lbHead">
+          <div>
+            <div class="lbTitle">Leaderboard</div>
+          </div>
+        </div>
+
+        <div class="lbControls" id="lbControls">
+          <div>
+            <label>Type</label>
+            <select id="metricSelect" class="select">
+              <option value="credits" selected>Crédits gagnés</option>
+              <option value="points">Points (poker comp.)</option>
+              <option value="balance">Balance (crédits)</option>
+            </select>
+          </div>
+
+          <div id="periodWrap">
+            <label>Période</label>
+            <select id="periodSelect" class="select">
+              <option value="day">Jour</option>
+              <option value="week" selected>Semaine</option>
+              <option value="month">Mois</option>
+              <option value="year">Année</option>
+            </select>
+          </div>
+
+          <div id="gameWrap">
+            <label>Jeu</label>
+            <select id="gameSelect" class="select">
+              <option value="GLOBAL" selected>Global</option>
+              <option value="POKER">Poker</option>
+              <option value="BLACKJACK">Blackjack</option>
+              <option value="ROULETTE">Roulette</option>
+              <option value="SLOTS">Slots</option>
+            </select>
+          </div>
+
+          <!-- affiché uniquement si metric === balance -->
+          <div id="orderWrap" class="hidden">
+            <label>Tri</label>
+            <select id="orderSelect" class="select">
+              <option value="desc" selected>Le plus</option>
+              <option value="asc">Le moins</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="lbStatus" class="sub" style="margin-top:10px;">—</div>
+        <div id="lbList" class="lbList" style="margin-top:10px;"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Quests overlay + panel -->
+  <div id="questsOverlay" class="questsOverlay hidden" aria-hidden="true"></div>
+
+  <aside id="questsPanel" class="questsPanel" aria-hidden="true">
+    <div class="questsHead">
+      <div>
+        <div class="questsTitle">Quêtes</div>
+        <div class="sub">Gagne des crédits (utile si tu n'as plus rien).</div>
+      </div>
+      <button id="questsClose" class="questsClose" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="questsBody scroll">
+
+      <div id="questsList" style="margin-top:10px;"></div>
+    </div>
+  </aside>
+
+  <script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>

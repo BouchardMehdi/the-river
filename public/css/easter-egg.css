@@ -1,0 +1,288 @@
+.eeWrap{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 22px 16px 48px;
+}
+
+.eeHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.eeTitle{
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.eeSub{
+  opacity: .85;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.eeCard{
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.eeCardTitle{
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.eeStatus{
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.eeKeys{
+  display: grid;
+  gap: 10px;
+}
+
+.eeKeyRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.eeKeyName{
+  font-weight: 700;
+}
+
+.eeKeyBadge{
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+}
+
+.eeKeyBadge.ok{
+  background: rgba(46, 204, 113, .18);
+  border-color: rgba(46, 204, 113, .40);
+}
+
+.eeKeyBadge.no{
+  background: rgba(231, 76, 60, .18);
+  border-color: rgba(231, 76, 60, .40);
+}
+
+.eeLockedHint{
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(231, 76, 60, .12);
+  border: 1px solid rgba(231, 76, 60, .30);
+}
+
+.eeBtn{
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.12);
+  color: inherit;
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.eeBtn:hover{ background: rgba(255,255,255,0.16); }
+
+.eeBtn:disabled{
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.eeBtnGhost{
+  background: transparent;
+}
+
+.eeSmall{
+  font-size: 13px;
+  opacity: .9;
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+.eeMuted{ opacity: .75; }
+
+.crapsGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.eeField{
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  opacity: .9;
+}
+
+.eeField input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: inherit;
+  outline: none;
+}
+
+.crapsResult{
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.22);
+}
+
+.crapsResult.win{
+  border-color: rgba(46, 204, 113, .40);
+  background: rgba(46, 204, 113, .12);
+}
+
+.crapsResult.lose{
+  border-color: rgba(231, 76, 60, .35);
+  background: rgba(231, 76, 60, .10);
+}
+
+.crTop{
+  margin-bottom: 10px;
+}
+
+.crTitle{
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.crSub{
+  margin-top: 4px;
+  opacity: .9;
+}
+
+.crRow{
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.hidden{ display:none !important; }
+
+/* =========================================================
+   RESPONSIVE (easter-egg) - mobile-first
+   ========================================================= */
+
+@media (min-width: 0px) {
+  .eggTopbar,
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .eggTopbar .left,
+  .eggTopbar .right,
+  .topbar .left,
+  .topbar .right {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .eggTopbar button,
+  .eggTopbar .btn,
+  .topbar button,
+  .topbar .btn {
+    width: 100%;
+  }
+
+  .eggLayout,
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .eggCard,
+  .card {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .crapsForm,
+  .crapsControls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .crapsForm input,
+  .crapsForm button,
+  .crapsControls input,
+  .crapsControls button {
+    width: 100%;
+  }
+
+  .diceRow,
+  .diceWrap {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .dice {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+@media (min-width: 600px) {
+  .eggTopbar button,
+  .eggTopbar .btn,
+  .topbar button,
+  .topbar .btn {
+    width: auto;
+  }
+
+  .crapsForm,
+  .crapsControls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .crapsForm input,
+  .crapsForm button,
+  .crapsControls input,
+  .crapsControls button {
+    width: auto;
+  }
+
+  .dice {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .eggLayout,
+  .layout {
+    grid-template-columns: 1fr 420px; /* contenu + panneau/status */
+  }
+}

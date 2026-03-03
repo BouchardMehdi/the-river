@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Poker — Table</title>
+
+  <link rel="stylesheet" href="../css/poker.css"/>
+</head>
+<body>
+  <div class="container"><br>
+    <div class="topbar">
+      <div>
+        <div class="titleRow">
+          <h1>Poker — Table</h1>
+          <span class="pill mono" id="tablePill">------</span>
+        </div>
+      </div>
+
+      <div class="topRight">
+        <div class="creditsPill">
+          <span class="small">Crédits</span>
+          <span class="mono" id="creditsValue">—</span>
+        </div>
+        <div class="topActions">
+          <a class="navBtn" href="../html/dashboard.html">Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="gameLayout">
+      <!-- LEFT -->
+      <div class="area">
+        <div class="sectionTitle">Table</div>
+
+        <div class="row">
+          <div class="rowContent">
+            <button class="btn success primary" id="startBtn">Start</button>
+            <button class="btn danger" id="leaveBtn">Leave</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="rowLabel">Action joueur</div>
+          <div class="rowContent">
+            <select id="actionType" class="input">
+              <option value="CHECK">CHECK</option>
+              <option value="CALL">CALL</option>
+              <option value="BET">BET</option>
+              <option value="RAISE">RAISE</option>
+              <option value="ALL_IN">ALL-IN</option>
+              <option value="FOLD">FOLD</option>
+            </select>
+
+            <input id="amount" class="input" type="number" placeholder="amount (si besoin)" min="0" />
+            <button class="btn success" id="actionBtn">Send action</button>
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <div class="sectionTitle">Players</div>
+        <div id="players" class="playersGrid"></div>
+
+        <hr class="sep" />
+
+        <div class="sectionTitle">Community cards</div>
+        <div id="community" class="cards"></div>
+
+        <div class="sectionTitle" style="margin-top:14px;">Ta main</div>
+        <div id="hand" class="cards"></div>
+
+        <div class="small" style="margin-top:10px;" id="bestHandLine">Best hand: —</div>
+        <div class="small" id="pollInfo"></div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="area">
+        <div class="chatHeader">
+          <div>
+            <div class="sectionTitle" style="margin:0;">Chat</div>
+          </div>
+        </div>
+
+        <div id="chatBox" class="chatBox"></div>
+
+        <div class="chatComposer">
+          <input id="chatInput" class="input" placeholder="Message..." />
+          <button id="sendChatBtn" class="btn success">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Bouton + panel règles -->
+  <button id="rulesFab" class="infoFab" title="Règles & mains">i</button>
+
+  <div id="rulesOverlay" class="panelOverlay hidden"></div>
+
+  <aside id="rulesPanel" class="sidePanel" aria-hidden="true">
+    <div class="panelHead">
+      <div>
+        <div class="panelTitle">Règles & mains</div>
+        <div class="small">La main actuelle est encadrée.</div>
+      </div>
+      <button id="rulesClose" class="btn ghost" type="button">✕</button>
+    </div>
+
+    <div class="panelBody">
+      <div class="panelSectionTitle">Règles rapides</div>
+      <ul class="panelList">
+        <li>Texas Hold’em : 2 cartes privées + 5 cartes communes.</li>
+        <li>Blinds : SB &amp; BB au début de chaque main.</li>
+        <li>Rounds : Préflop → Flop → Turn → River → Showdown.</li>
+        <li>Actions possibles : check, call, bet/raise, fold, all-in.</li>
+      </ul>
+
+      <div class="panelSectionTitle" style="margin-top:14px;">Mains (ordre de puissance)</div>
+
+      <div class="handRank" data-hand="HIGH_CARD"><div class="handName">Carte haute</div><div class="handDesc">Aucune combinaison</div></div>
+      <div class="handRank" data-hand="PAIR"><div class="handName">Paire</div><div class="handDesc">2 cartes de même valeur</div></div>
+      <div class="handRank" data-hand="TWO_PAIR"><div class="handName">Double paire</div><div class="handDesc">2 paires</div></div>
+      <div class="handRank" data-hand="THREE_KIND"><div class="handName">Brelan</div><div class="handDesc">3 cartes de même valeur</div></div>
+      <div class="handRank" data-hand="STRAIGHT"><div class="handName">Suite</div><div class="handDesc">5 cartes qui se suivent</div></div>
+      <div class="handRank" data-hand="FLUSH"><div class="handName">Couleur</div><div class="handDesc">5 cartes même symbole</div></div>
+      <div class="handRank" data-hand="FULL_HOUSE"><div class="handName">Full</div><div class="handDesc">Brelan + paire</div></div>
+      <div class="handRank" data-hand="FOUR_KIND"><div class="handName">Carré</div><div class="handDesc">4 cartes de même valeur</div></div>
+      <div class="handRank" data-hand="STRAIGHT_FLUSH"><div class="handName">Quinte flush</div><div class="handDesc">Suite + couleur</div></div>
+      <div class="handRank" data-hand="ROYAL_FLUSH"><div class="handName">Quinte flush royale</div><div class="handDesc">10-J-Q-K-A même couleur</div></div>
+    </div>
+  </aside>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script type="module" src="../js/poker-table.js"></script>
+</body>
+</html>

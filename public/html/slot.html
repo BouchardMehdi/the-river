@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Machines à sous</title>
+  <link rel="stylesheet" href="../css/slot.css">
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- LEFT -->
+    <div class="card">
+      <h1>Slots (Test)</h1>
+      <div class="row">
+        <label>Machine</label>
+        <select id="machine">
+          <option value="SLOT_3X3">3 × 3</option>
+          <option value="SLOT_3X5">3 × 5</option>
+          <option value="SLOT_5X5">5 × 5</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Spins</label>
+        <select id="spins"></select>
+      </div>
+
+      <div class="row">
+        <label>Coût</label>
+        <input id="cost" disabled>
+      </div>
+
+      <div class="buttons">
+        <button id="backDashboardBtn" class="secondary">Dashboard</button>
+        <button id="spinBtn" class="primary">SPIN</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div class="resultBlock smallPad">
+        <div class="pill">Crédits: <span id="balance">—</span></div>
+        <div class="pill">Dernier net: <span id="lastNet">—</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <div class="rightHeader">
+        <div>
+          <div class="title">Machine</div>
+          <div id="meta" class="muted small">—</div>
+        </div>
+        <div class="pill">Total payout: <span id="totalPayout">—</span></div>
+      </div>
+
+      <div id="machineView"></div>
+      <div id="history"></div>
+    </div>
+
+  </div>
+
+  <!-- Floating Info Button -->
+  <button id="infoBtn" class="infoBtn" type="button" aria-label="Infos machine">
+    i
+  </button>
+
+  <!-- Info Panel -->
+  <div id="infoPanel" class="infoPanel" aria-hidden="true">
+    <div class="infoPanelHeader">
+      <div>
+        <div class="infoTitle">Infos machine</div>
+        <div id="infoSub" class="muted small">—</div>
+      </div>
+      <button id="infoClose" class="infoClose" type="button" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="infoPanelBody">
+      <div class="infoSection">
+        <div class="infoSectionTitle">Prix</div>
+        <div id="infoPrices" class="infoGrid"></div>
+      </div>
+
+      <div class="infoSection">
+        <div class="infoSectionTitle">Taux symboles (par case)</div>
+        <div id="infoRates" class="infoGrid"></div>
+      </div>
+
+      <div class="infoSection">
+        <div class="infoSectionTitle">Valeurs symboles (multiplicateur)</div>
+        <div id="infoValues" class="infoGrid"></div>
+      </div>
+
+      <div class="infoSection">
+        <div class="infoSectionTitle">Patterns (facteurs)</div>
+        <div id="infoPatterns" class="infoGrid"></div>
+      </div>
+
+      <div class="muted small" style="margin-top:10px">
+        NB: Gains = betPerSpin × valeurSymbole × facteurPattern (et les gains s’additionnent si plusieurs patterns gagnent).
+      </div>
+    </div>
+  </div>
+
+  <div id="infoBackdrop" class="infoBackdrop" aria-hidden="true"></div>
+
+  <script src="../js/slot.js"></script>
+</body>
+</html>

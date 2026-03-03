@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE RIVER – Inscription</title>
+  <link rel="stylesheet" href="../../css/auth.css" />
+</head>
+<body>
+
+  <div class="authContainer">
+    <img src="../../assets/img/logo-the-river.png" alt="logo">
+
+    <div class="authCard">
+      <h1 class="authTitle">Créer un compte</h1>
+
+      <form id="registerForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="username">Nom d’utilisateur</label>
+          <input id="username" type="text" required autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <input id="password" type="password" required autocomplete="new-password" />
+        </div>
+
+        <button id="registerBtn" type="submit" class="primaryBtn">Créer le compte</button>
+      </form>
+
+      <div class="authFooter">
+        <span>Déjà un compte ?</span>
+        <a href="./login.html" class="linkBtn">Se connecter</a>
+      </div>
+
+      <div id="error" class="errorMsg"></div>
+    </div>
+  </div>
+
+  <!-- ✅ Popup vérification email -->
+  <div id="verifyOverlay" class="verifyOverlay hidden" aria-hidden="true">
+    <div class="verifyModal" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+      <h2 id="verifyTitle">Vérification email</h2>
+
+      <p class="verifyText">
+        Un code a été envoyé à <span id="verifyEmailLabel" class="verifyEmail"></span>.<br>
+        Entre le code ci-dessous pour activer ton compte.
+      </p>
+
+      <div class="field">
+        <label for="verifyCode">Code</label>
+        <input id="verifyCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" />
+      </div>
+
+      <div class="verifyActions">
+        <button id="resendBtn" type="button" class="ghostBtn">Renvoyer le code</button>
+        <button id="verifyBtn" type="button" class="primaryBtn smallBtn">Valider</button>
+      </div>
+
+      <div id="verifyStatus" class="errorMsg verifyStatus"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../../js/register.js"></script>
+</body>
+</html>

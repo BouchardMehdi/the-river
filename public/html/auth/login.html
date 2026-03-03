@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>THE RIVER – Connexion</title>
+  <link rel="stylesheet" href="../../css/auth.css" />
+</head>
+<body>
+
+  <div class="authContainer">
+    <img src="../../assets/img/logo-the-river.png" alt="logo">
+
+    <div class="authCard">
+      <h1 class="authTitle">Connexion</h1>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="username">Nom d’utilisateur</label>
+          <input id="username" type="text" required autocomplete="username" />
+        </div>
+
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <input id="password" type="password" required autocomplete="current-password" />
+        </div>
+
+        <button id="loginBtn" type="submit" class="primaryBtn">Se connecter</button>
+      </form>
+
+      <div class="authFooter" style="margin-top:12px;">
+        <a href="./register.html" class="linkBtn">Créer un compte</a>
+        <span style="margin:0 10px; opacity:.7;">•</span>
+        <a href="#" id="forgotLink" class="linkBtn">Mot de passe oublié ?</a>
+      </div>
+
+      <div id="status" class="errorMsg"></div>
+    </div>
+  </div>
+
+  <!-- ✅ Popup Forgot Password -->
+  <div id="forgotOverlay" class="verifyOverlay hidden" aria-hidden="true">
+    <div class="verifyModal" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+      <h2 id="forgotTitle">Réinitialiser le mot de passe</h2>
+
+      <!-- Step 1 -->
+      <div id="forgotStep1">
+        <p class="verifyText">
+          Entre ton email. On t’enverra un code pour réinitialiser ton mot de passe.
+        </p>
+
+        <div class="field">
+          <label for="forgotEmail">Email</label>
+          <input id="forgotEmail" type="email" autocomplete="email" placeholder="player@mail.com" />
+        </div>
+
+        <div class="verifyActions">
+          <button id="forgotSendBtn" type="button" class="primaryBtn smallBtn">Envoyer le code</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="forgotStep2" class="hidden">
+        <p class="verifyText">
+          Code envoyé ✅ Entre le code reçu + ton nouveau mot de passe.
+        </p>
+
+        <div class="field">
+          <label for="forgotCode">Code</label>
+          <input id="forgotCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="123456" />
+        </div>
+
+        <div class="field">
+          <label for="forgotNewPass">Nouveau mot de passe</label>
+          <input id="forgotNewPass" type="password" autocomplete="new-password" placeholder="min 6 caractères" />
+        </div>
+
+        <div class="verifyActions">
+          <button id="forgotResendBtn" type="button" class="ghostBtn">Renvoyer</button>
+          <button id="forgotResetBtn" type="button" class="primaryBtn smallBtn">Valider</button>
+        </div>
+      </div>
+
+      <div id="forgotStatus" class="errorMsg verifyStatus"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../../js/login.js"></script>
+</body>
+</html>

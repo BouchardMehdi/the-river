@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Easter Egg</title>
+
+  <link rel="stylesheet" href="/public/css/casino.css" />
+  <link rel="stylesheet" href="/public/css/easter-egg.css" />
+</head>
+<body>
+  <div class="eeWrap">
+    <header class="eeHeader">
+      <div>
+        <div class="eeTitle">Easter Egg</div>
+        <div class="eeSub">Rassemble les 4 clés pour révéler ce qui est caché.</div>
+      </div>
+
+      <button id="btnBackDashboard" class="eeBtn eeBtnGhost">← Retour dashboard</button>
+    </header>
+
+    <section class="eeCard">
+      <div class="eeCardTitle">Statut</div>
+      <div id="eeStatus" class="eeStatus">Chargement…</div>
+
+      <div class="eeKeys">
+        <div class="eeKeyRow">
+          <div class="eeKeyName">🔑 Clé Slots</div>
+          <div id="kSlots" class="eeKeyBadge" data-egg-key="slots">…</div>
+        </div>
+
+        <div class="eeKeyRow">
+          <div class="eeKeyName">🔑 Clé Blackjack</div>
+          <div id="kBlackjack" class="eeKeyBadge" data-egg-key="blackjack">…</div>
+        </div>
+
+        <div class="eeKeyRow">
+          <div class="eeKeyName">🔑 Clé Roulette</div>
+          <div id="kRoulette" class="eeKeyBadge" data-egg-key="roulette">…</div>
+        </div>
+
+        <div class="eeKeyRow">
+          <div class="eeKeyName">🔑 Clé Poker</div>
+          <div id="kPoker" class="eeKeyBadge" data-egg-key="poker">…</div>
+        </div>
+      </div>
+
+      <div id="eeLockedHint" class="eeLockedHint">
+        Page verrouillée — il te manque des clés.
+      </div>
+    </section>
+
+    <!-- ✅ Mini-jeu caché (affiché uniquement si 4/4) -->
+    <section id="crapsSection" class="eeCard hidden">
+      <div class="eeCardTitle">Craps (simplifié)</div>
+      <div class="eeSmall">
+        Écris le total (2 à 12) que tu penses obtenir avec 2 dés.
+        Si tu as bon : tu gagnes <b>1.5×</b> ta mise.
+      </div>
+
+      <div class="crapsGrid">
+        <label class="eeField">
+          <span>Total (2-12)</span>
+          <input id="guessTotal" type="number" min="2" max="12" value="7" />
+        </label>
+
+        <label class="eeField">
+          <span>Mise</span>
+          <input id="betAmount" type="number" min="1" value="10" />
+        </label>
+
+        <button id="btnRoll" class="eeBtn">Lancer 🎲</button>
+      </div>
+
+      <!-- ✅ ZONE ANIMATION DÉS -->
+      <div id="diceAnim" class="crapsResult hidden" style="margin-top:12px;">
+        <div class="crTop">
+          <div class="crTitle">Lancer…</div>
+          <div class="crSub">Les dés roulent…</div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 0;">
+          <div id="die1" style="width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);">-</div>
+          <div style="font-weight:900;font-size:22px;opacity:.8;">+</div>
+          <div id="die2" style="width:72px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);">-</div>
+          <div style="font-weight:900;font-size:22px;opacity:.8;">=</div>
+          <div id="dieTotal" style="width:84px;height:72px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:30px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);">-</div>
+        </div>
+
+        <div class="crSub" style="text-align:center;opacity:.85;">Arrêt sur le total…</div>
+      </div>
+
+      <!-- ✅ Résultat final -->
+      <div id="crapsResult" class="crapsResult hidden"></div>
+    </section>
+  </div>
+
+  <script type="module" src="/public/js/easter-egg.js"></script>
+</body>
+</html>

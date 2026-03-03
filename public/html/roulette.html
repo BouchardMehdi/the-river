@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Roulette</title>
+  <link rel="stylesheet" href="../css/roulette.css" />
+</head>
+<body>
+  <div class="page">
+
+    <header class="topbar">
+      <div class="topLeft">
+        <h1>Roulette</h1>
+      </div>
+
+      <div class="topRight">
+        <div class="creditsPill">
+          <span class="creditsLabel">Crédits</span>
+          <span id="balanceValue" class="creditsValue">—</span>
+        </div>
+
+        <button id="dashboardBtn" class="topBtn" type="button">Dashboard</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="roulette-area">
+        <div class="roulette-wrap">
+          <div class="scene">
+            <div class="wheel" id="wheel">
+              <div class="rim"></div>
+
+              <div class="pockets">
+                <div class="segments" id="segments"></div>
+                <div class="green-ring"></div>
+                <div class="ticks" id="ticks"></div>
+                <div class="labels" id="labels"></div>
+              </div>
+
+              <div class="hub"></div>
+            </div>
+
+            <div class="ball-track" id="ballTrack">
+              <div class="ball" id="ball"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result">
+          <div class="chip">
+            <div class="label">Résultat</div>
+            <div class="value" id="resultValue">—</div>
+          </div>
+          <div class="chip">
+            <div class="label">Couleur</div>
+            <div class="value" id="resultColor">—</div>
+          </div>
+          <div class="chip">
+            <div class="label">Total misé</div>
+            <div class="value" id="totalStaked">—</div>
+          </div>
+          <div class="chip">
+            <div class="label">Profit</div>
+            <div class="value" id="totalProfit">—</div>
+          </div>
+        </div>
+
+        <div class="wins" id="wins">—</div>
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="bets">
+        <div class="betsHead">
+          <h2>Miser</h2>
+          <div class="betsBtns">
+            <button id="addBetBtn" type="button">+ Ajouter une mise</button>
+            <button id="spinBtn" class="primary" type="button">SPIN</button>
+          </div>
+        </div>
+
+        <div class="betsList" id="betsList"></div>
+
+        <div class="betsFooter">
+          <div class="summary">
+            <div class="k">Nb mises</div><div class="v" id="betsCount">0</div>
+            <div class="k">Total mise</div><div class="v" id="betsTotal">0</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Floating button -->
+  <button id="rulesFab" class="rulesFab" type="button" aria-label="Ouvrir les règles">i</button>
+
+  <div id="rulesOverlay" class="rulesOverlay" aria-hidden="true"></div>
+
+  <!-- Rules panel -->
+  <aside id="rulesPanel" class="rulesPanel" aria-hidden="true">
+    <div class="rulesHeader">
+      <div class="rulesTitle">
+        <div class="rulesH1">Règles & Table</div>
+        <div class="rulesSub">Clique sur la table : plein / cheval / transversale / carré…</div>
+      </div>
+      <button id="rulesClose" class="rulesClose" type="button" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="rulesBody">
+      <!-- ✅ Bref “comment gagner” -->
+      <div class="rulesSection rulesWinBrief">
+        <h3>Comment gagner (très bref)</h3>
+        <p class="rulesHintLine">
+          La bille s’arrête sur un <b>numéro</b> (et une <b>couleur</b>). Tu gagnes si ta mise couvre ce numéro / cette zone.
+          Le gain dépend du type de mise (ex: <b>Plein x35</b>, <b>Cheval x17</b>, <b>Transversale x11</b>, <b>Carré x8</b>…).
+        </p>
+      </div>
+
+      <div class="rulesSection">
+        <h3>Mode “sélection”</h3>
+        <p class="rulesHintLine">
+          1) Choisis le <b>type</b> de la mise à droite (Plein, Cheval, Transversale, Carré…).<br/>
+          2) Clique sur la table ci-dessous pour remplir automatiquement la sélection.
+        </p>
+
+        <div class="tableMode">
+          <span class="tmLabel">Type actif :</span>
+          <span id="tableModeLabel" class="tmValue">—</span>
+          <button id="tableClearBtn" class="tmBtn" type="button">Vider sélection</button>
+        </div>
+      </div>
+
+      <div class="rulesSection">
+        <h3>Table (cliquable)</h3>
+
+        <div class="rouletteTable" id="rouletteTable">
+          <div class="rtZero" data-rt="number" data-n="0">0</div>
+
+          <div class="rtGrid">
+            <!-- ✅ NOMBRES + OVERLAY HOTSPOTS -->
+            <div class="rtNumbers" id="rtNumbers">
+              <!-- overlay construit en JS -->
+              <div class="rtOverlay" id="rtOverlay"></div>
+
+              <!-- rows 1..12 (bas->haut logique), on garde l'affichage "3 2 1" etc -->
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="3"  data-r="1" data-c="1">3</div>
+                <div class="rtCell" data-rt="number" data-n="2"  data-r="1" data-c="2">2</div>
+                <div class="rtCell" data-rt="number" data-n="1"  data-r="1" data-c="3">1</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="6"  data-r="2" data-c="1">6</div>
+                <div class="rtCell" data-rt="number" data-n="5"  data-r="2" data-c="2">5</div>
+                <div class="rtCell" data-rt="number" data-n="4"  data-r="2" data-c="3">4</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="9"  data-r="3" data-c="1">9</div>
+                <div class="rtCell" data-rt="number" data-n="8"  data-r="3" data-c="2">8</div>
+                <div class="rtCell" data-rt="number" data-n="7"  data-r="3" data-c="3">7</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="12" data-r="4" data-c="1">12</div>
+                <div class="rtCell" data-rt="number" data-n="11" data-r="4" data-c="2">11</div>
+                <div class="rtCell" data-rt="number" data-n="10" data-r="4" data-c="3">10</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="15" data-r="5" data-c="1">15</div>
+                <div class="rtCell" data-rt="number" data-n="14" data-r="5" data-c="2">14</div>
+                <div class="rtCell" data-rt="number" data-n="13" data-r="5" data-c="3">13</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="18" data-r="6" data-c="1">18</div>
+                <div class="rtCell" data-rt="number" data-n="17" data-r="6" data-c="2">17</div>
+                <div class="rtCell" data-rt="number" data-n="16" data-r="6" data-c="3">16</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="21" data-r="7" data-c="1">21</div>
+                <div class="rtCell" data-rt="number" data-n="20" data-r="7" data-c="2">20</div>
+                <div class="rtCell" data-rt="number" data-n="19" data-r="7" data-c="3">19</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="24" data-r="8" data-c="1">24</div>
+                <div class="rtCell" data-rt="number" data-n="23" data-r="8" data-c="2">23</div>
+                <div class="rtCell" data-rt="number" data-n="22" data-r="8" data-c="3">22</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="27" data-r="9" data-c="1">27</div>
+                <div class="rtCell" data-rt="number" data-n="26" data-r="9" data-c="2">26</div>
+                <div class="rtCell" data-rt="number" data-n="25" data-r="9" data-c="3">25</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="30" data-r="10" data-c="1">30</div>
+                <div class="rtCell" data-rt="number" data-n="29" data-r="10" data-c="2">29</div>
+                <div class="rtCell" data-rt="number" data-n="28" data-r="10" data-c="3">28</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="33" data-r="11" data-c="1">33</div>
+                <div class="rtCell" data-rt="number" data-n="32" data-r="11" data-c="2">32</div>
+                <div class="rtCell" data-rt="number" data-n="31" data-r="11" data-c="3">31</div>
+              </div>
+              <div class="rtRow">
+                <div class="rtCell" data-rt="number" data-n="36" data-r="12" data-c="1">36</div>
+                <div class="rtCell" data-rt="number" data-n="35" data-r="12" data-c="2">35</div>
+                <div class="rtCell" data-rt="number" data-n="34" data-r="12" data-c="3">34</div>
+              </div>
+            </div>
+
+            <!-- dozens -->
+            <div class="rtDozens">
+              <div class="rtBig" data-rt="dozen" data-v="1">1ère Douzaine<br/><span>1–12</span></div>
+              <div class="rtBig" data-rt="dozen" data-v="2">2ème Douzaine<br/><span>13–24</span></div>
+              <div class="rtBig" data-rt="dozen" data-v="3">3ème Douzaine<br/><span>25–36</span></div>
+            </div>
+
+            <!-- outside bets -->
+            <div class="rtOutside">
+              <div class="rtBig" data-rt="low">MANQUE<br/><span>1–18</span></div>
+              <div class="rtBig" data-rt="even">PAIR</div>
+              <div class="rtBig" data-rt="red">ROUGE</div>
+              <div class="rtBig" data-rt="black">NOIR</div>
+              <div class="rtBig" data-rt="odd">IMPAIR</div>
+              <div class="rtBig" data-rt="high">PASSE<br/><span>19–36</span></div>
+            </div>
+          </div>
+
+          <!-- columns -->
+          <div class="rtCols">
+            <div class="rtCol" data-rt="column" data-v="1">2 to 1<br/><span>Col 1</span></div>
+            <div class="rtCol" data-rt="column" data-v="2">2 to 1<br/><span>Col 2</span></div>
+            <div class="rtCol" data-rt="column" data-v="3">2 to 1<br/><span>Col 3</span></div>
+          </div>
+        </div>
+
+        <div class="rtHelp">
+          <b>Bonus :</b> Clique <b>entre 2 numéros</b> (cheval), sur la <b>croix</b> entre 4 (carré), ou sur la <b>bande</b> d’une ligne (transversale).
+        </div>
+      </div>
+
+      <div class="rulesSection">
+        <h3>Paiements</h3>
+        <div class="rulesMiniGrid">
+          <div class="miniCard"><b>Plein</b><span>x35</span></div>
+          <div class="miniCard"><b>Cheval</b><span>x17</span></div>
+          <div class="miniCard"><b>Transversale</b><span>x11</span></div>
+          <div class="miniCard"><b>Carré</b><span>x8</span></div>
+          <div class="miniCard"><b>Sixain</b><span>x5</span></div>
+          <div class="miniCard"><b>Douzaine</b><span>x2</span></div>
+          <div class="miniCard"><b>Colonne</b><span>x2</span></div>
+          <div class="miniCard"><b>Chances simples</b><span>x1</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <template id="betRowTpl">
+    <div class="betRow">
+      <div class="col">
+        <label>Type</label>
+        <select class="betType">
+          <option value="STRAIGHT">Plein (1 numéro) — x35</option>
+          <option value="SPLIT">Cheval (2 numéros adjacents) — x17</option>
+          <option value="STREET">Transversale (3 en ligne) — x11</option>
+          <option value="CORNER">Carré (4) — x8</option>
+          <option value="SIX_LINE">Sixain (6) — x5</option>
+
+          <option value="DOZEN">Douzaine — x2</option>
+          <option value="COLUMN">Colonne — x2</option>
+
+          <option value="RED">Rouge — x1</option>
+          <option value="BLACK">Noir — x1</option>
+          <option value="EVEN">Pair — x1</option>
+          <option value="ODD">Impair — x1</option>
+          <option value="LOW">Manque (1-18) — x1</option>
+          <option value="HIGH">Passe (19-36) — x1</option>
+        </select>
+      </div>
+
+      <div class="col">
+        <label>Montant</label>
+        <input class="betAmount" type="number" min="1" step="1" value="10" />
+      </div>
+
+      <div class="col selectionCol">
+        <label>Sélection</label>
+        <div class="selectionInputs"></div>
+        <div class="hint"></div>
+      </div>
+
+      <div class="col actionsCol">
+        <button class="danger removeBtn" type="button" title="Supprimer">✕</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="../js/roulette.js"></script>
+</body>
+</html>

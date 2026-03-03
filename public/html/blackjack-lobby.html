@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blackjack - Lobby</title>
+  <link rel="stylesheet" href="../css/blackjack.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1>Blackjack - Lobby</h1>
+      </div>
+      <div style="text-align:right">
+        <div class="buttons" style="justify-content:flex-end">
+          <!-- ✅ Balance à côté du bouton Lobby -->
+          <div class="pill mono balancePill" title="Crédits">
+          Crédits <span id="balancePill">—</span>
+          </div>
+          <button type="button" id="backDashboardBtn">Dashboard</button>
+        </div>
+        <div class="status" id="topStatus"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="sectionTitle">Tables disponibles</div>
+
+        <!-- ✅ Toolbar : refresh + loupe toggle + search input -->
+        <div class="tableToolbar">
+          <div class="tableToolbarLeft">
+            <button type="button" id="refreshBtn">Rafraîchir</button>
+
+            <button type="button" id="searchBtn" class="iconBtn" title="Rechercher une table" aria-label="Rechercher">
+              🔍
+            </button>
+          </div>
+
+          <div id="searchWrap" class="searchWrap" hidden>
+            <input id="searchInput" type="text" placeholder="Rechercher par nom ou code..." autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="status" id="listStatus"></div>
+        <div class="tableList" id="tableList"></div>
+      </div>
+
+      <div class="card">
+        <div class="sectionTitle">Créer une table</div>
+
+        <div class="row">
+          <label>Nom</label>
+          <input id="name" type="text" value="BJ Table" />
+        </div>
+        <div class="row">
+          <label>Min bet</label>
+          <input id="minBet" type="number" value="10" />
+        </div>
+        <div class="row">
+          <label>Max joueurs</label>
+          <input id="maxPlayers" type="number" value="6" />
+        </div>
+        <div class="row">
+          <label>Max bet</label>
+          <input id="tableMaxBet" type="number" placeholder="optionnel" />
+        </div>
+
+        <div class="buttons">
+          <button type="button" class="primary" id="createBtn">Créer</button>
+        </div>
+        <div class="status" id="createStatus"></div>
+
+        <hr style="border:none;border-top:1px solid var(--line); margin:14px 0;">
+
+        <div class="sectionTitle">Rejoindre une table</div>
+        <div class="row">
+          <label>Code</label>
+          <input id="joinCode" type="text" placeholder="ABCDEF" />
+        </div>
+        <div class="buttons">
+          <button type="button" id="joinBtn">Join</button>
+        </div>
+        <div class="status" id="joinStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/blackjack-lobby.js"></script>
+</body>
+</html>

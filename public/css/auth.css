@@ -1,0 +1,243 @@
+@import url("./casino.css");
+
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.authContainer{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+
+.authContainer img{
+  width: 20%;
+  height: auto;
+  position: absolute;
+  top: 10%;
+}
+
+.authCard{
+  width:100%;
+  max-width:380px;
+  background: rgba(0,0,0,.35);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:24px;
+  box-shadow:0 20px 40px rgba(0,0,0,.45);
+  margin-top: 5%;
+}
+
+.authTitle{
+  margin:0 0 18px 0;
+  text-align:center;
+  font-size:24px;
+  font-weight:900;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:14px;
+}
+
+.field label{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.field input{
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.35);
+  color:white;
+}
+
+.primaryBtn{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:14px;
+  border:none;
+  background:var(--green);
+  color:black;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.primaryBtn:hover{
+  opacity:.9;
+}
+
+.authFooter{
+  margin-top:16px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.linkBtn{
+  margin-left:6px;
+  color:var(--green);
+  font-weight:700;
+  text-decoration:none;
+}
+
+.linkBtn:hover{
+  text-decoration:underline;
+}
+
+.errorMsg{
+  margin-top:12px;
+  color:#ff6b6b;
+  font-size:13px;
+  text-align:center;
+}
+
+/* ---------- Legal popup ---------- */
+.legalOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(4px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+
+.legalModal{
+  max-width:420px;
+  background:rgba(10,12,18,.95);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
+}
+
+.legalModal h2{
+  margin-top:0;
+}
+
+.legalModal p{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+.legalModal button{
+  margin-top:14px;
+  padding:10px 16px;
+  border-radius:14px;
+  border:none;
+  background:var(--green);
+  color:black;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.hidden{
+  display:none !important;
+}
+
+/* =========================================================
+   ✅ Verification popup (Register) — même style que legal
+========================================================= */
+
+.verifyOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(4px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:120;
+}
+
+.verifyModal{
+  width:100%;
+  max-width:420px;
+  background:rgba(10,12,18,.95);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 30px 60px rgba(0,0,0,.6);
+}
+
+.verifyModal h2{
+  margin:0 0 10px 0;
+  text-align:center;
+}
+
+.verifyText{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.45;
+  text-align:center;
+  margin:0 0 14px 0;
+}
+
+.verifyEmail{
+  color:var(--green);
+  font-weight:900;
+}
+
+.verifyActions{
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  margin-top:10px;
+}
+
+/* bouton secondaire */
+.ghostBtn{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.35);
+  color:white;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.ghostBtn:hover{
+  border-color:rgba(255,255,255,.25);
+}
+
+/* bouton valider dans la popup */
+.smallBtn{
+  flex:1;
+  width:auto;
+  margin-top:0;
+}
+
+.verifyStatus{
+  margin-top:10px;
+}
+
+/* =========================================================
+   RESPONSIVE (auth) - mobile-first
+   ========================================================= */
+
+   @media screen and (max-width: 768px) {
+    .authCard{
+      margin-top: 30%;
+      width: 70%;
+    }
+
+    .authContainer img{
+      width: 70%;
+    }
+
+    .verifyModal{
+      width: 90%;
+    }
+   }

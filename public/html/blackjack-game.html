@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blackjack - Game</title>
+  <link rel="stylesheet" href="../css/blackjack.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div>
+        <h1>Blackjack — Partie</h1>
+        <p class="sub">
+          Table: <span class="pill mono" id="codePill">—</span>
+          <span class="pill mono" id="statusPill" style="display: none;">—</span>
+          <span class="pill mono" id="phasePill" style="display: none;">—</span>
+        </p>
+      </div>
+
+      <div style="text-align:right">
+        <div class="buttons" style="justify-content:flex-end">
+          <!-- ✅ Balance à côté du bouton Lobby -->
+          <div class="pill mono balancePill" title="Crédits">
+          Crédits <span id="balancePill">—</span>
+          </div>
+          <button type="button" id="backDashboardBtn">Dashboard</button>
+        </div>
+        <div class="status" id="topStatus"></div>
+      </div>
+    </div>
+
+    <div class="gameLayout">
+      <div class="area">
+        <div class="sectionTitle">Table</div>
+
+        <div class="buttons" style="justify-content:flex-start">
+          <button type="button" class="btn primary" id="startBtn">Start</button>
+          <button type="button" class="btn danger" id="leaveBtn">Leave</button>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="panel">
+          <div class="sectionTitle">Miser</div>
+          <div class="row">
+            <label>Bet</label>
+            <input id="betAmount" type="number" value="10" />
+          </div>
+          <div class="buttons">
+            <button type="button" class="primary" id="betBtn">Bet</button>
+          </div>
+          <div class="small" id="betHint"></div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="panel">
+          <div class="sectionTitle">Actions</div>
+          <div class="buttons" style="justify-content:flex-start">
+            <button type="button" id="hitBtn">Hit</button>
+            <button type="button" id="standBtn">Stand</button>
+          </div><br>
+          <div class="small" id="turnHint"></div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="panel">
+          <div class="sectionTitle">Dealer</div>
+          <div id="dealerRow"></div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="panel">
+          <div class="sectionTitle">Joueurs</div>
+          <div id="playersRows"></div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="panel">
+          <div class="sectionTitle">Résultat</div>
+          <div class="small mono" id="roundResult">—</div>
+        </div>
+      </div>
+
+      <div class="area">
+        <div class="sectionTitle">Chat</div>
+        <div class="chatBox" id="chatBox"></div>
+
+        <div class="row" style="margin-top:10px">
+          <label>Message</label>
+          <input id="chatMsg" type="text" placeholder="Message..." />
+        </div>
+        <div class="buttons">
+          <button type="button" id="sendChatBtn">Envoyer</button>
+        </div>
+
+        <!-- (déjà masqué par .chat { display:none } dans ton CSS) -->
+        <div class="small chat" style="margin-top:10px">
+          Connexion chat: <span class="mono" id="sockState">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button id="rulesBtn" class="rulesBtn" type="button" aria-label="Règles">i</button>
+  <!-- ✅ panel rules -->
+  <div id="rulesPanel" class="rulesPanel" aria-hidden="true">
+    <div class="rulesHeader">
+      <div>
+        <div class="rulesTitle">Règles Blackjack</div>
+        <div class="rulesSub small">Objectif, actions, gains</div>
+      </div>
+      <button id="rulesCloseBtn" class="rulesClose" type="button" aria-label="Fermer">✕</button>
+    </div>
+
+    <div class="rulesBody">
+      <div class="rulesSection">
+        <div class="rulesSectionTitle">🎯 Objectif</div>
+        <div class="small">
+          Faire <b>21</b> ou s’en approcher sans dépasser. Si tu dépasses → <b>bust</b>.
+        </div>
+      </div>
+
+      <div class="rulesSection">
+        <div class="rulesSectionTitle">🃏 Valeur des cartes</div>
+        <ul class="rulesList">
+          <li>2 à 10 : valeur nominale</li>
+          <li>Valet / Dame / Roi : 10</li>
+          <li>As : 1 ou 11 (choisi automatiquement selon ta main)</li>
+        </ul>
+      </div>
+
+      <div class="rulesSection">
+        <div class="rulesSectionTitle">▶ Déroulement</div>
+        <ol class="rulesList">
+          <li>Tout le monde mise (phase betting)</li>
+          <li>Distribution des cartes</li>
+          <li>À ton tour : <b>Hit</b> (tirer) ou <b>Stand</b> (rester)</li>
+          <li>Le dealer joue ensuite</li>
+        </ol>
+      </div>
+
+      <div class="rulesSection">
+        <div class="rulesSectionTitle">✅ Résultats</div>
+        <ul class="rulesList">
+          <li>Dealer bust → tu gagnes</li>
+          <li>Ta valeur &gt; dealer → tu gagnes</li>
+          <li>Égalité → push (mise rendue)</li>
+          <li>Ta valeur &lt; dealer → tu perds</li>
+        </ul>
+      </div>
+
+      <div class="small" style="opacity:.85;margin-top:10px">
+        (Tu peux adapter le texte si tu ajoutes split/double/insurance plus tard.)
+      </div>
+    </div>
+  </div>
+
+  <div id="rulesBackdrop" class="rulesBackdrop" aria-hidden="true"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="../js/blackjack-game.js"></script>
+</body>
+</html>

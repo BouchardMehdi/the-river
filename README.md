@@ -1,403 +1,422 @@
-# Poker API — NestJS (TypeScript)
+<p align="center">
+  <img src="/public/assets/img/logo-the-river.png" width="300" alt="Logo THE RIVER">
+</p><br>
+<h1 align="center">THE RIVER</h1>
 
-API de poker **Texas Hold’em simplifié** développée avec **NestJS**, **TypeORM** et **SQLite**.  
-Ce projet est conçu comme une **API backend** testable via **Postman**.
+<p align="center">
+Plateforme de casino web Full Stack développée avec NestJS, MySQL et JavaScript
+</p>
+
 ---
 
-Participants: BOUCHARD Mehdi, NGAMGA Ashley
+# Sommaire
 
-Temps de réalisation: 2 mois
-
-## Table des matières
-
+- [Démo](#démo)
 - [Présentation du projet](#présentation-du-projet)
-- [Fonctionnalités](#fonctionnalités)
-- [Prérequis](#prérequis)
+- [Architecture](#architecture)
+- [Technologies utilisées](#technologies-utilisées)
+  - [Backend](#backend)
+  - [Frontend](#frontend)
+  - [Infrastructure](#infrastructure)
+- [Jeux disponibles](#jeux-disponibles)
+  - [Poker](#poker)
+  - [Blackjack](#blackjack)
+  - [Slot Machine](#slot-machine)
+  - [Roulette](#roulette)
+  - [Easter-egg](#easter-egg)
+- [Système de quêtes](#système-de-quêtes)
+- [Dashboard](#dashboard)
+- [Authentification & sécurité](#authentification--sécurité)
+- [Système d’email](#système-demail)
+- [Communication temps réel](#communication-temps-réel)
+- [Base de données](#base-de-données)
 - [Installation](#installation)
-  - [Variables d’environnement (.env)](#variables-denvironnement-env)
-  - [Installer les dépendances](#installer-les-dépendances)
-  - [Dépendances principales](#dépendances-principales)
-- [Lancer le projet](#lancer-le-projet)
-- [Documentation API (Swagger)](#documentation-api-swagger)
-  - [Accès à Swagger](#accès-à-swagger)
-  - [Authentification dans Swagger](#authentification-dans-swagger)
-- [Base de données (SQLite)](#base-de-données-sqlite)
-- [Concept des tables](#concept-des-tables)
-- [Authentification (JWT)](#authentification-jwt)
-- [Routes API (Postman)](#routes-api-postman)
-  - [Auth](#auth)
-  - [Tables](#tables)
-  - [Actions de jeu](#actions-de-jeu)
-  - [Phase manuelles (tests)](#phases-manuelles-tests)
-- [Gestion des gains (showdown, all-in, side pots, egalites)](#gestion-des-gains-showdown-all-in-side-pots-egalites)
-  - [Combinaisons gérées (ordre)](#combinaisons-gérées-ordre)
-  - [All-in et side pots](#all-in-et-side-pots)
-  - [Egalites (split pot)](#egalites-split-pot)
-  - [Champs JSON retournes apres end-hand](#egalites-split-pot)
-- [Scénario Postman – Partie complète](#scénario-postman--partie-complète)
-- [Règles importantes](#règles-importantes)
-- [Sécurité](#sécurité)
+- [Evolutions futures](#évolutions-futures)
+    - [Mode Frénésie](#mode-frénésie)
+    - [Personnalisation](#personnalisation)
+    - [Compétiton poker](#personnalisation)
+
+---
+
+# Démo
+
+Version en production :
+
+https://the-river.bouchard-mehdi.fr
+
+
+---
 
 # Présentation du projet
 
-Cette API permet de gérer des parties de poker Texas Hold’em avec :
-- joueurs humains authentifiés
-- bots automatiques
-- gestion des mises
-- gestion des phases de jeu
-- persistance des utilisateurs et de leurs crédits
+**THE RIVER** est une plateforme de casino en ligne développée en **Full Stack**.
 
-Le calcul des **meilleures mains** n’est pas encore implémenté (volontairement).
+L’application simule un véritable environnement de casino avec :
 
-## Fonctionnalités
+- plusieurs jeux
+- du multijoueur en temps réel
+- une authentification sécurisée
+- un système de progression
+- un dashboard utilisateur
+- un système de quêtes gamifiées
 
-- Authentification **JWT** (register / login)
-- 3 tables fixes seedées :
-  - `table-1`
-  - `table-2`
-  - `table-3`
-- Rejoindre une table avec **buy-in**
-- Débit du solde + stack égal au buy-in
-- Démarrage de partie par l’owner
-- Remplissage automatique par des **bots**
-- Deck indépendant par table
-- Mélange + **burn card**
-- Phases :
-  - `WAITING`
-  - `PRE_FLOP`
-  - `FLOP`
-  - `TURN`
-  - `RIVER`
-- Actions :
-  - `CHECK`
-  - `BET`
-  - `CALL`
-  - `RAISE`
-  - `FOLD`
-  - `ALL_IN`
-- Sécurité :
-  - un joueur ne voit **que ses propres cartes**
-- Fin de partie :
-  - quand il reste **1 seul joueur avec stack > 0**
-  - le stack du gagnant est transféré dans son solde
-  - la table est reset
+Le projet a été conçu pour démontrer la capacité à construire une **application web complète prête pour la production**.
 
-## Prérequis
+---
 
-- **Node.js >= 18**
-- **npm >= 9**
-- *(Optionnel)* **DB Browser for SQLite** pour consulter la base de données
+# Architecture
 
-## Installation
+Le backend suit une architecture **modulaire par domaine métier**.
 
-### Variables d’environnement (.env)
+```bash
+src/
+│
+├── auth/          Authentification & JWT
+├── users/         Gestion des utilisateurs
+├── mail/          Service SMTP
+|
+│
+├── games/
+│   ├── poker/         Logique Poker Texas Hold'em
+│   ├── blackjack/     Jeu Blackjack
+│   ├── roulette/      Roulette française
+│   ├── slots/         Machine à sous
+│   ├── quests/        Système de quêtes
+|   ├── easter-egg/    Easter egg
+|   ├── craps/         Jeu surprise
+│   └── stats/         Statistiques & leaderboard
+│
+└── main.ts
+```
 
-Ce projet utilise des variables d’environnement pour la configuration sensible (JWT, base de données, etc.).
+Chaque module contient :
 
-Création du fichier .env
+- controllers
+- services
+- entités
+- DTO
+- gateways WebSocket
 
-À la racine du projet, créer un fichier :
-<pre>.env</pre>
+---
 
-Contenu minimal du fichier .env
-<pre>
-# Port de l API
+# Technologies utilisées
+
+## Backend
+
+- **NestJS**
+- **Node.js**
+- **TypeScript**
+- **TypeORM**
+- **MySQL**
+- **Socket.IO**
+- **JWT**
+- **Passport**
+- **bcrypt**
+- **Nodemailer**
+- **Helmet**
+- **class-validator**
+
+---
+
+## Frontend
+
+- HTML5
+- CSS3
+- JavaScript (ES Modules)
+- Fetch API
+- Socket.IO client
+
+---
+
+## Infrastructure
+
+- **Hostinger Node.js Hosting**
+- **MySQL**
+- **SMTP Hostinger**
+- **SSH**
+
+---
+
+# Jeux disponibles
+
+La plateforme propose plusieurs jeux de casino.
+
+---
+
+# Poker
+
+Le poker Texas Hold'em est le jeu principal.
+
+Fonctionnalités :
+
+- tables multijoueurs
+- gestion des blinds
+- système de mise
+- progression automatique des phases
+- calcul des mains
+- distribution du pot
+- showdown
+- suppression automatique des tables
+- chat temps réel
+
+---
+
+# Blackjack
+
+Tables de blackjack avec logique du dealer.
+
+Fonctionnalités :
+
+- tables multijoueurs
+- distribution des cartes
+- gestion des tours
+- dealer automatique
+- animation des cartes
+- chat intégré
+
+---
+
+# Slot Machine
+
+Machine à sous interactive.
+
+Fonctionnalités :
+
+- système de spins
+- plusieurs machines
+- calcul probabiliste des gains
+- gestion des crédits
+- easter eggs cachés
+
+---
+
+# Roulette
+
+Roulette française interactive.
+
+Fonctionnalités :
+
+- paris sur numéros
+- cheval
+- carré
+- transversale
+- paiement automatique
+- interface de table interactive
+
+---
+
+# Easter Egg
+
+Le projet inclut également un système d’**easter egg**.
+
+Cette easter egg se débloque en trouvant des **clés secrètes** associées à chaque jeu.
+
+Fonctionnement :
+
+- certaines actions spécifiques dans les jeux déclenchent un événement caché
+- une clé est alors débloquée pour le joueur
+- un système de notification informe le joueur du déblocage
+- les clés sont persistées et peuvent être utilisées pour débloquer du contenu futur
+
+Exemples :
+
+- clé **Slots**
+- clé **Poker**
+- clé **Roulette**
+- clé **Blackjack**
+
+Ce système ajoute une dimension **exploration et mystère** au projet.
+
+# Système de quêtes
+
+Le projet inclut un système de **gamification**.
+
+Types de quêtes :
+
+- **Daily quests**
+- **Weekly quests**
+- **Anti-tilt quests**
+
+Fonctionnalités :
+
+- progression persistante
+- système de cooldown
+- récupération de récompenses
+- intégration dans le dashboard
+
+Les récompenses peuvent donner :
+
+- crédits
+- points compétition
+
+---
+
+# Dashboard
+
+Chaque joueur possède un dashboard personnel comprenant :
+
+- solde du compte
+- points de compétition
+- progression des quêtes
+- classement leaderboard
+- statistiques de jeu
+- historique des gains et pertes
+
+---
+
+# Authentification & sécurité
+
+La sécurité utilise des standards modernes.
+
+Fonctionnalités :
+
+- authentification JWT
+- vérification email
+- reset password
+- hashage bcrypt
+- validation des DTO
+- headers de sécurité Helmet
+- configuration CORS sécurisée
+
+---
+
+# Système d’email
+
+Les emails transactionnels utilisent **Nodemailer**.
+
+Fonctionnalités :
+
+- vérification email
+- reset password
+- templates HTML
+- SMTP Hostinger
+
+---
+
+# Communication temps réel
+
+Les communications temps réel utilisent **Socket.IO**.
+
+Namespaces :
+
+/poker
+/blackjack
+
+
+Fonctionnalités :
+
+- synchronisation instantanée des actions
+- chat par table
+- gestion des connexions
+- fermeture automatique des tables
+
+---
+
+# Base de données
+
+Le projet utilise **MySQL** avec **TypeORM**.
+
+Principales entités :
+
+- users
+- poker_tables
+- blackjack_tables
+- slot_spins
+- game_events
+- quests
+- email_tokens
+
+---
+
+# Installation
+
+## Cloner le projet
+
+```bash
+git clone https://github.com/username/the-river.git
+cd the-river
+```
+
+# Installer les dépendances
+
+```bash
+npm install
+```
+
+# Variables d'environnement
+créer le fichier .env
+
+```bash
 PORT=3000
 
-# JWT
-JWT_SECRET=your_secret_key
-JWT_EXPIRES_IN=1d
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASS=password
+DB_DATABASE=the_river
 
-# Database (SQLite)
-DB_TYPE=sqlite
-DB_NAME=poker.db
-</pre>
+JWT_SECRET=secret
 
-Pour générer une JWT_SECRET vous pouvez utiliser cette commande
-<pre>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</pre>
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=465
+MAIL_SECURE=true
+MAIL_USER=email@domain.com
+MAIL_PASS=password
+MAIL_FROM="THE RIVER <email@domain.com>"
+```
 
-Utilisation dans NestJS
-Les variables sont chargées via @nestjs/config.
+# Lancer le projet
 
-Exemple d’utilisation :
-<pre>
-process.env.JWT_SECRET
-process.env.DB_NAME
-</pre>
+## Developpement
 
-### Installer les dépendances
+```bash
+npm run start:dev
+```
 
-**IMPORTANT**  
-Si quelqu’un récupère le projet depuis GitHub, il doit **obligatoirement installer les dépendances Node**, car le dossier `node_modules` n’est **jamais versionné**.
+## Production
 
-<pre>npm install</pre>
+```bash
+npm run build
+npm run start:prod
+```
 
-### Dépendances principales
+# Évolutions futures
 
-En pratique, tout est déjà dans le package.json.
-Les commandes ci-dessous servent uniquement à vérifier.
+Plusieurs améliorations sont prévues pour enrichir l'expérience de jeu.
 
-TypeORM + SQLite
-<pre>npm install @nestjs/typeorm typeorm sqlite3</pre>
+## Mode Frénésie
 
-Auth JWT (Passport)
-<pre>npm install @nestjs/passport passport passport-jwt
-npm install -D @types/passport-jwt</pre>
+Un mode alternatif avec un gameplay différent pour varier les sessions.
 
-Swagger
-<pre>npm install @nestjs/swagger swagger-ui-express</pre>
+Fonctionnalités envisagées :
 
-## Lancer le projet
-<pre>npm run start:dev</pre>
+- items et bonus spécifiques à chaque jeu
+- monnaie dédiée au mode frénésie
+- progression indépendante du mode classique
+- équilibrage propre au mode
 
-API accessible sur :
-<pre>http://localhost:3000</pre>
+---
 
-## Documentation API (Swagger)
+## Personnalisation
 
-Le projet utilise **Swagger (OpenAPI)** pour documenter et tester l’API.
+Ajout d’un système de personnalisation du profil joueur.
 
-### Accès à Swagger
-Une fois l’application lancée :
-<pre>http://localhost:3000/api</pre>
+Fonctionnalités envisagées :
 
-### Authentification dans Swagger
-Les routes protégées utilisent **JWT (Bearer Token)**.
+- thèmes d’interface (skins)
+- avatars et cadres personnalisés
+- badges et succès
+- cartes et symboles personnalisés
 
-1. Appeler la route `/auth/login`
-2. Copier le `access_token`
-3. Cliquer sur **Authorize** (en haut à droite)
-4. Coller le token (sans `Bearer`)
+---
 
-Vous pouvez ensuite tester toutes les routes directement depuis Swagger.
+## Compétition Poker
 
-## Base de données (SQLite)
+Renforcement du système compétitif autour du poker.
 
-- Base de données SQLite via TypeORM
-- Un fichier .db est généré automatiquement
+Fonctionnalités envisagées :
 
-En cas de changement d’entités en développement :
-
-- supprimer le fichier .db
-- relancer le serveur
-
-<pre>npm run start:dev</pre>
-
-## Concept des tables
-
-Au démarrage, 3 tables sont créées automatiquement si elles n’existent pas.
-<pre>
-Table ID  Buy-in  SB  BB
-table-1	   100	  10  25
-table-2	   250    25  50
-table-3	   500	  50  100
-</pre>
-### Règles
-
-JOIN :
-
-- le buy-in est débité du solde
-- le joueur reçoit un stack = buy-in
-- la table reste en WAITING
-
-START :
-
-- uniquement l’owner
-- ajout automatique des bots
-- passage en IN_GAME
-
-## Authentification (JWT)
-
-Après login, un access_token est retourné.
-
-### Dans Postman :
-
-- Authorization
-- Type : Bearer Token
-- Coller le token JWT
-
-## Routes API (Postman)
-### Auth
-
-Register
-POST /auth/register
-<pre>
-{
-  "username": "player1",
-  "password": "password123"
-}
-</pre>
-Le joueur reçoit 1000 crédits à la création.
-
-Login
-POST /auth/login
-<pre>
-{
-  "username": "player1",
-  "password": "password123"
-}
-</pre>
-Réponse :
-<pre>
-{
-  "access_token": "..."
-}
-</pre>
-
-### Tables
-
-Voir toutes les tables
-GET /tables
-
-Voir une table
-GET /tables/:id
-
-Exemple :
-GET /tables/table-1
-
-Rejoindre une table (token obligatoire)
-POST /tables/:id/join
-
-Header :
-<pre>Authorization: Bearer TOKEN </pre>
-
-### Actions de jeu
-
-Start (token obligatoire)
-POST /tables/:id/start
-
-Voir sa main (token obligatoire)
-GET /tables/:id/hand
-
-Action (token obligatoire)
-POST /tables/:id/action
-<pre>
-{ "action": "CALL" }
-
-{ "action": "RAISE", "amount": 25 }
-
-{ "action": "BET", "amount": 20 }
-
-{ "action": "CHECK" }
-
-{ "action": "FOLD" }
-</pre>
-
-En PRE_FLOP, BET est interdit (blinds déjà posées).
-
-Voir sa main (token obligatoire)
-GET /tables/:id/hand
-
-### Phases manuelles (tests)
-Ces routes sont bloquées tant que tous les joueurs n’ont pas joué (sauf pour les bots ils jouent automatiquement au déclenchement du flop/turn/river/end-hand).
-
-FLOP
-POST /tables/:id/flop
-<pre>{ "playerId": "player1" }</pre>
-
-TURN
-POST /tables/:id/turn
-<pre>{ "playerId": "player1" }</pre>
-
-RIVER
-POST /tables/:id/river
-<pre>{ "playerId": "player1" }</pre>
-
-END-HAND
-POST /tables/:id/end-hand
-<pre>{ "playerId": "player1" }</pre>
-
-## Gestion des gains (showdown, all-in, side pots, egalites)
-
-A la fin d une main (apres le END-HAND), l API determine le ou les gagnants selon les règles du Texas Hold em.
-
-### Combinaisons gérées (ordre)
-1. Quinte Flush Royal
-2. Quinte Flush
-3. Carre
-4. Full
-5. Couleur
-6. Suite
-7. Brelan
-8. Double Paire
-9. Paire
-10. Hauteur
-
-### All-in et side pots
-- Les joueurs peuvent etre **all-in** (stack a 0) et restent eligibles au showdown.
-- Le pot est decoupe en **main pot** et **side pots** en fonction des contributions de chaque joueur.
-- Un joueur all-in ne peut gagner que les pots auxquels il est eligible (comme en vrai poker).
-
-### Egalites (split pot)
-- Si plusieurs joueurs ont exactement la meme meilleure main pour un pot, le pot est partage :
-  - `share = floor(pot / nbWinners)`
-  - `reste = pot % nbWinners`
-- Le reste est distribue de maniere deterministe selon l ordre des joueurs dans `table.players`.
-
-### Champs JSON retournes apres end-hand
-POST /tables/:id/end-hand
-la table renvoie :
-
-- `lastWinnerId` : gagnant du main pot (si egalite, le premier dans l ordre)
-- `lastWinnerHand` : les 2 cartes privees (hole cards) du gagnant du main pot
-- `lastWinnerHandDescription` : explication de la combinaison (ex: "Paire de 8", "Suite 7 8 9 10 J")
-- `lastWinners` : distribution complete (main pot + side pots).  
-  Il peut y avoir plusieurs lignes avec le meme `potIndex` en cas d egalite.
-
-Exemple :
-<pre>
-{
-  "lastWinnerId": "player1",
-  "lastWinnerHand": [
-    { "suit": "Piques", "rank": "8" },
-    { "suit": "Carreaux", "rank": "8" }
-  ],
-  "lastWinnerHandDescription": "Paire de 8",
-  "lastWinners": [
-    {
-      "potIndex": 0,
-      "amount": 120,
-      "winnerId": "player1",
-      "handDescription": "Paire de 8",
-      "bestFive": [
-        { "suit": "Piques", "rank": "8" },
-        { "suit": "Carreaux", "rank": "8" }
-      ]
-    }
-  ]
-}
-</pre>
-
-## Scénario Postman – Partie complète
-
-1. Register
-2. Login
-3. Join table
-4. Start game
-5. Voir sa main
-6. Actions PRE_FLOP
-7. FLOP
-8. Actions FLOP
-9. TURN
-10. Actions TURN
-11. RIVER
-12. Actions RIVER
-13. END-HAND
-
-## Règles importantes
-
-La table démarre en WAITING
-Le jeu démarre en PRE_FLOP
-
-1 burn card avant :
-- FLOP
-- TURN
-- RIVER
-
-Les bots complètent automatiquement les actions si nécessaire
-
-## Sécurité
-
-Les cartes sont protégées par JWT
-Impossible de voir la main d’un autre joueur
-Impossible de voir la main des bots
+- saisons compétitives
+- récompenses de fin de saison
+- reset du classement (ladder)
+- historique et statistiques persistées

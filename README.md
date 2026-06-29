@@ -7,6 +7,7 @@ Plateforme casino web avec un backend NestJS et un ancien front statique conserv
 ```txt
 the-river/
   back/                 API NestJS, TypeORM, MySQL, Socket.IO
+  front/                nouveau front Next.js
   front/legacy-static/  ancien front HTML/CSS/JS conserve sans refonte
   .env                  variables locales lues par le backend
 ```
@@ -73,6 +74,44 @@ npm test -- --runInBand
 npm run build
 ```
 
-## Front
+## Front Next.js
 
-Le dossier `front/legacy-static` contient l'ancien front. La future refonte React/Next pourra etre creee dans `front/` sans toucher au backend.
+```bash
+cd front
+npm install
+npm run dev
+```
+
+Front local:
+
+```txt
+http://127.0.0.1:3001
+```
+
+Variable utile cote front:
+
+```env
+API_PROXY_URL=http://127.0.0.1:3000
+```
+
+Par defaut, le front appelle `/api/*` sur Next.js, puis Next proxyfie vers le backend. Tu peux definir `NEXT_PUBLIC_API_URL` uniquement si tu veux appeler le backend directement depuis le navigateur.
+
+Pages principales:
+
+```txt
+/
+/login
+/register
+/dashboard
+/games
+/games/poker
+/games/blackjack
+/games/roulette
+/games/slots
+/games/craps
+/easter-egg
+```
+
+## Ancien Front
+
+Le dossier `front/legacy-static` contient l'ancien front HTML/CSS/JS. Il reste disponible comme reference pendant la migration vers le nouveau front Next.js.

@@ -14,8 +14,10 @@ export function getSocketCorsOrigins(): string[] | boolean {
   if (!raw || raw.trim() === '') return isProduction ? false : LOCAL_DEV_ORIGINS;
   if (raw.trim() === '*') return !isProduction;
 
-  return raw
+  const configured = raw
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+  return isProduction ? configured : Array.from(new Set([...configured, ...LOCAL_DEV_ORIGINS]));
 }

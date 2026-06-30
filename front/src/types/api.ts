@@ -19,9 +19,14 @@ export type Quest = {
   label?: string;
   description?: string;
   progress?: number;
+  goal?: number;
   target?: number;
+  canClaim?: boolean;
   completed?: boolean;
   claimed?: boolean;
+  cooldownHours?: number;
+  nextAvailableAt?: string | null;
+  lastClaimedAt?: string | null;
   rewardCredits?: number;
   rewardPoints?: number;
   type?: string;

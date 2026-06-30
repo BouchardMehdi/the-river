@@ -6,6 +6,7 @@
 /front/node_modules
 /build
 /front/.next
+/front/.next-build
 /front/dist
 /front/build
 

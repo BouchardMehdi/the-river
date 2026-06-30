@@ -3,14 +3,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Coins, Home, LayoutDashboard, LogIn, LogOut, Trophy } from 'lucide-react';
+import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/auth-context';
 
 const nav = [
   { href: '/', label: 'Accueil', icon: Home },
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/games/poker', label: 'Poker', icon: Trophy },
-  { href: '/games/slots', label: 'Slots', icon: Coins },
+  { href: '/games', label: 'Games', icon: Gamepad2 },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -28,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="topnav" aria-label="Navigation principale">
           {nav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = item.href === '/games' ? pathname.startsWith('/games') : pathname === item.href;
             return (
               <Link key={item.href} href={item.href} className={active ? 'navlink active' : 'navlink'}>
                 <Icon size={18} />
@@ -43,7 +42,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <>
               <Link className="balance-pill" href="/dashboard">
                 <Coins size={17} />
-                <span>{user.credits} crédits</span>
+                <span>{user.credits} credits</span>
               </Link>
               <button className="icon-button" onClick={logout} title="Se deconnecter" type="button">
                 <LogOut size={18} />

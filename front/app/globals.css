@@ -721,6 +721,34 @@ main {
   box-shadow: var(--shadow);
 }
 
+.benefit-card,
+.landing-game-card,
+.analytics-card,
+.metric-card,
+.sidebar-balance,
+.quest-mini-card,
+.dashboard-menu-item,
+.button,
+.icon-button {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+
+.interactive-card:hover,
+.benefit-card:hover,
+.landing-game-card:hover,
+.metric-card:hover,
+.sidebar-balance:hover {
+  transform: translateY(-3px);
+  border-color: rgba(216, 168, 79, 0.42);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.34);
+}
+
 .benefit-card {
   min-height: 170px;
   padding: 24px;
@@ -910,6 +938,10 @@ main {
   background: rgba(255, 255, 255, 0.06);
 }
 
+.dashboard-menu-item:hover {
+  transform: translateX(3px);
+}
+
 .sidebar-balance {
   margin-top: auto;
   padding: 20px;
@@ -929,6 +961,9 @@ main {
 }
 
 .sidebar-balance a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #fff8e9;
 }
 
@@ -980,6 +1015,15 @@ main {
   border-radius: 8px;
   color: #c5d0d1;
   background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font: inherit;
+}
+
+.date-filter.active,
+.date-filter:hover {
+  color: #03130c;
+  background: #d8a84f;
+  border-color: rgba(216, 168, 79, 0.65);
 }
 
 .dashboard-kpis {
@@ -994,6 +1038,12 @@ main {
   align-content: center;
   gap: 10px;
   padding: 22px;
+}
+
+.metric-card.accent {
+  background:
+    radial-gradient(circle at 86% 18%, rgba(216, 168, 79, 0.22), transparent 35%),
+    linear-gradient(180deg, rgba(22, 35, 45, 0.95), rgba(7, 16, 23, 0.98));
 }
 
 .metric-card strong {
@@ -1099,6 +1149,61 @@ main {
   stroke-width: 2;
 }
 
+.chart-line,
+.chart-point {
+  transition: opacity 180ms ease, stroke-width 180ms ease;
+}
+
+.chart-card:hover .chart-line {
+  stroke-width: 4;
+}
+
+.game-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.game-stat-card {
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.92), rgba(6, 14, 21, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.game-stat-card img {
+  width: 120px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.32));
+  transition: transform 180ms ease;
+}
+
+.game-stat-card:hover img {
+  transform: scale(1.06) rotate(-1deg);
+}
+
+.game-stat-card div {
+  display: grid;
+  gap: 6px;
+}
+
+.game-stat-card span,
+.game-stat-card em {
+  color: #aebcc0;
+  font-style: normal;
+}
+
+.game-stat-card strong {
+  font-size: 22px;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 0.85fr);
@@ -1154,6 +1259,15 @@ main {
   gap: 16px;
 }
 
+.best-game-image {
+  width: 110px;
+  height: 82px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.32));
+}
+
 .slot-badge {
   width: 76px;
   height: 70px;
@@ -1207,6 +1321,28 @@ main {
   color: #e8f0ef;
 }
 
+.activity-row {
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.activity-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+  transform: translateX(3px);
+}
+
+.activity-game {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.activity-game img {
+  width: 34px;
+  height: 28px;
+  object-fit: contain;
+}
+
 .quests-card {
   display: grid;
   gap: 16px;
@@ -1219,9 +1355,10 @@ main {
 }
 
 .quest-mini-card {
-  min-height: 140px;
+  min-height: 190px;
   display: grid;
-  gap: 8px;
+  align-content: start;
+  gap: 10px;
   padding: 16px;
 }
 
@@ -1234,8 +1371,115 @@ main {
   font-size: 16px;
 }
 
-.quest-mini-card span {
+.quest-mini-card span,
+.quest-mini-card p {
   color: #aebcc0;
+}
+
+.quest-mini-card p {
+  margin: 0;
+  min-height: 42px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.quest-topline,
+.quest-footer,
+.leader-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quest-status {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.quest-status.ready {
+  color: #03130c;
+  background: #25df98;
+}
+
+.quest-status.progress {
+  color: #f1d28a;
+  background: rgba(216, 168, 79, 0.12);
+}
+
+.quest-status.cooldown {
+  color: #9fd4ff;
+  background: rgba(65, 147, 255, 0.14);
+}
+
+.quest-status.claimed {
+  color: #c5d0d1;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.quest-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.quest-progress span {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d8a84f, #25df98);
+}
+
+.quest-footer strong {
+  color: #f1d28a;
+}
+
+.secret-key-card {
+  min-height: 130px;
+}
+
+.empty-quest {
+  grid-column: span 2;
+}
+
+.leaderboard-card {
+  display: grid;
+  gap: 16px;
+}
+
+.leader-list {
+  display: grid;
+  gap: 10px;
+}
+
+.leader-row {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.leader-row span {
+  color: #f1d28a;
+  font-weight: 900;
+}
+
+.leader-row em {
+  color: #aebcc0;
+  font-style: normal;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
 }
 
 @media (max-width: 900px) {
@@ -1294,6 +1538,7 @@ main {
   }
 
   .dashboard-kpis,
+  .game-stat-grid,
   .benefit-grid,
   .landing-games,
   .quest-strip {
@@ -1350,10 +1595,20 @@ main {
   }
 
   .dashboard-kpis,
+  .game-stat-grid,
   .benefit-grid,
   .landing-games,
   .quest-strip {
     grid-template-columns: 1fr;
+  }
+
+  .game-stat-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .game-stat-card img {
+    width: 96px;
+    height: 78px;
   }
 
   .dashboard-main {
@@ -1379,6 +1634,10 @@ main {
     padding: 12px 0;
   }
 
+  .empty-quest {
+    grid-column: auto;
+  }
+
   .landing-copy h1 {
     font-size: 42px;
   }
@@ -1395,5 +1654,385 @@ main {
   .roulette-wheel {
     right: -30px;
     width: 360px;
+  }
+}
+
+/* Dashboard refresh */
+.dashboard-shell.dashboard-modern {
+  width: min(1560px, calc(100% - 28px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 20px;
+  align-items: start;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard-shell.dashboard-modern.leaderboard-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboard-modern .dashboard-main {
+  min-width: 0;
+  padding: 0;
+}
+
+.dashboard-modern .dashboard-header,
+.dashboard-panel,
+.quest-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.92), rgba(6, 14, 21, 0.96));
+  box-shadow: var(--shadow);
+}
+
+.dashboard-modern .dashboard-header {
+  padding: 22px 24px;
+}
+
+.dashboard-modern .dashboard-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.quest-open-button {
+  position: relative;
+}
+
+.quest-open-button strong {
+  min-width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #03130c;
+  background: #25df98;
+  font-size: 12px;
+}
+
+.segmented-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(150, 174, 190, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.segmented-control.full {
+  width: 100%;
+}
+
+.segmented-control button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  color: #aebcc0;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.segmented-control.full button {
+  flex: 1;
+}
+
+.segmented-control button.active,
+.segmented-control button:hover {
+  color: #03130c;
+  background: #d8a84f;
+}
+
+.dashboard-modern .dashboard-kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-grid.compact {
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+}
+
+.chart-wrap {
+  position: relative;
+}
+
+.dashboard-modern .performance-chart {
+  min-height: 320px;
+}
+
+.chart-point-button {
+  cursor: pointer;
+  outline: none;
+}
+
+.chart-point-button:focus .chart-point,
+.chart-point-button:hover .chart-point {
+  filter: drop-shadow(0 0 8px rgba(241, 210, 138, 0.95));
+  stroke-width: 3;
+}
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 3;
+  min-width: 150px;
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid rgba(216, 168, 79, 0.38);
+  border-radius: 8px;
+  background: rgba(4, 12, 18, 0.96);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, calc(-100% - 12px));
+  pointer-events: none;
+}
+
+.chart-tooltip span {
+  color: #aebcc0;
+  font-size: 12px;
+}
+
+.chart-tooltip strong,
+.activity-table.compact strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chart-tooltip em,
+.chart-tooltip small {
+  font-style: normal;
+  font-size: 12px;
+}
+
+.chart-tooltip small {
+  color: #aebcc0;
+}
+
+.donut-svg {
+  width: 220px;
+  min-width: 220px;
+  height: 220px;
+  overflow: visible;
+}
+
+.donut-slice {
+  cursor: pointer;
+  transition: filter 180ms ease, opacity 180ms ease, transform 180ms ease;
+  transform-origin: 110px 110px;
+}
+
+.donut-slice:hover {
+  opacity: 0.96;
+  transform: scale(1.025);
+}
+
+.donut-center-label {
+  fill: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.donut-center-value {
+  fill: #fff8e9;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.distribution-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.distribution-item em {
+  grid-column: 1 / -1;
+  color: #aebcc0;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.distribution-item.active {
+  color: #f1d28a;
+  transform: translateX(4px);
+}
+
+.activity-table.compact {
+  gap: 0;
+}
+
+.activity-table.compact .activity-row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 58px;
+}
+
+.activity-table.compact.expanded .activity-row {
+  grid-template-columns: minmax(0, 1.2fr) 0.7fr 0.9fr auto auto;
+}
+
+.activity-empty {
+  min-height: 58px;
+  display: grid;
+  place-items: center;
+  color: #aebcc0;
+  border: 1px dashed rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+}
+
+.dashboard-panel {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.panel-heading h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+}
+
+.panel-heading p,
+.panel-empty {
+  margin: 0;
+  color: #aebcc0;
+}
+
+.dashboard-panel .sidebar-balance {
+  margin-top: 0;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  border: 0;
+  background: rgba(0, 0, 0, 0.48);
+  cursor: pointer;
+}
+
+.quest-drawer {
+  position: fixed;
+  z-index: 51;
+  top: 0;
+  right: 0;
+  width: min(520px, 100vw);
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+  padding: 22px;
+  border-radius: 8px 0 0 8px;
+  transform: translateX(105%);
+  transition: transform 220ms ease;
+}
+
+.quest-drawer.open {
+  transform: translateX(0);
+}
+
+.quest-drawer-list {
+  display: grid;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.quest-drawer .quest-mini-card {
+  min-height: auto;
+}
+
+.secret-keys {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.secret-keys h3 {
+  margin: 0 0 6px;
+}
+
+.secret-key-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 34px;
+  color: #aebcc0;
+}
+
+.secret-key-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #f1d28a;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-shell.dashboard-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-panel {
+    position: static;
+  }
+
+  .dashboard-grid.compact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-modern .dashboard-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-modern .dashboard-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-modern .dashboard-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-shell.dashboard-modern {
+    width: min(100% - 20px, 1560px);
+    margin-top: 18px;
+  }
+
+  .dashboard-modern .dashboard-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-modern .card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .donut-row {
+    align-items: center;
+  }
+
+  .activity-table.compact .activity-row {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-drawer {
+    width: 100vw;
+    border-radius: 0;
   }
 }

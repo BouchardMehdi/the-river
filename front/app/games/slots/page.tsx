@@ -94,7 +94,7 @@ function SlotsContent() {
               <div className="table-meta">
                 <span className="chip">Gain {latest.payout}</span>
                 <span className="chip">Total {result.totalPayout}</span>
-                <span className="chip">Solde {result.credits}</span>
+                <span className="chip">Solde {result.credits} crédits</span>
               </div>
             </div>
           ) : (

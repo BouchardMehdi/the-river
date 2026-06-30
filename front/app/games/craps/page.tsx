@@ -68,7 +68,7 @@ function CrapsContent() {
                 <span className="chip">Total {result.total}</span>
                 <span className="chip">{result.win ? 'Gagne' : 'Perdu'}</span>
                 <span className="chip">Net {result.net}</span>
-                <span className="chip">Solde {result.credits}</span>
+                <span className="chip">Solde {result.credits} crédits</span>
               </div>
             </div>
           ) : (

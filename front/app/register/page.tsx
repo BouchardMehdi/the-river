@@ -56,7 +56,7 @@ export default function RegisterPage() {
         <form className="auth-panel" onSubmit={onRegister}>
           <div>
             <h1>Inscription</h1>
-            <p>Demarre avec 1000 credits et debloque les quetes.</p>
+            <p>Demarre avec 1000 crédits et debloque les quetes.</p>
           </div>
           {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
           <label className="field">

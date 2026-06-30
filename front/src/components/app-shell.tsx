@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <>
               <Link className="balance-pill" href="/dashboard">
                 <Coins size={17} />
-                <span>{user.credits}</span>
+                <span>{user.credits} crédits</span>
               </Link>
               <button className="icon-button" onClick={logout} title="Se deconnecter" type="button">
                 <LogOut size={18} />

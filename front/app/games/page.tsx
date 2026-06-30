@@ -1,34 +1,119 @@
+import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight, CircleDot, Sparkles } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 const games = [
-  ['Poker', '/games/poker', 'Tables, blinds, actions et showdown.'],
-  ['Blackjack', '/games/blackjack', 'Lobby, mises, hit, stand et dealer.'],
-  ['Roulette', '/games/roulette', 'Paris rapides et resultats instantanes.'],
-  ['Slots', '/games/slots', 'Machines 3x3, 3x5 et 5x5.'],
-  ['Craps', '/games/craps', 'Jeu secret lie aux cles.'],
-];
+  {
+    href: '/games/slots',
+    image: '/assets/home/game-slot.png',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Machine a sous',
+    text: 'Machines rapides, spins courts et resultats instantanes.',
+    tone: 'blue',
+  },
+  {
+    href: '/games/roulette',
+    image: '/assets/home/game-roulette.png',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Roulette',
+    text: 'Paris simples, mises rapides et suivi direct des gains.',
+    tone: 'green',
+  },
+  {
+    href: '/games/poker',
+    image: '/assets/home/game-poker.png',
+    kind: 'Table',
+    status: 'Multijoueur',
+    title: 'Poker',
+    text: 'Tables, blinds, actions et showdown entre joueurs.',
+    tone: 'red',
+  },
+  {
+    href: '/games/blackjack',
+    image: '/assets/home/game-blackjack.png',
+    kind: 'Table',
+    status: 'Multijoueur',
+    title: 'Blackjack',
+    text: 'Lobby, mises, hit, stand et dealer automatique.',
+    tone: 'gold',
+  },
+  {
+    href: '/games/craps',
+    image: '/assets/logo-the-river.png',
+    kind: 'Secret',
+    status: 'A debloquer',
+    title: 'Craps',
+    text: 'Jeu cache lie aux cles et aux routes secretes.',
+    tone: 'secret',
+  },
+] as const;
+
+const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;
+const featured = games[dayIndex];
 
 export default function GamesPage() {
   return (
-    <section className="page">
-      <div className="page-title">
-        <div>
-          <h1>Jeux</h1>
-          <p>Choisis ta table ou lance une session solo.</p>
+    <section className="games-page">
+      <header className="games-hero">
+        <div className="games-hero-copy">
+          <span className="welcome-pill">
+            <Sparkles size={15} /> Hub des jeux
+          </span>
+          <h1>Choisis ta table.</h1>
+          <p>Lance une session, rejoins une table ou explore les jeux secrets de THE RIVER.</p>
+          <div className="button-row">
+            <Link className="button" href={featured.href}>
+              Jouer maintenant <ArrowRight size={17} />
+            </Link>
+            <Link className="button secondary" href="/dashboard">
+              Voir mes stats
+            </Link>
+          </div>
         </div>
-      </div>
-      <div className="grid three">
-        {games.map(([title, href, text]) => (
-          <Link className="game-card" href={href} key={href}>
-            <span className="mark">{title[0]}</span>
-            <div>
-              <h2>{title}</h2>
-              <p>{text}</p>
-            </div>
-            <span className="tag">Ouvrir</span>
-          </Link>
-        ))}
-      </div>
+
+        <Link className="featured-game-card" href={featured.href}>
+          <div>
+            <span>{featured.status}</span>
+            <h2>{featured.title}</h2>
+            <p>{featured.text}</p>
+          </div>
+          <Image src={featured.image} alt={featured.title} width={360} height={260} priority />
+        </Link>
+      </header>
+
+      <section className="games-library">
+        <div className="section-heading games-heading">
+          <div>
+            <h2>Tous les jeux</h2>
+            <p>Chaque carte ouvre la vraie page de jeu correspondante.</p>
+          </div>
+        </div>
+
+        <div className="games-grid">
+          {games.map((game) => (
+            <Link className={`casino-game-card ${game.tone}`} href={game.href} key={game.href}>
+              <div className="casino-game-image">
+                <Image className={`game-art game-art-${game.tone}`} src={game.image} alt={game.title} width={420} height={260} />
+              </div>
+              <div className="casino-game-body">
+                <div className="casino-game-meta">
+                  <span><CircleDot size={13} /> {game.kind}</span>
+                  <em>{game.status}</em>
+                </div>
+                <h3>{game.title}</h3>
+                <p>{game.text}</p>
+                <span className="button secondary small">
+                  Ouvrir <ArrowRight size={15} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
     </section>
   );
 }

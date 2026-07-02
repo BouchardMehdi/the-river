@@ -74,7 +74,7 @@ export class BlackjackController {
     return this.blackjackService.placeBetByCode(code, dto.amount, user);
   }
 
-  // Action joueur : hit / stand
+  // Action joueur : hit / stand / double / split
   @Post("tables/:code/action")
   action(
     @Param("code") code: string,
@@ -82,9 +82,9 @@ export class BlackjackController {
     @CurrentUser() user: JwtUser
   ) {
     const act = dto?.action;
-    if (act !== "hit" && act !== "stand") {
+    if (act !== "hit" && act !== "stand" && act !== "double" && act !== "split") {
       throw new BadRequestException(
-        'INVALID_ACTION_BODY_EXPECTED: {"action":"hit"} or {"action":"stand"}'
+        'INVALID_ACTION_BODY_EXPECTED: {"action":"hit"}, {"action":"stand"}, {"action":"double"} or {"action":"split"}'
       );
     }
     return this.blackjackService.playerActionByCode(code, act, user);

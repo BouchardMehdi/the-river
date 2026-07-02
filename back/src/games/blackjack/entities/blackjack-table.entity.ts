@@ -10,6 +10,7 @@ import {
 import { BlackjackTablePlayer } from './blackjack-table-player.entity';
 
 export type BlackjackTableStatus = 'waiting' | 'in_game' | 'finished';
+export type BlackjackTableVisibility = 'PUBLIC' | 'PRIVATE';
 
 @Entity('blackjack_tables')
 @Index('UQ_blackjack_tables_code', ['code'], { unique: true })
@@ -34,6 +35,9 @@ export class BlackjackTable {
 
   @Column({ type: 'varchar', length: 16, default: 'waiting' })
   status: BlackjackTableStatus;
+
+  @Column({ type: 'varchar', length: 8, default: 'PUBLIC' })
+  visibility: BlackjackTableVisibility;
 
   @Column({ type: 'int' })
   ownerId: number;

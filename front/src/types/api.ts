@@ -66,6 +66,7 @@ export type BlackjackTable = {
   minBet: number;
   tableMaxBet?: number | null;
   maxPlayers: number;
+  visibility?: 'PUBLIC' | 'PRIVATE';
   players?: Array<{ userId: number; username: string }>;
 };
 
@@ -87,9 +88,22 @@ export type BlackjackState = {
         cards: Card[];
         status: string;
         value: number;
+        activeHandIndex?: number;
+        hands?: Array<{
+          id: string;
+          bet: number;
+          cards: Card[];
+          status: string;
+          value: number;
+          active?: boolean;
+          canSplit?: boolean;
+          canDouble?: boolean;
+          doubled?: boolean;
+          splitFromPair?: boolean;
+        }>;
       }
     >;
-    roundResult?: { message: string; netWins: Record<string, number> } | null;
+    roundResult?: { message: string; winners: string[]; netWins: Record<string, number> } | null;
   };
   you: { userId: number; username: string };
 };

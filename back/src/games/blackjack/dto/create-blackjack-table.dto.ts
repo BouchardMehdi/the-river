@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 export class CreateBlackjackTableDto {
   @IsString()
@@ -18,4 +18,8 @@ export class CreateBlackjackTableDto {
   @IsInt()
   @Min(1)
   tableMaxBet?: number;
+
+  @IsOptional()
+  @IsIn(["PUBLIC", "PRIVATE"])
+  visibility?: "PUBLIC" | "PRIVATE";
 }

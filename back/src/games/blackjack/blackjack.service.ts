@@ -45,12 +45,23 @@ type PlayerRoundStatus =
   | "blackjack"
   | "done";
 
+type BlackjackHand = {
+  id: string;
+  bet: number;
+  cards: Card[];
+  status: PlayerRoundStatus;
+  doubled?: boolean;
+  splitFromPair?: boolean;
+};
+
 type PlayerRoundState = {
   userId: number;
   username: string;
   bet: number;
   cards: Card[];
   status: PlayerRoundStatus;
+  hands?: BlackjackHand[];
+  activeHandIndex?: number;
 };
 
 type GamePhase = "betting" | "player_turns" | "dealer_turn" | "finished";
@@ -79,6 +90,8 @@ type GameState = {
 
 @Injectable()
 export class BlackjackService {
+  private visibilityColumnReady = false;
+
   constructor(
     @InjectRepository(BlackjackTable)
     private tablesRepo: Repository<BlackjackTable>,
@@ -91,6 +104,19 @@ export class BlackjackService {
     private readonly blackjackChatGateway: BlackjackChatGateway,
     private readonly statsService: StatsService
   ) {}
+
+  private async ensureVisibilityColumn(): Promise<void> {
+    if (this.visibilityColumnReady) return;
+
+    const columns = await this.dataSource.query("SHOW COLUMNS FROM `blackjack_tables` LIKE 'visibility'");
+    if (!Array.isArray(columns) || columns.length === 0) {
+      await this.dataSource.query(
+        "ALTER TABLE `blackjack_tables` ADD COLUMN `visibility` varchar(8) NOT NULL DEFAULT 'PUBLIC'"
+      );
+    }
+
+    this.visibilityColumnReady = true;
+  }
 
   // ============================================================
   // Helpers Table Code
@@ -179,6 +205,45 @@ export class BlackjackService {
     return cards.length === 2 && this.handValue(cards) === 21;
   }
 
+  private blackjackRankValue(card: Card): number {
+    return this.cardValue(card.rank) === 11 ? 11 : Math.min(10, this.cardValue(card.rank));
+  }
+
+  private canSplitHand(hand: BlackjackHand): boolean {
+    return hand.cards.length === 2 && this.blackjackRankValue(hand.cards[0]) === this.blackjackRankValue(hand.cards[1]);
+  }
+
+  private makeHand(id: string, bet: number, cards: Card[] = [], splitFromPair = false): BlackjackHand {
+    return {
+      id,
+      bet,
+      cards,
+      status: "playing",
+      splitFromPair,
+    };
+  }
+
+  private ensurePlayerHands(player: PlayerRoundState): BlackjackHand[] {
+    if (!Array.isArray(player.hands) || player.hands.length === 0) {
+      player.hands = [this.makeHand("main", player.bet, player.cards ?? [])];
+    }
+    if (typeof player.activeHandIndex !== "number") player.activeHandIndex = 0;
+    return player.hands;
+  }
+
+  private activeHand(player: PlayerRoundState): BlackjackHand | null {
+    const hands = this.ensurePlayerHands(player);
+    return hands[player.activeHandIndex ?? 0] ?? null;
+  }
+
+  private syncPlayerFromHands(player: PlayerRoundState) {
+    const hands = this.ensurePlayerHands(player);
+    const active = hands[player.activeHandIndex ?? 0] ?? hands[0];
+    player.bet = hands.reduce((sum, hand) => sum + Math.max(0, Number(hand.bet) || 0), 0);
+    player.cards = active?.cards ?? [];
+    player.status = active?.status ?? "waiting";
+  }
+
   private draw(state: GameState): Card {
     if (state.shoe.length === 0) {
       state.shoe = this.buildShoeSixDecks();
@@ -208,6 +273,14 @@ export class BlackjackService {
       const s = JSON.parse(game.stateJson) as GameState;
       // harden si vieilles données en DB
       if (!("roundResult" in (s as any))) (s as any).roundResult = null;
+      for (const player of Object.values((s as any).players ?? {})) {
+        const roundPlayer = player as PlayerRoundState;
+        if (!Array.isArray(roundPlayer.hands)) {
+          roundPlayer.hands = [this.makeHand("main", Number(roundPlayer.bet ?? 0), roundPlayer.cards ?? [])];
+        }
+        if (typeof roundPlayer.activeHandIndex !== "number") roundPlayer.activeHandIndex = 0;
+        this.syncPlayerFromHands(roundPlayer);
+      }
       return s;
     } catch {
       throw new BadRequestException("CORRUPTED_GAME_STATE");
@@ -215,6 +288,7 @@ export class BlackjackService {
   }
 
   private async saveState(game: BlackjackGame, state: GameState) {
+    for (const player of Object.values(state.players)) this.syncPlayerFromHands(player);
     game.stateJson = JSON.stringify(state);
     await this.gamesRepo.save(game);
   }
@@ -232,6 +306,7 @@ export class BlackjackService {
   }
 
   private async getTableByCodeOrThrow(code: string) {
+    await this.ensureVisibilityColumn();
     const normalized = this.normalizeCode(code);
     const table = await this.tablesRepo.findOne({
       where: { code: normalized } as any,
@@ -247,9 +322,21 @@ export class BlackjackService {
 
     const playersWithValue: Record<string, any> = {};
     for (const [k, p] of Object.entries(state.players)) {
+      const hands = this.ensurePlayerHands(p);
+      const activeHand = hands[p.activeHandIndex ?? 0] ?? hands[0];
       playersWithValue[k] = {
         ...p,
-        value: this.handValue(p.cards),
+        cards: activeHand?.cards ?? p.cards,
+        status: activeHand?.status ?? p.status,
+        value: activeHand ? this.handValue(activeHand.cards) : this.handValue(p.cards),
+        hands: hands.map((hand, index) => ({
+          ...hand,
+          value: this.handValue(hand.cards),
+          active: index === (p.activeHandIndex ?? 0),
+          canSplit: hand.status === "playing" && this.canSplitHand(hand),
+          canDouble: hand.status === "playing" && hand.cards.length === 2,
+        })),
+        activeHandIndex: p.activeHandIndex ?? 0,
       };
     }
 
@@ -269,19 +356,23 @@ export class BlackjackService {
   // Lobby / Tables
   // ============================================================
   async listTables() {
+    await this.ensureVisibilityColumn();
     return this.tablesRepo.find({
+      where: { visibility: "PUBLIC" as any } as any,
       order: { createdAt: "DESC" } as any,
       relations: ["players"],
     });
   }
 
   async getTableByCode(code: string) {
+    await this.ensureVisibilityColumn();
     const { table } = await this.getTableByCodeOrThrow(code);
     return table;
   }
 
   // ✅ CREATE TABLE (génère code 6 lettres)
   async createTable(dto: any, jwt: JwtUser) {
+    await this.ensureVisibilityColumn();
     const user = await this.usersService.findByUsername(jwt.username);
     if (!user) throw new NotFoundException("USER_NOT_FOUND");
 
@@ -303,6 +394,7 @@ export class BlackjackService {
         throw new BadRequestException("INVALID_TABLE_MAX_BET");
       if (tableMaxBet < minBet) throw new BadRequestException("TABLE_MAX_BET_TOO_LOW");
     }
+    const visibility = dto.visibility === "PRIVATE" ? "PRIVATE" : "PUBLIC";
 
     return this.dataSource.transaction(async (manager) => {
       const tablesRepo = manager.getRepository(BlackjackTable);
@@ -317,7 +409,8 @@ export class BlackjackService {
         maxPlayers,
         minBet,
         tableMaxBet,
-        status: "lobby" as any,
+        status: "waiting" as any,
+        visibility: visibility as any,
         ownerId: jwt.userId,
       });
 
@@ -357,6 +450,7 @@ export class BlackjackService {
 
   // ✅ join autorisé même si in_game (attend prochain tour)
   async joinTableByCode(code: string, jwt: JwtUser) {
+    await this.ensureVisibilityColumn();
     return this.dataSource.transaction(async (manager) => {
       const tablesRepo = manager.getRepository(BlackjackTable);
       const playersRepo = manager.getRepository(BlackjackTablePlayer);
@@ -396,12 +490,14 @@ export class BlackjackService {
 
         if (!state.players[String(jwt.userId)]) {
           state.players[String(jwt.userId)] = {
-            userId: jwt.userId,
-            username: user.username,
-            bet: 0,
-            cards: [],
-            status: "waiting",
-          };
+          userId: jwt.userId,
+          username: user.username,
+          bet: 0,
+          cards: [],
+          status: "waiting",
+          hands: [],
+          activeHandIndex: 0,
+        };
         }
 
         if (table.status === "in_game" && !state.waitingPlayers.includes(jwt.userId)) {
@@ -418,6 +514,7 @@ export class BlackjackService {
   }
 
   async leaveTableByCode(code: string, jwt: JwtUser) {
+    await this.ensureVisibilityColumn();
     return this.dataSource.transaction(async (manager) => {
       const tablesRepo = manager.getRepository(BlackjackTable);
       const playersRepo = manager.getRepository(BlackjackTablePlayer);
@@ -501,11 +598,15 @@ export class BlackjackService {
             bet: 0,
             cards: [],
             status: "waiting",
+            hands: [],
+            activeHandIndex: 0,
           };
         } else {
           state.players[String(p.userId)].bet = 0;
           state.players[String(p.userId)].cards = [];
           state.players[String(p.userId)].status = "waiting";
+          state.players[String(p.userId)].hands = [];
+          state.players[String(p.userId)].activeHandIndex = 0;
         }
       }
 
@@ -547,24 +648,30 @@ export class BlackjackService {
     state.roundResult = null;
 
     for (const uid of active) {
-      state.players[String(uid)].cards = [];
-      state.players[String(uid)].status = "playing";
+      const player = state.players[String(uid)];
+      const originalBet = Number(player.bet) || 0;
+      player.hands = [this.makeHand("main", originalBet)];
+      player.activeHandIndex = 0;
+      player.cards = [];
+      player.status = "playing";
     }
 
     state.turnOrder = active;
     state.currentTurnIndex = 0;
 
     // deal order
-    for (const uid of state.turnOrder) state.players[String(uid)].cards.push(this.draw(state));
+    for (const uid of state.turnOrder) this.ensurePlayerHands(state.players[String(uid)])[0].cards.push(this.draw(state));
     state.dealer.cards.push(this.draw(state));
-    for (const uid of state.turnOrder) state.players[String(uid)].cards.push(this.draw(state));
+    for (const uid of state.turnOrder) this.ensurePlayerHands(state.players[String(uid)])[0].cards.push(this.draw(state));
     state.dealer.cards.push(this.draw(state));
 
     // blackjack auto-skip
     for (const uid of state.turnOrder) {
       const p = state.players[String(uid)];
-      if (this.isBlackjackTwoCards(p.cards)) {
-        p.status = "blackjack";
+      const hand = this.ensurePlayerHands(p)[0];
+      if (this.isBlackjackTwoCards(hand.cards)) {
+        hand.status = "blackjack";
+        this.syncPlayerFromHands(p);
         this.blackjackChatGateway.emitSystemToTable(tableCode, `${p.username} a BLACKJACK !`);
       }
     }
@@ -645,6 +752,8 @@ export class BlackjackService {
           bet: 0,
           cards: [],
           status: "waiting" as PlayerRoundStatus,
+          hands: [],
+          activeHandIndex: 0,
         };
 
       if (ps.bet > 0) throw new BadRequestException("BET_ALREADY_PLACED");
@@ -654,6 +763,8 @@ export class BlackjackService {
       ps.bet = amount;
       ps.cards = [];
       ps.status = "playing";
+      ps.hands = [this.makeHand("main", amount)];
+      ps.activeHandIndex = 0;
       state.players[String(jwt.userId)] = ps;
 
       await this.saveState(game, state);
@@ -666,7 +777,7 @@ export class BlackjackService {
     });
   }
 
-  async playerActionByCode(code: string, action: "hit" | "stand", jwt: JwtUser) {
+  async playerActionByCode(code: string, action: "hit" | "stand" | "double" | "split", jwt: JwtUser) {
     const { table, normalized } = await this.getTableByCodeOrThrow(code);
     if (table.status !== "in_game") throw new BadRequestException("GAME_NOT_STARTED");
 
@@ -702,24 +813,62 @@ export class BlackjackService {
         return this.getStateByCode(normalized, jwt);
       }
 
-      if (ps.status !== "playing") throw new BadRequestException("YOU_CANNOT_ACT");
+      const hands = this.ensurePlayerHands(ps);
+      const hand = this.activeHand(ps);
+      if (!hand || hand.status !== "playing") throw new BadRequestException("YOU_CANNOT_ACT");
 
       if (action === "hit") {
-        ps.cards.push(this.draw(state));
-        const v = this.handValue(ps.cards);
-        this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} HIT (${v}).`);
+        hand.cards.push(this.draw(state));
+        const v = this.handValue(hand.cards);
+        this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} tire une carte (${v}).`);
 
         if (v > 21) {
-          ps.status = "bust";
-          this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} BUST (${v}).`);
+          hand.status = "bust";
+          this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} saute (${v}).`);
+        } else if (v === 21) {
+          hand.status = "stand";
         }
-      } else {
-        ps.status = "stand";
-        const v = this.handValue(ps.cards);
-        this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} STAND (${v}).`);
+      } else if (action === "stand") {
+        hand.status = "stand";
+        const v = this.handValue(hand.cards);
+        this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} reste (${v}).`);
+      } else if (action === "double") {
+        if (hand.cards.length !== 2) throw new BadRequestException("DOUBLE_ONLY_ON_FIRST_TWO_CARDS");
+        const maxBet = table.tableMaxBet ?? null;
+        if (maxBet !== null && hand.bet * 2 > Number(maxBet)) throw new BadRequestException("DOUBLE_EXCEEDS_TABLE_MAX");
+
+        await this.usersService.debitCreditsByUsername(jwt.username, hand.bet);
+        hand.bet *= 2;
+        hand.doubled = true;
+        hand.cards.push(this.draw(state));
+        const v = this.handValue(hand.cards);
+        hand.status = v > 21 ? "bust" : "stand";
+        this.blackjackChatGateway.emitSystemToTable(
+          normalized,
+          `${ps.username} double sa mise et tire une carte (${v}).`
+        );
+        if (v > 21) this.blackjackChatGateway.emitSystemToTable(normalized, `${ps.username} saute (${v}).`);
+      } else if (action === "split") {
+        if (!this.canSplitHand(hand)) throw new BadRequestException("SPLIT_REQUIRES_SAME_VALUE_PAIR");
+
+        await this.usersService.debitCreditsByUsername(jwt.username, hand.bet);
+
+        const [first, second] = hand.cards;
+        const currentIndex = ps.activeHandIndex ?? 0;
+        const firstHand = this.makeHand(`${hand.id}-a`, hand.bet, [first, this.draw(state)], true);
+        const secondHand = this.makeHand(`${hand.id}-b`, hand.bet, [second, this.draw(state)], true);
+
+        hands.splice(currentIndex, 1, firstHand, secondHand);
+        ps.activeHandIndex = currentIndex;
+
+        this.blackjackChatGateway.emitSystemToTable(
+          normalized,
+          `${ps.username} split sa paire en deux mains.`
+        );
       }
 
       state.players[String(jwt.userId)] = ps;
+      this.syncPlayerFromHands(ps);
       state.dealer.value = this.handValue(state.dealer.cards);
 
       const nextPhase = this.advanceTurnToNextPlayable(state);
@@ -781,11 +930,25 @@ export class BlackjackService {
       const ps = state.players[String(uid)];
       if (!ps) return false;
       if (ps.bet <= 0) return false;
-      return ps.status === "playing";
+      return this.ensurePlayerHands(ps).some((hand) => hand.bet > 0 && hand.status === "playing");
+    };
+
+    const setNextHandForPlayer = (uid: number, fromIndex = 0) => {
+      const ps = state.players[String(uid)];
+      if (!ps) return false;
+      const hands = this.ensurePlayerHands(ps);
+      for (let idx = fromIndex; idx < hands.length; idx++) {
+        if (hands[idx].bet > 0 && hands[idx].status === "playing") {
+          ps.activeHandIndex = idx;
+          this.syncPlayerFromHands(ps);
+          return true;
+        }
+      }
+      return false;
     };
 
     const currentId = state.turnOrder[state.currentTurnIndex];
-    if (currentId && isPlayable(currentId)) {
+    if (currentId && setNextHandForPlayer(currentId, state.players[String(currentId)]?.activeHandIndex ?? 0)) {
       state.phase = "player_turns";
       return state.phase;
     }
@@ -796,7 +959,7 @@ export class BlackjackService {
       if (idx >= state.turnOrder.length) break;
 
       const uid = state.turnOrder[idx];
-      if (isPlayable(uid)) {
+      if (isPlayable(uid) && setNextHandForPlayer(uid, 0)) {
         state.currentTurnIndex = idx;
         state.phase = "player_turns";
         return state.phase;
@@ -831,37 +994,47 @@ export class BlackjackService {
       const ps = state.players[String(uid)];
       if (!ps || ps.bet <= 0) continue;
 
-      const playerValue = this.handValue(ps.cards);
-      const playerBust = playerValue > 21;
-      const playerBJ = this.isBlackjackTwoCards(ps.cards);
+      const hands = this.ensurePlayerHands(ps);
+      let playerNet = 0;
 
-      let payout = 0;
+      for (const hand of hands) {
+        if (hand.bet <= 0) continue;
 
-      if (dealerBJ && !playerBJ) payout = 0;
-      else if (playerBust) payout = 0;
-      else if (dealerBust) payout = ps.bet * 2;
-      else if (playerValue === dealerValue) payout = ps.bet;
-      else if (playerValue > dealerValue) payout = playerBJ ? Math.floor(ps.bet * 2.5) : ps.bet * 2;
-      else payout = 0;
+        const playerValue = this.handValue(hand.cards);
+        const playerBust = playerValue > 21;
+        const playerBJ = this.isBlackjackTwoCards(hand.cards) && !hand.splitFromPair;
 
-      if (payout > 0) {
-        await this.usersService.creditCreditsByUsername(ps.username, payout);
+        let payout = 0;
+
+        if (dealerBJ && !playerBJ) payout = 0;
+        else if (playerBust) payout = 0;
+        else if (dealerBust) payout = hand.bet * 2;
+        else if (playerValue === dealerValue) payout = hand.bet;
+        else if (playerValue > dealerValue) payout = playerBJ ? Math.floor(hand.bet * 2.5) : hand.bet * 2;
+        else payout = 0;
+
+        if (payout > 0) {
+          await this.usersService.creditCreditsByUsername(ps.username, payout);
+        }
+
+        playerNet += payout - hand.bet;
+        hand.status = "done";
       }
 
-      const net = payout - ps.bet;
-      netWins[ps.username] = net;
-      if (net > 0) winners.push(ps.username);
+      netWins[ps.username] = playerNet;
+      if (playerNet > 0) winners.push(ps.username);
 
       // 📈 Stats dashboard (gain/perte net)
       try {
         this.statsService.recordEvent(ps.username, {
           game: "BLACKJACK",
-          deltaCredits: net,
+          deltaCredits: playerNet,
           meta: {
             tableCode: tableCode ?? null,
             round: state.round,
-            won: net > 0,
-            noHit: Array.isArray(ps.cards) && ps.cards.length === 2,
+            won: playerNet > 0,
+            hands: hands.length,
+            noHit: hands.every((hand) => Array.isArray(hand.cards) && hand.cards.length === 2),
           },
         });
       } catch {
@@ -869,6 +1042,7 @@ export class BlackjackService {
       }
 
       ps.status = "done";
+      this.syncPlayerFromHands(ps);
     }
 
     const uniqueWinners: string[] = Array.from(new Set(winners));
@@ -931,6 +1105,8 @@ export class BlackjackService {
       state.players[k].bet = 0;
       state.players[k].cards = [];
       state.players[k].status = "waiting";
+      state.players[k].hands = [];
+      state.players[k].activeHandIndex = 0;
     }
 
     await this.saveState(game, state);

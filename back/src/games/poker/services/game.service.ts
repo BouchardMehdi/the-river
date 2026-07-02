@@ -204,6 +204,10 @@ export class GameService {
 
     table.hands = {};
     table.communityCards = [];
+    table.lastWinnerId = undefined;
+    table.lastWinnerHand = undefined;
+    table.lastWinnerHandDescription = undefined;
+    table.lastWinners = undefined;
 
     table.pot = 0;
     table.currentBet = 0;
@@ -441,31 +445,41 @@ export class GameService {
 
         try {
           const decision = this.botDecision.decide(table, pid);
+          let recordedAction = decision.action;
 
           // Sécurité : BET si currentBet>0 -> on transforme en CALL
           if (decision.action === 'BET' && (table.currentBet ?? 0) > 0) {
             this.bettingService.act(table, pid, 'CALL' as any);
+            recordedAction = 'CALL' as any;
           } else if (decision.action === 'RAISE' && (table.currentBet ?? 0) === 0) {
             // RAISE si currentBet==0 -> on transforme en BET
             const bb = Math.max(1, Number(table.bigBlindAmount ?? 10));
             const amt = Math.max(bb, Number(decision.amount ?? bb));
             this.bettingService.act(table, pid, 'BET' as any, amt);
+            recordedAction = 'BET' as any;
           } else {
             this.bettingService.act(table, pid, decision.action as any, decision.amount);
           }
 
+          this.botService.recordAction(table.id, pid, recordedAction);
           progressed = true;
         } catch {
           // fallback si la décision échoue (rare)
           try {
             const cb = Number(table.currentBet ?? 0);
             const my = Number(table.bets?.[pid] ?? 0);
-            if (my < cb) this.bettingService.act(table, pid, 'CALL' as any);
-            else this.bettingService.act(table, pid, 'CHECK' as any);
+            if (my < cb) {
+              this.bettingService.act(table, pid, 'CALL' as any);
+              this.botService.recordAction(table.id, pid, 'CALL' as any);
+            } else {
+              this.bettingService.act(table, pid, 'CHECK' as any);
+              this.botService.recordAction(table.id, pid, 'CHECK' as any);
+            }
             progressed = true;
           } catch {
             try {
               this.bettingService.act(table, pid, 'FOLD' as any);
+              this.botService.recordAction(table.id, pid, 'FOLD' as any);
               progressed = true;
             } catch {}
           }

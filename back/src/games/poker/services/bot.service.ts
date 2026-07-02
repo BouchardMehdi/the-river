@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { PokerTableInternal } from '../domain/table.types';
+import type { ActionType, PokerTableInternal } from '../domain/table.types';
 import { shuffleInPlace } from '../../../common/random';
 
 /**
@@ -21,6 +21,15 @@ type BotMemoryState = {
   bets: Record<string, number>;
   folded: Record<string, boolean>;
   profiles: Record<string, BotProfile>;
+  opponents: Record<string, BotOpponentStats>;
+};
+
+export type BotOpponentStats = {
+  actions: number;
+  aggressiveActions: number;
+  passiveActions: number;
+  folds: number;
+  showdowns: number;
 };
 
 @Injectable()
@@ -104,15 +113,61 @@ export class BotService {
     return this.perTable[tableId].profiles?.[botId] ?? 'BALANCED';
   }
 
+  recordAction(tableId: string, playerId: string, action: ActionType): void {
+    this.ensureTableMemory(tableId);
+    const state = this.perTable[tableId];
+    state.opponents[playerId] ??= this.createOpponentStats();
+
+    const stats = state.opponents[playerId];
+    stats.actions += 1;
+
+    if (action === 'BET' || action === 'RAISE' || action === 'ALL_IN') {
+      stats.aggressiveActions += 1;
+    } else if (action === 'CALL' || action === 'CHECK') {
+      stats.passiveActions += 1;
+    } else if (action === 'FOLD') {
+      stats.folds += 1;
+    }
+  }
+
+  getOpponentStats(tableId: string, playerId: string): BotOpponentStats {
+    this.ensureTableMemory(tableId);
+    return this.perTable[tableId].opponents[playerId] ?? this.createOpponentStats();
+  }
+
+  tableAggression(tableId: string, playerIds: string[]): number {
+    this.ensureTableMemory(tableId);
+    const stats = playerIds
+      .map((pid) => this.perTable[tableId].opponents[pid])
+      .filter(Boolean);
+
+    const actions = stats.reduce((sum, stat) => sum + stat.actions, 0);
+    if (actions <= 0) return 0.35;
+
+    const aggressive = stats.reduce((sum, stat) => sum + stat.aggressiveActions, 0);
+    return Math.max(0, Math.min(1, aggressive / actions));
+  }
+
   clearTable(tableId: string): void {
     delete this.perTable[tableId];
   }
 
   private ensureTableMemory(tableId: string): void {
     if (!this.perTable[tableId]) {
-      this.perTable[tableId] = { bets: {}, folded: {}, profiles: {} };
+      this.perTable[tableId] = { bets: {}, folded: {}, profiles: {}, opponents: {} };
     }
     this.perTable[tableId].profiles ??= {};
+    this.perTable[tableId].opponents ??= {};
+  }
+
+  private createOpponentStats(): BotOpponentStats {
+    return {
+      actions: 0,
+      aggressiveActions: 0,
+      passiveActions: 0,
+      folds: 0,
+      showdowns: 0,
+    };
   }
 
   private generateBotId(table: PokerTableInternal, index: number): string {

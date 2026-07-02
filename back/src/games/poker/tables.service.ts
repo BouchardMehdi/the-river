@@ -15,6 +15,7 @@ import { PlayerService } from './services/player.service';
 import { GameService } from './services/game.service';
 import { BettingService } from './services/betting.service';
 import { TableResetService } from './services/table-reset.service';
+import { BotService } from './services/bot.service';
 import { UsersService } from '../../users/users.service';
 import { ChatGateway } from './chat/chat.gateway';
 import { HandEvaluatorService } from './services/hand-evaluator.service';
@@ -37,6 +38,7 @@ export class TablesService {
     private readonly gameService: GameService,
     private readonly bettingService: BettingService,
     private readonly tableResetService: TableResetService,
+    private readonly botService: BotService,
     private readonly usersService: UsersService,
     private readonly chatGateway: ChatGateway,
     private readonly handEvaluator: HandEvaluatorService,
@@ -59,6 +61,11 @@ export class TablesService {
     return (players ?? []).filter((p) => !this.isBotId(p)).length;
   }
 
+  private async deleteTable(tableId: string): Promise<void> {
+    await this.repo.delete({ id: tableId });
+    this.botService.clearTable(tableId);
+  }
+
   private getActivePlayers(internal: any): string[] {
     return (internal.players ?? []).filter((pid: string) => {
       const stack = Number(internal.stacks?.[pid] ?? 0);
@@ -69,6 +76,20 @@ export class TablesService {
 
   private getAliveStacks(internal: any): string[] {
     return (internal.players ?? []).filter((pid: string) => Number(internal.stacks?.[pid] ?? 0) > 0);
+  }
+
+  private isBettingRoundComplete(internal: any): boolean {
+    const active = this.getActivePlayers(internal);
+    if (active.length <= 1) return true;
+
+    const currentBet = Number(internal.currentBet ?? 0);
+    for (const pid of active) {
+      const acted = !!internal.hasActed?.[pid];
+      const bet = Number(internal.bets?.[pid] ?? 0);
+      if (!acted || bet !== currentBet) return false;
+    }
+
+    return true;
   }
 
   private getOwnerOrFallback(internal: any): string {
@@ -190,6 +211,48 @@ export class TablesService {
     }
   }
 
+  private async autoProgressCompletedRounds(tableId: string, internal: any): Promise<void> {
+    if (internal.status !== 'IN_GAME') return;
+
+    const owner = this.getOwnerOrFallback(internal);
+
+    for (let safety = 0; safety < 12; safety++) {
+      if (internal.status !== 'IN_GAME') return;
+
+      await this.autoAdvanceIfTrivial(tableId, internal);
+      if (internal.status !== 'IN_GAME') return;
+
+      const phase = this.phaseOf(internal);
+      if (phase === 'WAITING' || phase === 'SHOWDOWN') return;
+      if (!this.isBettingRoundComplete(internal)) return;
+
+      if (phase === 'PRE_FLOP') {
+        this.gameService.revealFlop(internal, owner);
+        this.chatGateway.emitSystemToTable(tableId, 'FLOP');
+        continue;
+      }
+
+      if (phase === 'FLOP') {
+        this.gameService.revealTurn(internal, owner);
+        this.chatGateway.emitSystemToTable(tableId, 'TURN');
+        continue;
+      }
+
+      if (phase === 'TURN') {
+        this.gameService.revealRiver(internal, owner);
+        this.chatGateway.emitSystemToTable(tableId, 'RIVER');
+        continue;
+      }
+
+      if (phase === 'RIVER') {
+        await this.endHandInternal(tableId, internal, owner);
+        return;
+      }
+
+      return;
+    }
+  }
+
   // -------------------- FIN / CASHOUT --------------------
 
   private async finalizeGameIfOver(tableId: string, internal: any): Promise<boolean> {
@@ -212,7 +275,7 @@ export class TablesService {
       this.chatGateway.emitSystemToTable(tableId, `💰 CASHOUT: ${winnerId} +${winnerStack} crédits`);
     }
 
-    internal.status = 'WAITING';
+    internal.status = 'FINISHED';
     internal.phase = 'WAITING';
 
     for (const pid of internal.players ?? []) internal.stacks[pid] = 0;
@@ -228,10 +291,18 @@ export class TablesService {
     internal.showdownHands = undefined;
     internal.showdownEndsAt = undefined;
 
-    internal.lastWinners = undefined;
-    internal.lastWinnerId = undefined;
+    internal.lastWinners = [
+      {
+        potIndex: 0,
+        amount: winnerStack,
+        winnerId,
+        handDescription: 'Partie terminee',
+        handWinner: [],
+      },
+    ];
+    internal.lastWinnerId = winnerId;
     internal.lastWinnerHand = undefined;
-    internal.lastWinnerHandDescription = undefined;
+    internal.lastWinnerHandDescription = `Partie terminee avec ${winnerStack} credits`;
 
     this.chatGateway.emitSystemToTable(tableId, `🏁 Partie terminée (un seul joueur a encore du stack).`);
     return true;
@@ -242,14 +313,54 @@ export class TablesService {
   async findOne(id: string): Promise<PokerTablePublic> {
     const table = await this.repo.findOneBy({ id: this.normalizeCode(id) });
     if (!table) throw new NotFoundException('La table est introuvable');
-    return toPublic(table as any);
+    const internal = table as any;
+    if ((internal.players ?? []).length > 0 && this.humanCount(internal.players ?? []) === 0) {
+      await this.deleteTable(internal.id);
+      throw new NotFoundException('La table est introuvable');
+    }
+
+    return toPublic(internal);
   }
 
   async listPublicTables(): Promise<PokerTablePublic[]> {
     const tables = await this.repo.find({ where: { visibility: 'PUBLIC' as any } });
-    return tables
-      .filter((t: any) => (t.status ?? '') !== 'DELETED')
-      .map((t) => toPublic(t as any));
+    const visible: PokerTablePublic[] = [];
+
+    for (const table of tables) {
+      const internal = table as any;
+      if ((internal.status ?? '') === 'DELETED' || (internal.status ?? '') === 'FINISHED') continue;
+
+      if ((internal.players ?? []).length > 0 && this.humanCount(internal.players ?? []) === 0) {
+        await this.deleteTable(internal.id);
+        continue;
+      }
+
+      visible.push(toPublic(internal));
+    }
+
+    return visible;
+  }
+
+  async listPlayerTables(username: string): Promise<PokerTablePublic[]> {
+    if (!username || username.trim().length === 0) throw new BadRequestException('username requis');
+
+    const tables = await this.repo.find();
+    const mine: PokerTablePublic[] = [];
+
+    for (const table of tables) {
+      const internal = table as any;
+      if ((internal.status ?? '') === 'DELETED' || (internal.status ?? '') === 'FINISHED') continue;
+
+      const players = internal.players ?? [];
+      if (players.length > 0 && this.humanCount(players) === 0) {
+        await this.deleteTable(internal.id);
+        continue;
+      }
+
+      if (players.includes(username)) mine.push(toPublic(internal));
+    }
+
+    return mine;
   }
 
   async createTable(params: {
@@ -358,8 +469,8 @@ export class TablesService {
     if (!table) throw new NotFoundException('La table est introuvable');
     const internal = table as any;
 
-    if (internal.status === 'IN_GAME') throw new BadRequestException('Partie en cours, impossible de rejoindre');
     if (internal.players?.includes(username)) return toPublic(internal);
+    if (internal.status === 'IN_GAME') throw new BadRequestException('Partie en cours, impossible de rejoindre');
     if (internal.players.length >= internal.maxPlayers) throw new BadRequestException('la table est pleine');
 
     const buyIn = internal.buyInAmount;
@@ -417,8 +528,7 @@ export class TablesService {
     this.chatGateway.emitSystemToTable(tableId, `🎲 La partie commence (${internal.mode})`);
     this.chatGateway.emitSystemToTable(tableId, `Blinds: SB ${sb} (${sbP}) • BB ${bb} (${bbP})`);
 
-    // ✅ si déjà trivial (ex: 1 joueur actif), on auto-advance
-    await this.autoAdvanceIfTrivial(tableId, internal);
+    await this.autoProgressCompletedRounds(tableId, internal);
     await this.repo.save(internal);
 
     return toPublic(internal);
@@ -434,13 +544,13 @@ export class TablesService {
     if (!internal.players?.includes(username)) throw new ForbiddenException("Vous n'êtes pas assis à cette table");
 
     this.bettingService.act(internal, username, action, amount);
+    this.botService.recordAction(tableId, username, action);
 
     try {
       this.gameService.autoActBots(internal);
     } catch {}
 
-    // ✅ si 0/1 joueur actif : on déroule automatiquement flop/turn/river/end-hand
-    await this.autoAdvanceIfTrivial(tableId, internal);
+    await this.autoProgressCompletedRounds(tableId, internal);
 
     await this.repo.save(internal);
     this.chatGateway.emitSystemToTable(tableId, `${username} ${String(action)}${amount != null ? ` ${amount}` : ''}`);
@@ -596,7 +706,7 @@ export class TablesService {
 
     const humans = (internal.players ?? []).filter((p: string) => !this.isBotId(p));
     if (humans.length === 0) {
-      await this.repo.delete({ id: internal.id });
+      await this.deleteTable(internal.id);
       return { tableDeleted: true, table: null };
     }
 

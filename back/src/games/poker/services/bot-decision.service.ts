@@ -8,7 +8,68 @@ import { randomFloat } from '../../../common/random';
 
 export type BotDecision = {
   action: ActionType;
-  amount?: number; // utilisé pour BET/RAISE
+  amount?: number;
+};
+
+type ProfileConfig = {
+  looseness: number;
+  aggression: number;
+  bluff: number;
+  trap: number;
+  riskTolerance: number;
+  foldDiscipline: number;
+};
+
+type DrawInfo = {
+  flushDraw: boolean;
+  straightDraw: boolean;
+  overcards: number;
+  equityBoost: number;
+  callBonus: number;
+  raiseBonus: number;
+};
+
+const PROFILE_CONFIG: Record<BotProfile, ProfileConfig> = {
+  TIGHT_AGGRESSIVE: {
+    looseness: 0.28,
+    aggression: 0.75,
+    bluff: 0.28,
+    trap: 0.14,
+    riskTolerance: 0.48,
+    foldDiscipline: 0.75,
+  },
+  LOOSE_AGGRESSIVE: {
+    looseness: 0.78,
+    aggression: 0.86,
+    bluff: 0.48,
+    trap: 0.08,
+    riskTolerance: 0.72,
+    foldDiscipline: 0.38,
+  },
+  TIGHT_PASSIVE: {
+    looseness: 0.22,
+    aggression: 0.24,
+    bluff: 0.08,
+    trap: 0.22,
+    riskTolerance: 0.34,
+    foldDiscipline: 0.86,
+  },
+  LOOSE_PASSIVE: {
+    looseness: 0.68,
+    aggression: 0.32,
+    bluff: 0.14,
+    trap: 0.18,
+    riskTolerance: 0.58,
+    foldDiscipline: 0.46,
+  },
+  BALANCED: {
+    looseness: 0.48,
+    aggression: 0.52,
+    bluff: 0.22,
+    trap: 0.12,
+    riskTolerance: 0.52,
+    foldDiscipline: 0.58,
+  },
 };
 
 @Injectable()
@@ -20,133 +81,154 @@ export class BotDecisionService {
 
   decide(table: PokerTableInternal, botId: string): BotDecision {
     const profile = this.botService.getBotProfile(table.id, botId);
-
-    // Sécurité
+    const config = PROFILE_CONFIG[profile];
     const stack = Number(table.stacks?.[botId] ?? 0);
     if (stack <= 0) return { action: 'CHECK' };
 
+    const hole = (table.hands?.[botId] ?? []) as Card[];
+    const board = (table.communityCards ?? []) as Card[];
     const myBet = Number(table.bets?.[botId] ?? 0);
     const currentBet = Number(table.currentBet ?? 0);
     const toCall = Math.max(0, currentBet - myBet);
 
-    const hole = (table.hands?.[botId] ?? []) as Card[];
-    const board = (table.communityCards ?? []) as Card[];
-
-    // Nombre d’adversaires encore “actifs” (pas fold + stack>0)
-    const activePlayers = (table.players ?? []).filter((pid) => {
-      const s = Number(table.stacks?.[pid] ?? 0);
-      const f = !!table.foldedPlayers?.[pid];
-      return s > 0 && !f;
-    });
+    const activePlayers = this.activePlayers(table);
     const opponents = Math.max(0, activePlayers.length - 1);
+    const humanOpponents = activePlayers.filter((pid) => pid !== botId && !this.botService.isBotId(pid));
+    const tableAggression = this.botService.tableAggression(table.id, humanOpponents);
 
-    // Randomisation légère (anti-bot “robotique”)
-    const noise = this.profileNoise(profile);
+    const rawStrength = board.length === 0 || (table.phase as any) === 'PRE_FLOP'
+      ? this.preflopStrength(hole)
+      : this.postflopStrength(hole, board);
+    const draw = this.drawPotential(hole, board);
+    const position = this.positionScore(table, botId, activePlayers);
+    const boardWetness = this.boardWetness(board);
+    const multiwayPenalty = Math.min(0.16, opponents * 0.035);
+    const aggressionAdjustment = tableAggression > 0.55 ? -0.04 : tableAggression < 0.22 ? 0.035 : 0;
+    const looseAdjustment = (config.looseness - 0.5) * 0.12;
 
-    // ---- Décision PRE-FLOP (heuristique simple) ----
-    if ((table.phase as any) === 'PRE_FLOP' || board.length === 0) {
-      const strength = this.preflopStrength(hole); // 0..1
+    const strength = this.clamp01(
+      rawStrength +
+        draw.equityBoost +
+        position +
+        looseAdjustment +
+        aggressionAdjustment -
+        multiwayPenalty +
+        this.profileNoise(profile),
+    );
 
-      // Ajuste selon profil + bruit
-      const s = this.clamp01(strength + noise);
-
-      return this.decideFromStrength({
+    if (toCall > 0) {
+      return this.decideFacingBet({
         table,
         botId,
         profile,
-        strength01: s,
-        opponents,
-        toCall,
+        config,
+        strength,
+        draw,
+        boardWetness,
         stack,
+        toCall,
+        currentBet,
       });
     }
 
-    // ---- Post-flop : on évalue la meilleure main possible avec les cartes disponibles ----
-    const post = this.postflopStrength(hole, board); // 0..1
-    const s = this.clamp01(post + noise * 0.8);
-
-    return this.decideFromStrength({
+    return this.decideOpenAction({
       table,
       botId,
       profile,
-      strength01: s,
-      opponents,
-      toCall,
+      config,
+      strength,
+      draw,
+      boardWetness,
       stack,
+      position,
     });
   }
 
-  // ---------------- Decision policy ----------------
-
-  private decideFromStrength(args: {
+  private decideFacingBet(args: {
     table: PokerTableInternal;
     botId: string;
     profile: BotProfile;
-    strength01: number;
-    opponents: number;
-    toCall: number;
+    config: ProfileConfig;
+    strength: number;
+    draw: DrawInfo;
+    boardWetness: number;
     stack: number;
+    toCall: number;
+    currentBet: number;
   }): BotDecision {
-    const { table, profile, strength01, opponents, toCall, stack } = args;
-
-    const currentBet = Number(table.currentBet ?? 0);
+    const { table, botId, profile, config, strength, draw, boardWetness, stack, toCall, currentBet } = args;
     const bb = Math.max(1, Number(table.bigBlindAmount ?? 10));
     const pot = Math.max(0, Number(table.pot ?? 0));
+    const potOdds = toCall / Math.max(1, pot + toCall);
+    const stackPressure = toCall / Math.max(1, stack);
+    const scaryBoardPenalty = boardWetness * (0.08 + config.foldDiscipline * 0.05);
+    const callScore = strength + draw.callBonus + config.riskTolerance * 0.1 - potOdds * 0.62 - stackPressure * 0.18 - scaryBoardPenalty;
+    const raiseScore = strength + draw.raiseBonus + config.aggression * 0.13 - potOdds * 0.22;
 
-    const isAggro = profile.includes('AGGRESSIVE');
-    const isLoose = profile.includes('LOOSE');
-
-    // Seuils simples (à ajuster plus tard)
-    const strong = isLoose ? 0.62 : 0.68;
-    const medium = isLoose ? 0.46 : 0.50;
-
-    // Plus il y a d’adversaires, plus on devient prudent
-    const multiwayPenalty = Math.min(0.12, opponents * 0.03);
-    const s = this.clamp01(strength01 - multiwayPenalty);
-
-    // --- Si quelqu’un a misé ---
-    if (currentBet > 0) {
-      // Très fort : raise parfois, sinon call
-      if (s >= strong) {
-        // Raise plus souvent si agressif
-        const raiseChance = isAggro ? 0.45 : 0.22;
-        if (randomFloat() < raiseChance) {
-          const raiseInc = this.pickRaiseIncrement(bb, currentBet, pot, profile);
-          return this.raiseOrAllIn(table, args.botId, stack, raiseInc);
-        }
-        return this.callOrAllIn(stack, toCall);
+    if (strength >= 0.78) {
+      const trapChance = config.trap * (1 - boardWetness * 0.5);
+      if (randomFloat() > trapChance && randomFloat() < 0.32 + config.aggression * 0.42) {
+        return this.raiseOrAllIn(table, botId, stack, this.pickRaiseIncrement(bb, currentBet, pot, stack, strength, profile));
       }
-
-      // Moyen : call si pas trop cher, sinon fold
-      if (s >= medium) {
-        // “Pot odds” ultra simplifié : si toCall <= ~25% du pot (ou bb), on call plus souvent
-        const cheap = toCall <= Math.max(bb, Math.floor(pot * 0.25));
-        if (cheap || randomFloat() < 0.35) return this.callOrAllIn(stack, toCall);
-        return toCall === 0 ? { action: 'CHECK' } : { action: 'FOLD' };
-      }
-
-      // Faible : fold si toCall > 0, check si possible
-      return toCall === 0 ? { action: 'CHECK' } : { action: 'FOLD' };
+      return this.callOrAllIn(stack, toCall);
     }
 
-    // --- Personne n’a misé (currentBet == 0) ---
-    if (s >= strong) {
-      // Value bet
-      const bet = this.pickBetSize(bb, pot, profile);
-      return this.betOrAllIn(stack, bet);
+    if (raiseScore >= 0.69 && randomFloat() < config.aggression * 0.38) {
+      return this.raiseOrAllIn(table, botId, stack, this.pickRaiseIncrement(bb, currentBet, pot, stack, strength, profile));
     }
 
-    if (s >= medium) {
-      // Check souvent, bet parfois (surtout si agressif)
-      const betChance = isAggro ? 0.25 : 0.12;
-      if (randomFloat() < betChance) {
-        const bet = this.pickBetSize(bb, pot, profile) * 0.75;
-        return this.betOrAllIn(stack, Math.max(bb, Math.floor(bet)));
-      }
-      return { action: 'CHECK' };
+    const semiBluffSpot = (draw.flushDraw || draw.straightDraw) && potOdds < 0.3 && randomFloat() < config.bluff;
+    if (semiBluffSpot && stack > toCall + bb && randomFloat() < config.aggression) {
+      return this.raiseOrAllIn(table, botId, stack, this.pickRaiseIncrement(bb, currentBet, pot, stack, strength, profile));
     }
 
-    // Faible : check
+    const callThreshold = config.looseness > 0.6 ? 0.22 : 0.31;
+    if (callScore >= callThreshold || (draw.callBonus > 0.08 && potOdds <= 0.24)) {
+      return this.callOrAllIn(stack, toCall);
+    }
+
+    if (toCall <= Math.max(bb, Math.floor(pot * 0.08)) && randomFloat() < config.riskTolerance) {
+      return this.callOrAllIn(stack, toCall);
+    }
+
+    return { action: 'FOLD' };
+  }
+
+  private decideOpenAction(args: {
+    table: PokerTableInternal;
+    botId: string;
+    profile: BotProfile;
+    config: ProfileConfig;
+    strength: number;
+    draw: DrawInfo;
+    boardWetness: number;
+    stack: number;
+    position: number;
+  }): BotDecision {
+    const { table, profile, config, strength, draw, boardWetness, stack, position } = args;
+    const bb = Math.max(1, Number(table.bigBlindAmount ?? 10));
+    const pot = Math.max(0, Number(table.pot ?? 0));
+    const phase = String(table.phase ?? 'PRE_FLOP');
+    const valueThreshold = phase === 'PRE_FLOP' ? 0.62 - config.looseness * 0.08 : 0.56 - config.aggression * 0.05;
+    const stealSpot = position > 0.045 && pot <= bb * 4 && randomFloat() < config.bluff * 0.72;
+    const semiBluff = (draw.flushDraw || draw.straightDraw) && randomFloat() < config.bluff * (0.75 + boardWetness * 0.35);
+
+    if (strength >= valueThreshold) {
+      return this.betOrAllIn(stack, this.pickBetSize(bb, pot, stack, strength, profile, phase));
+    }
+
+    if (semiBluff && stack > bb * 2) {
+      return this.betOrAllIn(stack, this.pickBetSize(bb, pot, stack, Math.max(0.42, strength), profile, phase));
+    }
+
+    if (stealSpot) {
+      return this.betOrAllIn(stack, this.pickBetSize(bb, pot, stack, 0.45, profile, phase));
+    }
+
+    if (strength >= 0.43 && randomFloat() < config.aggression * 0.18) {
+      return this.betOrAllIn(stack, Math.max(bb, Math.floor(this.pickBetSize(bb, pot, stack, strength, profile, phase) * 0.72)));
+    }
+
     return { action: 'CHECK' };
   }
 
@@ -163,43 +245,45 @@ export class BotDecisionService {
   }
 
   private raiseOrAllIn(table: PokerTableInternal, botId: string, stack: number, raiseIncrement: number): BotDecision {
-    // betting.service.ts: RAISE attend "raiseAmount" (increment), pas "target"
     const inc = Math.max(1, Math.floor(raiseIncrement));
     const myBet = Number(table.bets?.[botId] ?? 0);
     const currentBet = Number(table.currentBet ?? 0);
-
-    const targetBet = currentBet + inc;
-    const toPay = Math.max(0, targetBet - myBet);
-
+    const toPay = Math.max(0, currentBet + inc - myBet);
     if (toPay >= stack) return { action: 'ALL_IN' };
     return { action: 'RAISE', amount: inc };
   }
 
-  // ---------------- Sizing ----------------
-
-  private pickBetSize(bb: number, pot: number, profile: BotProfile): number {
-    const isAggro = profile.includes('AGGRESSIVE');
-    const base = Math.max(bb, Math.floor(pot * (isAggro ? 0.65 : 0.5)));
-    const jitter = 0.85 + randomFloat() * 0.35; // 0.85..1.20
-    return Math.max(bb, Math.floor(base * jitter));
+  private pickBetSize(bb: number, pot: number, stack: number, strength: number, profile: BotProfile, phase: string): number {
+    const config = PROFILE_CONFIG[profile];
+    const preflop = phase === 'PRE_FLOP';
+    const base = preflop ? bb * (2.2 + config.aggression * 0.9) : Math.max(bb, pot * (0.36 + strength * 0.35 + config.aggression * 0.12));
+    const jitter = 0.88 + randomFloat() * 0.24;
+    return Math.min(stack, Math.max(bb, Math.floor(base * jitter)));
   }
 
-  private pickRaiseIncrement(bb: number, currentBet: number, pot: number, profile: BotProfile): number {
-    const isAggro = profile.includes('AGGRESSIVE');
-    // increment (pas target) : typiquement ~50% du currentBet, ou bb, ou un morceau du pot
-    const base = Math.max(bb, Math.floor(currentBet * (isAggro ? 0.75 : 0.55)), Math.floor(pot * 0.25));
-    const jitter = 0.85 + randomFloat() * 0.35;
-    return Math.max(bb, Math.floor(base * jitter));
+  private pickRaiseIncrement(
+    bb: number,
+    currentBet: number,
+    pot: number,
+    stack: number,
+    strength: number,
+    profile: BotProfile,
+  ): number {
+    const config = PROFILE_CONFIG[profile];
+    const base = Math.max(
+      bb,
+      currentBet * (0.55 + config.aggression * 0.28),
+      pot * (0.18 + strength * 0.22),
+    );
+    const jitter = 0.85 + randomFloat() * 0.3;
+    return Math.min(stack, Math.max(bb, Math.floor(base * jitter)));
   }
-
-  // ---------------- Strength evaluators ----------------
 
   private preflopStrength(hole: Card[]): number {
     if (!hole || hole.length < 2) return 0;
 
     const a = hole[0];
     const b = hole[1];
-
     const va = this.rankToValue(a.rank);
     const vb = this.rankToValue(b.rank);
     const high = Math.max(va, vb);
@@ -208,69 +292,123 @@ export class BotDecisionService {
     const pair = va === vb;
     const gap = Math.abs(va - vb);
 
-    // Base
-    let s = 0.10;
+    if (pair) return this.clamp01(0.42 + (high - 2) * (0.53 / 12));
 
-    // Paires
-    if (pair) {
-      // 22 -> 0.45, AA -> 0.95
-      s = 0.40 + (high - 2) * (0.55 / 12);
-      return this.clamp01(s);
-    }
-
-    // Broadways (A,K,Q,J,10)
-    const isBroadway = (v: number) => v >= 10;
-    const bothBroadway = isBroadway(va) && isBroadway(vb);
-
-    if (bothBroadway) s += 0.32;
-
-    // Ax
-    if (high === 14) s += 0.18;
-
-    // Suited
+    let s = 0.08;
+    if (high === 14) s += 0.18 + low * 0.012;
+    if (high >= 13 && low >= 10) s += 0.3;
+    else if (high >= 11 && low >= 10) s += 0.22;
     if (suited) s += 0.08;
-
-    // Connecteurs / one-gap
-    if (gap === 1) s += 0.10;
+    if (gap === 1) s += 0.1;
     else if (gap === 2) s += 0.06;
-
-    // Hauteur
+    else if (gap >= 5) s -= 0.1;
+    if (low <= 5 && gap >= 4 && high !== 14) s -= 0.08;
     s += (high - 2) * (0.24 / 12);
-
-    // Pénalité si trop “gappy”
-    if (gap >= 5) s -= 0.10;
 
     return this.clamp01(s);
   }
 
   private postflopStrength(hole: Card[], board: Card[]): number {
     const cards = [...(hole ?? []), ...(board ?? [])].filter(Boolean);
-    if (cards.length < 5) return 0.2;
+    if (cards.length < 5) return 0.24;
 
     const best = this.bestOfN(cards);
-    // HandRank: 1 meilleur ... 10 pire
-    // On mappe en 0..1 (monstre -> proche 1)
     const rank = best.rank;
+    const boardOnly = board.length >= 5 ? this.bestOfN(board) : null;
+    const boardPlays = boardOnly ? this.handEval.compareScores(best, boardOnly) === 0 : false;
 
-    // Tier simple basé sur HandRank
-    if (rank <= HandRank.FULL) return 0.92;          // full+ (très fort)
-    if (rank <= HandRank.SUITE) return 0.78;         // couleur/suite
-    if (rank <= HandRank.DOUBLE_PAIRE) return 0.62;  // brelan/double paire
-    if (rank <= HandRank.PAIRE) return 0.46;         // paire
-    return 0.26;                                     // hauteur
+    let strength = 0.26;
+    if (rank <= HandRank.FULL) strength = 0.93;
+    else if (rank <= HandRank.SUITE) strength = 0.8;
+    else if (rank <= HandRank.DOUBLE_PAIRE) strength = 0.64;
+    else if (rank <= HandRank.PAIRE) strength = 0.46;
+
+    if (boardPlays) strength -= 0.12;
+    if (board.length === 3 && strength >= 0.64) strength += 0.04;
+    if (board.length === 5 && strength <= 0.46) strength -= 0.04;
+
+    return this.clamp01(strength);
+  }
+
+  private drawPotential(hole: Card[], board: Card[]): DrawInfo {
+    const cards = [...(hole ?? []), ...(board ?? [])].filter(Boolean);
+    if (cards.length < 4 || board.length >= 5) {
+      return { flushDraw: false, straightDraw: false, overcards: 0, equityBoost: 0, callBonus: 0, raiseBonus: 0 };
+    }
+
+    const suitCounts = cards.reduce<Record<string, number>>((acc, card) => {
+      acc[card.suit] = (acc[card.suit] ?? 0) + 1;
+      return acc;
+    }, {});
+    const flushDraw = Math.max(0, ...Object.values(suitCounts)) >= 4;
+    const values = Array.from(new Set(cards.map((card) => this.rankToValue(card.rank)).flatMap((v) => (v === 14 ? [14, 1] : [v])))).sort((a, b) => a - b);
+    let straightDraw = false;
+    for (let start = 1; start <= 10; start += 1) {
+      const window = [start, start + 1, start + 2, start + 3, start + 4];
+      const hits = window.filter((v) => values.includes(v)).length;
+      if (hits >= 4) straightDraw = true;
+    }
+
+    const boardHigh = Math.max(0, ...(board ?? []).map((card) => this.rankToValue(card.rank)));
+    const overcards = (hole ?? []).filter((card) => this.rankToValue(card.rank) > boardHigh).length;
+    const equityBoost = (flushDraw ? 0.08 : 0) + (straightDraw ? 0.07 : 0) + overcards * 0.025;
+    const callBonus = (flushDraw ? 0.1 : 0) + (straightDraw ? 0.08 : 0) + overcards * 0.015;
+    const raiseBonus = (flushDraw ? 0.08 : 0) + (straightDraw ? 0.06 : 0);
+
+    return { flushDraw, straightDraw, overcards, equityBoost, callBonus, raiseBonus };
+  }
+
+  private boardWetness(board: Card[]): number {
+    if (!board || board.length < 3) return 0;
+
+    const suitCounts = board.reduce<Record<string, number>>((acc, card) => {
+      acc[card.suit] = (acc[card.suit] ?? 0) + 1;
+      return acc;
+    }, {});
+    const values = Array.from(new Set(board.map((card) => this.rankToValue(card.rank)))).sort((a, b) => a - b);
+    const maxSuit = Math.max(0, ...Object.values(suitCounts));
+    const paired = values.length < board.length ? 0.12 : 0;
+    let connected = 0;
+    for (let i = 1; i < values.length; i += 1) {
+      if (values[i] - values[i - 1] <= 2) connected += 0.08;
+    }
+    const suited = maxSuit >= 3 ? 0.2 : maxSuit === 2 ? 0.08 : 0;
+
+    return this.clamp01(paired + connected + suited);
+  }
+
+  private positionScore(table: PokerTableInternal, botId: string, activePlayers: string[]): number {
+    if (activePlayers.length <= 1) return 0;
+
+    const dealerId = (table as any).dealerPlayerId as string | undefined;
+    const dealerIndex = Math.max(0, dealerId ? activePlayers.indexOf(dealerId) : Number((table as any).dealerIndex ?? 0) % activePlayers.length);
+    const botIndex = activePlayers.indexOf(botId);
+    if (botIndex < 0 || dealerIndex < 0) return 0;
+
+    const distanceFromDealer = (botIndex - dealerIndex + activePlayers.length) % activePlayers.length;
+    if (activePlayers.length === 2) return distanceFromDealer === 0 ? 0.045 : -0.015;
+    if (distanceFromDealer === 0) return 0.055;
+    if (distanceFromDealer >= activePlayers.length - 2) return 0.04;
+    return -0.035;
+  }
+
+  private activePlayers(table: PokerTableInternal): string[] {
+    return (table.players ?? []).filter((pid) => {
+      const stack = Number(table.stacks?.[pid] ?? 0);
+      const folded = !!table.foldedPlayers?.[pid];
+      return stack > 0 && !folded;
+    });
   }
 
   private bestOfN(cards: Card[]) {
-    // Best main sur 5 cartes parmi N (N=5..7) avec ton HandEvaluator
     const n = cards.length;
     if (n === 7) return this.handEval.bestHandOf7(cards);
 
     let best = this.handEval.evaluate5(cards.slice(0, 5));
     const combos = this.combinations(cards, 5);
-
-    for (const c of combos) {
-      const s = this.handEval.evaluate5(c);
-      if (this.handEval.compareScores(s, best) < 0) best = s;
+    for (const combo of combos) {
+      const score = this.handEval.evaluate5(combo);
+      if (this.handEval.compareScores(score, best) < 0) best = score;
     }
     return best;
   }
@@ -280,40 +418,35 @@ export class BotDecisionService {
     const n = arr.length;
     const idx = Array.from({ length: k }, (_, i) => i);
 
-    const push = () => res.push(idx.map((i) => arr[i]));
-
     if (k > n || k <= 0) return res;
+    const push = () => res.push(idx.map((i) => arr[i]));
     push();
 
     while (true) {
       let i = k - 1;
-      while (i >= 0 && idx[i] === i + n - k) i--;
+      while (i >= 0 && idx[i] === i + n - k) i -= 1;
       if (i < 0) break;
-      idx[i]++;
-      for (let j = i + 1; j < k; j++) idx[j] = idx[j - 1] + 1;
+      idx[i] += 1;
+      for (let j = i + 1; j < k; j += 1) idx[j] = idx[j - 1] + 1;
       push();
     }
 
     return res;
   }
 
-  // ---------------- Helpers ----------------
-
   private profileNoise(profile: BotProfile): number {
-    // valeur ajoutée à la force (0..1) avant décision
-    // loose = plus “optimiste”, tight = plus prudent
     switch (profile) {
       case 'LOOSE_AGGRESSIVE':
-        return (randomFloat() - 0.45) * 0.18; // léger biais positif
+        return (randomFloat() - 0.42) * 0.16;
       case 'LOOSE_PASSIVE':
-        return (randomFloat() - 0.48) * 0.16;
+        return (randomFloat() - 0.46) * 0.14;
       case 'TIGHT_AGGRESSIVE':
-        return (randomFloat() - 0.55) * 0.16; // léger biais négatif
+        return (randomFloat() - 0.55) * 0.13;
       case 'TIGHT_PASSIVE':
-        return (randomFloat() - 0.58) * 0.14;
+        return (randomFloat() - 0.6) * 0.12;
       case 'BALANCED':
       default:
-        return (randomFloat() - 0.5) * 0.16;
+        return (randomFloat() - 0.5) * 0.14;
     }
   }
 

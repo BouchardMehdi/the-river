@@ -1,6 +1,6 @@
 import type { Card } from '../services/deck.service';
 
-export type TableStatus = 'OPEN' | 'WAITING' | 'IN_GAME' | 'CLOSED';
+export type TableStatus = 'OPEN' | 'WAITING' | 'IN_GAME' | 'FINISHED' | 'CLOSED';
 export type GamePhase = 'WAITING' | 'PRE_FLOP' | 'FLOP' | 'TURN' | 'RIVER';
 
 export type ActionType = 'CHECK' | 'BET' | 'CALL' | 'RAISE' | 'FOLD' | 'ALL_IN';

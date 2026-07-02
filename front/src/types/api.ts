@@ -42,6 +42,8 @@ export type PokerTable = {
   communityCards?: Card[];
   pot?: number;
   currentBet?: number;
+  smallBlindAmount?: number;
+  bigBlindAmount?: number;
   stacks?: Record<string, number>;
   bets?: Record<string, number>;
   ownerPlayerId?: string;

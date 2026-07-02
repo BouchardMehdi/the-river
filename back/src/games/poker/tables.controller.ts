@@ -11,6 +11,12 @@ export class TablesController {
     return this.tablesService.listPublicTables();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('mine')
+  async listMine(@Req() req: any) {
+    return this.tablesService.listPlayerTables(req.user.username);
+  }
+
   @Get(':id')
   async getTable(@Param('id') id: string) {
     return this.tablesService.findOne(id);

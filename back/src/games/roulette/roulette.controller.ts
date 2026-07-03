@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { IsArray, IsEnum, IsNumber, IsObject, IsOptional, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -36,5 +36,11 @@ export class RouletteController {
   @Post('solo/spin')
   async soloSpin(@CurrentUser() user: JwtUser, @Body() dto: SoloSpinDto) {
     return this.roulette.soloSpin(user.username, dto.bets as any);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('stats')
+  async stats(@CurrentUser() user: JwtUser) {
+    return this.roulette.getPlayerStats(user.username);
   }
 }

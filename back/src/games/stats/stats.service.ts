@@ -33,7 +33,7 @@ export class StatsService {
     return Math.max(min, Math.min(max, n));
   }
 
-  private periodStart(period: StatsPeriod) {
+  getPeriodStart(period: StatsPeriod) {
     const now = new Date();
 
     if (period === 'day') {
@@ -92,6 +92,22 @@ export class StatsService {
       order: { createdAt: 'DESC' },
       take,
     });
+  }
+
+  async getGameEventsByUsername(username: string, game: string, since?: Date) {
+    const u = await this.usersService.findByUsername(username);
+    if (!u) throw new BadRequestException('USER_NOT_FOUND');
+
+    const qb = this.eventsRepo
+      .createQueryBuilder('e')
+      .where('e.userId = :userId', { userId: u.userId })
+      .andWhere('e.game = :game', { game: String(game).toUpperCase() });
+
+    if (since) {
+      qb.andWhere('e.createdAt >= :since', { since: since.toISOString() });
+    }
+
+    return qb.orderBy('e.createdAt', 'ASC').getMany();
   }
 
   /**
@@ -168,7 +184,7 @@ export class StatsService {
     limit?: number;
   }) {
     const take = this.clamp(Math.floor(Number(args.limit) || 10), 1, 100);
-    const start = this.periodStart(args.period);
+    const start = this.getPeriodStart(args.period);
 
     const sumField = args.metric === 'points' ? 'deltaPoints' : 'deltaCredits';
 

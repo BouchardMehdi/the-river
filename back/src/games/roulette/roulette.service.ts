@@ -105,6 +105,72 @@ export class RouletteService {
     return { result, settlement, balance };
   }
 
+  async getPlayerStats(username: string) {
+    if (!username) throw new UnauthorizedException('Invalid user');
+
+    const weekStart = this.statsService.getPeriodStart('week');
+    const events = await this.statsService.getGameEventsByUsername(username, 'ROULETTE', weekStart);
+    const counts = Array.from({ length: 37 }, (_, number) => ({ number, count: 0 }));
+    let even = 0;
+    let odd = 0;
+    let red = 0;
+    let black = 0;
+    let green = 0;
+
+    for (const event of events) {
+      let meta: any = null;
+      try {
+        meta = event.metaJson ? JSON.parse(event.metaJson) : null;
+      } catch {
+        meta = null;
+      }
+
+      const number = Number(meta?.number);
+      if (!Number.isInteger(number) || number < ROULETTE_MIN || number > ROULETTE_MAX) continue;
+
+      counts[number].count += 1;
+
+      if (number === 0) {
+        green += 1;
+      } else {
+        if (isEven(number)) even += 1;
+        if (isOdd(number)) odd += 1;
+        if (isRed(number)) red += 1;
+        if (isBlack(number)) black += 1;
+      }
+    }
+
+    const totalSpins = counts.reduce((sum, item) => sum + item.count, 0);
+    const percent = (value: number) => totalSpins > 0 ? Number(((value / totalSpins) * 100).toFixed(1)) : 0;
+    const withPercent = (items: Array<{ number: number; count: number }>) =>
+      items.map((item) => ({
+        ...item,
+        percentage: percent(item.count),
+        color: item.number === 0 ? 'GREEN' : (isRed(item.number) ? 'RED' : 'BLACK'),
+      }));
+
+    return {
+      period: {
+        key: 'week',
+        startsAt: weekStart.toISOString(),
+      },
+      totalSpins,
+      hotNumbers: totalSpins > 0
+        ? withPercent([...counts].sort((a, b) => b.count - a.count || a.number - b.number).slice(0, 4))
+        : [],
+      coldNumbers: totalSpins > 0
+        ? withPercent([...counts].sort((a, b) => a.count - b.count || a.number - b.number).slice(0, 4))
+        : [],
+      distribution: {
+        even: { count: even, percentage: percent(even) },
+        odd: { count: odd, percentage: percent(odd) },
+        red: { count: red, percentage: percent(red) },
+        black: { count: black, percentage: percent(black) },
+        green: { count: green, percentage: percent(green) },
+      },
+    };
+  }
+
   private spinWheel(): RouletteSpinResult {
     const number = this.randomInt(ROULETTE_MIN, ROULETTE_MAX);
     const color: RouletteSpinResult['color'] =

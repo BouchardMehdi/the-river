@@ -1,0 +1,24 @@
+<svg width="720" height="460" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="460" rx="34" fill="#081620"/>
+  <rect x="54" y="58" width="612" height="344" rx="28" fill="#0d1f2b" stroke="#8ad8ff" stroke-opacity=".28" stroke-width="3"/>
+  <path d="M102 330C170 318 201 286 250 280C305 273 326 312 379 280C433 247 449 174 500 145C539 123 575 132 620 94" stroke="#1de59d" stroke-width="12" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M102 330C170 318 201 286 250 280C305 273 326 312 379 280C433 247 449 174 500 145C539 123 575 132 620 94" stroke="#f1d28a" stroke-width="4" stroke-linecap="round"/>
+  <g filter="url(#shadow)">
+    <path d="M505 160l112-54-43 118-21-42-44 37-20-24 44-37-28 2z" fill="#ff625a"/>
+    <path d="M505 160l112-54-43 118-21-42-44 37-20-24 44-37-28 2z" stroke="#fff8e9" stroke-opacity=".28" stroke-width="4"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
+    <text x="102" y="132" fill="#fff8e9" font-size="58">CRASH</text>
+    <text x="106" y="184" fill="#1de59d" font-size="38">2.46x</text>
+    <text x="106" y="364" fill="#aebcc0" font-size="18">Cashout avant le crash</text>
+  </g>
+  <defs>
+    <filter id="glow" x="66" y="58" width="590" height="308" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10"/>
+      <feComposite in2="SourceGraphic" operator="over"/>
+    </filter>
+    <filter id="shadow" x="465" y="82" width="180" height="166" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+</svg>

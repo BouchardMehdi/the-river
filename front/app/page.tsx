@@ -64,22 +64,40 @@ const games = [
     variant: 'pachinko',
   },
   {
+    href: '/games/hi-lo',
+    image: '/assets/home/game-hilo.png',
+    title: 'Hi-Lo',
+    variant: 'hilo',
+  },
+  {
+    href: '/games/mines',
+    image: '/assets/home/game-mines.png',
+    title: 'Mines',
+    variant: 'mines',
+  },
+  {
     href: '/games/keno',
-    image: '/assets/home/game-keno.svg',
+    image: '/assets/home/game-keno.png',
     title: 'Keno',
     variant: 'keno',
   },
   {
     href: '/games/baccarat',
-    image: '/assets/home/game-baccarat.svg',
+    image: '/assets/home/game-baccarat.png',
     title: 'Baccarat',
     variant: 'baccarat',
   },
   {
     href: '/games/wheel-of-fortune',
-    image: '/assets/home/game-wheel.svg',
+    image: '/assets/home/game-wheel.png',
     title: 'Wheel of Fortune',
     variant: 'wheel',
+  },
+  {
+    href: '/games/crash',
+    image: '/assets/home/game-crash.png',
+    title: 'Crash',
+    variant: 'crash',
   },
 ] as const;
 

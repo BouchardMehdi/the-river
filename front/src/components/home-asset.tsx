@@ -10,9 +10,12 @@ type AssetVariant =
   | 'blackjack'
   | 'craps'
   | 'pachinko'
+  | 'hilo'
+  | 'mines'
   | 'keno'
   | 'baccarat'
-  | 'wheel';
+  | 'wheel'
+  | 'crash';
 
 type HomeAssetProps = {
   alt: string;
@@ -70,9 +73,12 @@ function AssetFallback({ variant }: { variant: AssetVariant }) {
       {variant === 'blackjack' ? <span>A K</span> : null}
       {variant === 'craps' ? <span>7</span> : null}
       {variant === 'pachinko' ? <span>9x</span> : null}
+      {variant === 'hilo' ? <span>A 7</span> : null}
+      {variant === 'mines' ? <span>M</span> : null}
       {variant === 'keno' ? <span>22</span> : null}
       {variant === 'baccarat' ? <span>9</span> : null}
       {variant === 'wheel' ? <span>50x</span> : null}
+      {variant === 'crash' ? <span>2.46x</span> : null}
     </div>
   );
 }

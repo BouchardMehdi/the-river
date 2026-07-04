@@ -90,12 +90,14 @@ type GameKey =
   | 'KENO'
   | 'BACCARAT'
   | 'WHEEL'
+  | 'CRASH'
   | 'CASINO';
 type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
 type ChartPeriod = 'day' | 'week' | 'month';
 type PieMode = 'games' | 'net';
 type LeaderFilter = 'credits' | 'points' | 'score';
+type StatsGameFilter = 'ALL' | ChartGameKey;
 
 type ChartPoint = {
   color: string;
@@ -175,6 +177,12 @@ const gameMeta: Record<GameKey, { color: string; image: string; label: string; h
     image: '/assets/home/game-wheel.svg',
     label: 'Wheel of Fortune',
   },
+  CRASH: {
+    color: '#ff625a',
+    href: '/games/crash',
+    image: '/assets/home/game-crash.svg',
+    label: 'Crash',
+  },
   CASINO: {
     color: '#c5d0d1',
     href: '/games',
@@ -189,7 +197,7 @@ const chartPeriodLabels: Record<ChartPeriod, string> = {
   month: '30j',
 };
 
-const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL'];
+const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL', 'CRASH'];
 
 function formatCredits(value: number | undefined | null) {
   return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
@@ -234,6 +242,7 @@ function toGameKey(game?: string): GameKey {
   if (key.includes('KENO')) return 'KENO';
   if (key.includes('BACCARAT')) return 'BACCARAT';
   if (key.includes('WHEEL')) return 'WHEEL';
+  if (key.includes('CRASH')) return 'CRASH';
   return 'CASINO';
 }
 
@@ -298,6 +307,7 @@ function DashboardContent() {
   const [chartMode, setChartMode] = useState<ChartMode>('overview');
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('week');
   const [pieMode, setPieMode] = useState<PieMode>('games');
+  const [statsGameFilter, setStatsGameFilter] = useState<StatsGameFilter>('ALL');
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('credits');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
@@ -336,7 +346,7 @@ function DashboardContent() {
 
   useEffect(() => {
     setSelectedPoint(null);
-  }, [chartMode, chartPeriod]);
+  }, [chartMode, chartPeriod, statsGameFilter]);
 
   async function claim(key: string) {
     setClaimingKey(key);
@@ -355,6 +365,11 @@ function DashboardContent() {
     const recent = summary?.recent && summary.recent.length > 0 ? summary.recent : [];
     return recent.slice(0, 8);
   }, [summary]);
+
+  const visibleActivity = useMemo(() => {
+    if (statsGameFilter === 'ALL') return activity;
+    return activity.filter((event) => toGameKey(event.game) === statsGameFilter);
+  }, [activity, statsGameFilter]);
 
   const chartBuckets = useMemo(() => {
     if (summary?.chart && summary.chart.length > 0) return summary.chart;
@@ -375,6 +390,7 @@ function DashboardContent() {
           KENO: game === 'KENO' ? delta : 0,
           BACCARAT: game === 'BACCARAT' ? delta : 0,
           WHEEL: game === 'WHEEL' ? delta : 0,
+          CRASH: game === 'CRASH' ? delta : 0,
         },
         end: event.createdAt,
         gains: Math.max(0, delta),
@@ -436,7 +452,7 @@ function DashboardContent() {
       }
     }
 
-    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL'];
+    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL', 'CRASH'];
     return ordered.map((key) => ({
       key,
       ...gameMeta[key],
@@ -444,16 +460,48 @@ function DashboardContent() {
     }));
   }, [activity, summary]);
 
+  const visibleGameTotals = useMemo(() => {
+    if (statsGameFilter === 'ALL') return gameTotals;
+    return gameTotals.filter((game) => game.key === statsGameFilter);
+  }, [gameTotals, statsGameFilter]);
+
+  const displayTotals = useMemo(() => {
+    if (statsGameFilter === 'ALL') return totals;
+    const selectedGame = gameTotals.find((game) => game.key === statsGameFilter);
+    const gains = Number(selectedGame?.gains ?? 0);
+    const losses = Number(selectedGame?.losses ?? 0);
+    const net = Number(selectedGame?.net ?? 0);
+    const volume = Number(selectedGame?.volume ?? 0);
+    const performance = volume > 0 ? (net / volume) * 100 : 0;
+    return { gains, losses, net, performance, volume };
+  }, [gameTotals, statsGameFilter, totals]);
+
+  const chartBucketsForStats = useMemo(() => {
+    if (statsGameFilter === 'ALL') return chartBuckets;
+
+    return chartBuckets.map((bucket) => {
+      const delta = Number(bucket.byGame?.[statsGameFilter] ?? 0);
+      return {
+        ...bucket,
+        gains: Math.max(0, delta),
+        losses: Math.abs(Math.min(0, delta)),
+        net: delta,
+        volume: Math.abs(delta),
+      };
+    });
+  }, [chartBuckets, statsGameFilter]);
+
   const chartSeries = useMemo(() => {
     if (chartMode === 'games') {
-      return chartGameKeys.map((key) => {
+      const activeGameKeys = statsGameFilter === 'ALL' ? chartGameKeys : [statsGameFilter];
+      return activeGameKeys.map((key) => {
         let net = 0;
         return {
           color: gameMeta[key].color,
-          deltas: chartBuckets.map((bucket) => Number(bucket.byGame?.[key] ?? 0)),
+          deltas: chartBucketsForStats.map((bucket) => Number(bucket.byGame?.[key] ?? 0)),
           key,
           label: gameMeta[key].label,
-          values: chartBuckets.map((bucket) => {
+          values: chartBucketsForStats.map((bucket) => {
             net += Number(bucket.byGame?.[key] ?? 0);
             return net;
           }),
@@ -465,30 +513,30 @@ function DashboardContent() {
     return [
       {
         color: '#4193ff',
-        deltas: chartBuckets.map((bucket) => Number(bucket.net ?? 0)),
+        deltas: chartBucketsForStats.map((bucket) => Number(bucket.net ?? 0)),
         key: 'net',
         label: 'Net',
-        values: chartBuckets.map((bucket) => {
+        values: chartBucketsForStats.map((bucket) => {
           cumulativeNet += Number(bucket.net ?? 0);
           return cumulativeNet;
         }),
       },
       {
         color: '#25df98',
-        deltas: chartBuckets.map((bucket) => Number(bucket.gains ?? 0)),
+        deltas: chartBucketsForStats.map((bucket) => Number(bucket.gains ?? 0)),
         key: 'gains',
         label: 'Gains',
-        values: chartBuckets.map((bucket) => Number(bucket.gains ?? 0)),
+        values: chartBucketsForStats.map((bucket) => Number(bucket.gains ?? 0)),
       },
       {
         color: '#ff625a',
-        deltas: chartBuckets.map((bucket) => -Number(bucket.losses ?? 0)),
+        deltas: chartBucketsForStats.map((bucket) => -Number(bucket.losses ?? 0)),
         key: 'losses',
         label: 'Pertes',
-        values: chartBuckets.map((bucket) => Number(bucket.losses ?? 0)),
+        values: chartBucketsForStats.map((bucket) => Number(bucket.losses ?? 0)),
       },
     ];
-  }, [chartBuckets, chartMode]);
+  }, [chartBucketsForStats, chartMode, statsGameFilter]);
 
   const chartBounds = useMemo(() => {
     const values = chartSeries.flatMap((series) => series.values);
@@ -501,7 +549,7 @@ function DashboardContent() {
   const pieSlices = useMemo(() => {
     const raw =
       pieMode === 'games'
-        ? gameTotals.map((game) => ({
+        ? visibleGameTotals.map((game) => ({
             color: game.color,
             key: game.key,
             label: game.label,
@@ -510,15 +558,15 @@ function DashboardContent() {
           }))
         : [
             {
-              color: totals.net >= 0 ? '#25df98' : '#ff625a',
+              color: displayTotals.net >= 0 ? '#25df98' : '#ff625a',
               key: 'net',
               label: 'Net',
-              meta: `${formatCredits(totals.gains)} gagnes / ${formatCredits(totals.losses)} perdus`,
-              value: Math.abs(totals.net),
+              meta: `${formatCredits(displayTotals.gains)} gagnes / ${formatCredits(displayTotals.losses)} perdus`,
+              value: Math.abs(displayTotals.net),
             },
           ];
     return raw;
-  }, [gameTotals, pieMode, totals]);
+  }, [displayTotals, pieMode, visibleGameTotals]);
 
   const pieTotal = pieSlices.reduce((sum, slice) => sum + slice.value, 0);
   const hasPieData = pieTotal > 0;
@@ -544,7 +592,7 @@ function DashboardContent() {
     index: number,
     point: { x: number; y: number },
   ) {
-    const bucket = chartBuckets[index];
+    const bucket = chartBucketsForStats[index];
     const pointDelta = Number(series.deltas[index] ?? 0);
     setSelectedPoint({
       color: series.color,
@@ -567,6 +615,17 @@ function DashboardContent() {
             <p>Vue claire de tes credits, resultats et objectifs actifs.</p>
           </div>
           <div className="dashboard-actions">
+            <label className="dashboard-game-filter">
+              <span>Stats</span>
+              <select value={statsGameFilter} onChange={(event) => setStatsGameFilter(event.target.value as StatsGameFilter)}>
+                <option value="ALL">Tous les jeux</option>
+                {chartGameKeys.map((key) => (
+                  <option key={key} value={key}>
+                    {gameMeta[key].label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button className="button secondary small quest-open-button" onClick={() => setQuestPanelOpen(true)} type="button">
               <ListChecks size={17} />
               <span>Quetes</span>
@@ -587,23 +646,23 @@ function DashboardContent() {
         <div className="dashboard-kpis">
           <article className="metric-card accent">
             <span>Volume joue</span>
-            <strong>{formatCredits(totals.volume)}</strong>
+            <strong>{formatCredits(displayTotals.volume)}</strong>
             <em>Periode selectionnee</em>
           </article>
           <article className="metric-card">
             <span>Gains</span>
-            <strong>{formatCredits(totals.gains)}</strong>
+            <strong>{formatCredits(displayTotals.gains)}</strong>
             <em className="positive">Credits positifs</em>
           </article>
           <article className="metric-card">
             <span>Pertes</span>
-            <strong>{formatCredits(totals.losses)}</strong>
+            <strong>{formatCredits(displayTotals.losses)}</strong>
             <em className="negative">Credits negatifs</em>
           </article>
           <article className="metric-card">
             <span>Performance nette</span>
-            <strong>{totals.performance.toFixed(1)}%</strong>
-            <em className={totals.net >= 0 ? 'positive' : 'negative'}>{formatCredits(totals.net)} net</em>
+            <strong>{displayTotals.performance.toFixed(1)}%</strong>
+            <em className={displayTotals.net >= 0 ? 'positive' : 'negative'}>{formatCredits(displayTotals.net)} net</em>
           </article>
         </div>
 
@@ -727,7 +786,7 @@ function DashboardContent() {
                 <circle cx="110" cy="110" r="51" fill="#08151c" />
                 <text className="donut-center-label" x="110" y="105" textAnchor="middle">{pieMode === 'net' ? 'Net' : 'Total'}</text>
                 <text className="donut-center-value" x="110" y="128" textAnchor="middle">
-                  {pieMode === 'net' ? formatCredits(totals.net) : formatCredits(totals.volume)}
+                  {pieMode === 'net' ? formatCredits(displayTotals.net) : formatCredits(displayTotals.volume)}
                 </text>
               </svg>
               <div className="distribution-list">
@@ -748,7 +807,7 @@ function DashboardContent() {
               <Link href="/games">Voir tous les jeux</Link>
             </div>
             <div className="activity-table compact">
-              {activity.length > 0 ? activity.slice(0, 5).map((event, index) => {
+              {visibleActivity.length > 0 ? visibleActivity.slice(0, 5).map((event, index) => {
                 const delta = Number(event.deltaCredits ?? 0);
                 const meta = gameMeta[toGameKey(event.game)];
                 return (

@@ -61,7 +61,7 @@ const games = [
   },
   {
     href: '/games/hi-lo',
-    image: '/assets/cards/spades_A.png',
+    image: '/assets/home/game-hilo.png',
     kind: 'Solo',
     status: 'Disponible',
     title: 'Hi-Lo',
@@ -70,7 +70,7 @@ const games = [
   },
   {
     href: '/games/mines',
-    image: '/assets/home/game-mines.svg',
+    image: '/assets/home/game-mines.png',
     kind: 'Solo',
     status: 'Disponible',
     title: 'Mines',
@@ -79,7 +79,7 @@ const games = [
   },
   {
     href: '/games/keno',
-    image: '/assets/home/game-keno.svg',
+    image: '/assets/home/game-keno.png',
     kind: 'Solo',
     status: 'Disponible',
     title: 'Keno',
@@ -88,7 +88,7 @@ const games = [
   },
   {
     href: '/games/baccarat',
-    image: '/assets/home/game-baccarat.svg',
+    image: '/assets/home/game-baccarat.png',
     kind: 'Table',
     status: 'Disponible',
     title: 'Baccarat',
@@ -97,12 +97,21 @@ const games = [
   },
   {
     href: '/games/wheel-of-fortune',
-    image: '/assets/home/game-wheel.svg',
+    image: '/assets/home/game-wheel.png',
     kind: 'Solo',
     status: 'Disponible',
     title: 'Wheel of Fortune',
     text: 'Fais tourner la roue et vise les gros multiplicateurs.',
     tone: 'wheel',
+  },
+  {
+    href: '/games/crash',
+    image: '/assets/home/game-crash.png',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Crash',
+    text: 'Cashout avant que la courbe ne tombe et securise ton multiplicateur.',
+    tone: 'crash',
   },
 ] as const;
 

@@ -2588,6 +2588,40 @@ main {
   gap: 10px;
 }
 
+.dashboard-game-filter {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(216, 168, 79, 0.34);
+  border-radius: 8px;
+  background: rgba(216, 168, 79, 0.08);
+}
+
+.dashboard-game-filter span {
+  color: #d8a84f;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.dashboard-game-filter select {
+  min-width: 158px;
+  border: 0;
+  outline: none;
+  color: #fff8e9;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+
+.dashboard-game-filter option {
+  color: #03130c;
+  background: #fff8e9;
+}
+
 .date-filter {
   min-height: 42px;
   display: inline-flex;
@@ -3203,7 +3237,7 @@ main {
 
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -3366,6 +3400,10 @@ main {
   --game-accent: #a58cff;
 }
 
+.casino-game-card.crash {
+  --game-accent: #ff625a;
+}
+
 .casino-game-image img.game-art-craps {
   width: min(126%, 352px);
   max-height: 178px;
@@ -3416,6 +3454,13 @@ main {
   max-height: 178px;
   margin-bottom: -6px;
   filter: drop-shadow(0 0 24px rgba(165, 140, 255, 0.26));
+}
+
+.casino-game-image img.game-art-crash {
+  width: min(122%, 346px);
+  max-height: 178px;
+  margin-bottom: -6px;
+  filter: drop-shadow(0 0 24px rgba(255, 98, 90, 0.24));
 }
 
 .casino-game-card::before {
@@ -4313,11 +4358,26 @@ main {
   line-height: 1.5;
 }
 
+.games-page .casino-game-card:hover,
 .craps-page .interactive-card:hover,
-.pachinko-page .interactive-card:hover {
+.pachinko-page .interactive-card:hover,
+.hilo-page .interactive-card:hover,
+.mines-page .interactive-card:hover,
+.keno-page .interactive-card:hover,
+.baccarat-page .interactive-card:hover,
+.wheel-page .interactive-card:hover,
+.crash-page .interactive-card:hover,
+.slots-page .interactive-card:hover,
+.roulette-page .interactive-card:hover,
+.poker-page .interactive-card:hover,
+.blackjack-page .interactive-card:hover {
   transform: none;
   border-color: rgba(150, 174, 190, 0.18);
   box-shadow: var(--shadow);
+}
+
+.games-page .casino-game-card:hover .casino-game-image img {
+  transform: none;
 }
 
 .craps-table button:hover,
@@ -6261,6 +6321,405 @@ main {
   width: 10px;
   height: 10px;
   border-radius: 999px;
+}
+
+/* Crash */
+.crash-page {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.crash-hero,
+.crash-stage,
+.crash-panel,
+.crash-rules-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+  box-shadow: var(--shadow);
+}
+
+.crash-hero {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 430px;
+  gap: 26px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  background:
+    radial-gradient(circle at 80% 26%, rgba(255, 98, 90, 0.22), transparent 34%),
+    radial-gradient(circle at 68% 78%, rgba(29, 229, 157, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.crash-hero h1 {
+  margin: 16px 0 12px;
+  max-width: 760px;
+  font-size: clamp(46px, 6vw, 84px);
+  line-height: 0.94;
+}
+
+.crash-hero p {
+  max-width: 650px;
+  margin: 0 0 22px;
+  color: #c5d0d1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.crash-hero-chart {
+  position: relative;
+  min-height: 230px;
+  overflow: hidden;
+  border: 1px solid rgba(150, 174, 190, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 74% 28%, rgba(29, 229, 157, 0.18), transparent 36%),
+    rgba(255, 255, 255, 0.035);
+  background-size: 100% 46px, 54px 100%, auto, auto;
+}
+
+.crash-hero-chart::before {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 40px;
+  bottom: 48px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1de59d, #f1d28a, #ff625a);
+  transform: skewY(-16deg);
+  transform-origin: left bottom;
+  box-shadow: 0 0 28px rgba(29, 229, 157, 0.3);
+}
+
+.crash-hero-chart span {
+  position: absolute;
+  left: 28px;
+  top: 28px;
+  color: #1de59d;
+  font-size: 44px;
+  font-weight: 900;
+}
+
+.crash-hero-chart svg {
+  position: absolute;
+  right: 50px;
+  top: 46px;
+  color: #ff625a;
+  transform: rotate(-32deg);
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.36));
+}
+
+.crash-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.crash-stage,
+.crash-panel {
+  padding: 18px;
+}
+
+.crash-stage {
+  min-height: 720px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+  overflow: hidden;
+}
+
+.crash-multiplier {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.crash-multiplier strong {
+  color: #1de59d;
+  font-size: clamp(52px, 7vw, 104px);
+  line-height: 0.9;
+  text-shadow: 0 0 32px rgba(29, 229, 157, 0.2);
+}
+
+.crash-multiplier span {
+  max-width: 360px;
+  color: #c5d0d1;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.crash-graph {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border: 1px solid rgba(150, 174, 190, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 72% 22%, rgba(255, 98, 90, 0.1), transparent 34%),
+    rgba(255, 255, 255, 0.026);
+  background-size: 100% 70px, 82px 100%, auto, auto;
+}
+
+.crash-curve-svg {
+  position: absolute;
+  inset: 28px 30px 34px 30px;
+  z-index: 1;
+  width: calc(100% - 60px);
+  height: calc(100% - 62px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.crash-curve-svg path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: d 180ms linear;
+}
+
+.crash-curve-guide {
+  stroke: rgba(255, 248, 233, 0.2);
+  stroke-width: 2;
+  stroke-dasharray: 5 7;
+}
+
+.crash-curve-area {
+  fill: rgba(29, 229, 157, 0.11);
+  stroke: none;
+}
+
+.crash-curve-glow {
+  stroke: rgba(29, 229, 157, 0.36);
+  stroke-width: 22;
+  filter: blur(6px);
+}
+
+.crash-curve-line {
+  stroke: #1de59d;
+  stroke-width: 8;
+  filter: drop-shadow(0 0 22px rgba(29, 229, 157, 0.48));
+}
+
+.crash-rocket {
+  position: absolute;
+  z-index: 2;
+  left: var(--rocket-left);
+  top: var(--rocket-top);
+  color: #ff625a;
+  transform: translate(-50%, -50%) rotate(-34deg);
+  transition: left 180ms linear, top 180ms linear;
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.34));
+}
+
+.crash-stage.running .crash-rocket {
+  animation: crashRocketFloat 680ms ease-in-out infinite alternate;
+}
+
+.crash-burst {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 150px;
+  border: 3px solid rgba(255, 98, 90, 0.68);
+  border-radius: 999px;
+  color: #fff8e9;
+  background: rgba(127, 31, 27, 0.76);
+  font-size: 25px;
+  font-weight: 900;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.7);
+  transition: opacity 180ms ease, transform 180ms ease;
+  box-shadow: 0 0 42px rgba(255, 98, 90, 0.34);
+}
+
+.crash-burst.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.crash-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.crash-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.crash-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.crash-panel label span {
+  color: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.crash-panel input {
+  min-height: 44px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(12, 11, 9, 0.82);
+  padding: 0 12px;
+}
+
+.crash-kpis {
+  display: grid;
+  gap: 8px;
+}
+
+.crash-kpis span,
+.crash-history article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  color: #aebcc0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.crash-kpis strong {
+  color: #f1d28a;
+}
+
+.crash-kpis strong.positive {
+  color: #1de59d;
+}
+
+.crash-kpis strong.negative {
+  color: #ff625a;
+}
+
+.crash-cashout {
+  background: linear-gradient(180deg, #20d59b, #10936d);
+  box-shadow: 0 0 28px rgba(29, 229, 157, 0.18);
+}
+
+.crash-panel p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.crash-history {
+  display: grid;
+  gap: 8px;
+}
+
+.crash-history article.win {
+  border-color: rgba(29, 229, 157, 0.3);
+}
+
+.crash-history article.loss {
+  border-color: rgba(255, 98, 90, 0.28);
+}
+
+.crash-history strong {
+  color: #fff8e9;
+}
+
+.crash-history em {
+  color: #c5d0d1;
+  font-style: normal;
+}
+
+.crash-rules-drawer {
+  position: fixed;
+  z-index: 45;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: min(450px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 220ms ease;
+}
+
+.crash-rules-drawer.open {
+  transform: translateX(0);
+}
+
+.crash-rules-scroll {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.crash-rules-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.crash-rules-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.crash-rules-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 14, 21, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ff625a, #1de59d);
+}
+
+.crash-rules-scroll article {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.crash-rules-scroll svg {
+  color: #ff625a;
+}
+
+.crash-rules-scroll h3 {
+  margin: 0 0 6px;
+}
+
+.crash-rules-scroll p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+@keyframes crashRocketFloat {
+  from {
+    transform: translate(-50%, -50%) translateY(0) rotate(-34deg);
+  }
+  to {
+    transform: translate(-50%, -50%) translateY(-8px) rotate(-29deg);
+  }
 }
 
 /* Poker room */
@@ -8472,7 +8931,9 @@ main {
   .baccarat-hero,
   .baccarat-layout,
   .wheel-hero,
-  .wheel-layout {
+  .wheel-layout,
+  .crash-hero,
+  .crash-layout {
     grid-template-columns: 1fr;
   }
 
@@ -8494,6 +8955,10 @@ main {
 
   .wheel-stage {
     min-height: 650px;
+  }
+
+  .crash-stage {
+    min-height: 640px;
   }
 
   .dashboard-shell.dashboard-modern {
@@ -8564,6 +9029,16 @@ main {
   .dashboard-modern .dashboard-actions {
     justify-content: flex-start;
   }
+
+  .dashboard-game-filter {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dashboard-game-filter select {
+    min-width: 0;
+    flex: 1;
+  }
 }
 
 @media (max-width: 560px) {
@@ -8599,7 +9074,8 @@ main {
   .pachinko-page,
   .keno-page,
   .baccarat-page,
-  .wheel-page {
+  .wheel-page,
+  .crash-page {
     width: min(100% - 20px, 1560px);
     padding-top: 18px;
   }
@@ -8621,7 +9097,10 @@ main {
   .baccarat-panel,
   .wheel-hero,
   .wheel-stage,
-  .wheel-panel {
+  .wheel-panel,
+  .crash-hero,
+  .crash-stage,
+  .crash-panel {
     padding: 16px;
   }
 
@@ -8755,6 +9234,31 @@ main {
       rotate(var(--segment-angle))
       translateY(-146px)
       rotate(90deg);
+  }
+
+  .crash-hero-chart {
+    min-height: 210px;
+  }
+
+  .crash-stage {
+    min-height: 540px;
+  }
+
+  .crash-multiplier {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .crash-multiplier span {
+    text-align: left;
+  }
+
+  .crash-graph {
+    min-height: 360px;
+  }
+
+  .crash-plane {
+    left: min(calc(var(--crash-progress) + 42px), calc(100% - 72px));
   }
 
   .craps-dice-stage {

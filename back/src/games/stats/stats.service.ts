@@ -33,6 +33,44 @@ export class StatsService {
     return Math.max(min, Math.min(max, n));
   }
 
+  private normalizeGame(game: string) {
+    const key = String(game ?? '').trim().toUpperCase();
+    if (key.includes('SLOT')) return 'SLOTS';
+    if (key.includes('ROULETTE')) return 'ROULETTE';
+    if (key.includes('POKER')) return 'POKER';
+    if (key.includes('BLACKJACK')) return 'BLACKJACK';
+    return key || 'CASINO';
+  }
+
+  private parseMeta(metaJson?: string | null) {
+    if (!metaJson) return null;
+
+    try {
+      return JSON.parse(metaJson);
+    } catch {
+      return null;
+    }
+  }
+
+  private getDashboardStart(period: StatsPeriod) {
+    const now = new Date();
+    const d = new Date(now);
+
+    if (period === 'day') d.setHours(d.getHours() - 24);
+    else if (period === 'week') d.setDate(d.getDate() - 7);
+    else if (period === 'month') d.setMonth(d.getMonth() - 1);
+    else d.setFullYear(d.getFullYear() - 1);
+
+    return d;
+  }
+
+  private getChartBucketCount(period: StatsPeriod) {
+    if (period === 'day') return 12;
+    if (period === 'week') return 14;
+    if (period === 'month') return 15;
+    return 18;
+  }
+
   getPeriodStart(period: StatsPeriod) {
     const now = new Date();
 
@@ -92,6 +130,124 @@ export class StatsService {
       order: { createdAt: 'DESC' },
       take,
     });
+  }
+
+  async getDashboardSummary(username: string, period: StatsPeriod = 'week', limit = 12) {
+    const u = await this.usersService.findByUsername(username);
+    if (!u) throw new BadRequestException('USER_NOT_FOUND');
+
+    const take = this.clamp(Math.floor(Number(limit) || 12), 1, 80);
+    const start = this.getDashboardStart(period);
+    const now = new Date();
+
+    const rows = await this.eventsRepo
+      .createQueryBuilder('e')
+      .where('e.userId = :userId', { userId: u.userId })
+      .andWhere('e.createdAt >= :start', { start: start.toISOString() })
+      .orderBy('e.createdAt', 'DESC')
+      .getMany();
+
+    const byGame = new Map<
+      string,
+      { events: number; gains: number; losses: number; net: number; volume: number }
+    >();
+
+    let gains = 0;
+    let losses = 0;
+
+    for (const row of rows) {
+      const delta = Number(row.deltaCredits || 0);
+      const key = this.normalizeGame(row.game);
+      const current = byGame.get(key) ?? {
+        events: 0,
+        gains: 0,
+        losses: 0,
+        net: 0,
+        volume: 0,
+      };
+
+      current.events += 1;
+      current.gains += delta > 0 ? delta : 0;
+      current.losses += delta < 0 ? Math.abs(delta) : 0;
+      current.net += delta;
+      current.volume += Math.abs(delta);
+      byGame.set(key, current);
+
+      gains += delta > 0 ? delta : 0;
+      losses += delta < 0 ? Math.abs(delta) : 0;
+    }
+
+    const volume = gains + losses;
+    const net = gains - losses;
+
+    const serializeEvent = (row: GameEventEntity) => ({
+      id: row.id,
+      userId: row.userId,
+      username: row.username,
+      game: this.normalizeGame(row.game),
+      deltaCredits: Number(row.deltaCredits || 0),
+      deltaPoints: Number(row.deltaPoints || 0),
+      meta: this.parseMeta(row.metaJson),
+      createdAt: row.createdAt,
+    });
+
+    const bucketCount = this.getChartBucketCount(period);
+    const startTime = start.getTime();
+    const endTime = Math.max(now.getTime(), startTime + 1);
+    const bucketSize = Math.max(1, Math.ceil((endTime - startTime) / bucketCount));
+    const chart = Array.from({ length: bucketCount }, (_, index) => {
+      const bucketStart = new Date(startTime + index * bucketSize);
+      const bucketEnd = new Date(Math.min(endTime, startTime + (index + 1) * bucketSize));
+      return {
+        start: bucketStart,
+        end: bucketEnd,
+        gains: 0,
+        losses: 0,
+        net: 0,
+        volume: 0,
+        byGame: {
+          SLOTS: 0,
+          ROULETTE: 0,
+          POKER: 0,
+          BLACKJACK: 0,
+        } as Record<string, number>,
+      };
+    });
+
+    for (const row of rows) {
+      const eventTime = new Date(row.createdAt).getTime();
+      const index = this.clamp(Math.floor((eventTime - startTime) / bucketSize), 0, bucketCount - 1);
+      const delta = Number(row.deltaCredits || 0);
+      const bucket = chart[index];
+      bucket.gains += delta > 0 ? delta : 0;
+      bucket.losses += delta < 0 ? Math.abs(delta) : 0;
+      bucket.net += delta;
+      bucket.volume += Math.abs(delta);
+
+      const key = this.normalizeGame(row.game);
+      if (key in bucket.byGame) bucket.byGame[key] += delta;
+    }
+
+    return {
+      period,
+      startedAt: start,
+      balance: Number((u as any).credits ?? 0),
+      totals: {
+        events: rows.length,
+        gains,
+        losses,
+        net,
+        performance: volume > 0 ? (net / volume) * 100 : 0,
+        volume,
+      },
+      byGame: Array.from(byGame.entries()).map(([game, totals]) => ({
+        game,
+        ...totals,
+        share: volume > 0 ? (totals.volume / volume) * 100 : 0,
+      })),
+      recent: rows.slice(0, take).map(serializeEvent),
+      chart,
+    };
   }
 
   async getGameEventsByUsername(username: string, game: string, since?: Date) {

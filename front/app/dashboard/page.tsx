@@ -7,7 +7,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Bell,
-  CalendarDays,
   Check,
   ChevronRight,
   ListChecks,
@@ -23,6 +22,7 @@ import { StatusMessage } from '@/components/ui';
 import type { Quest } from '@/types/api';
 
 type PerfEvent = {
+  id?: number;
   game?: string;
   deltaCredits?: number;
   deltaPoints?: number;
@@ -30,9 +30,37 @@ type PerfEvent = {
   meta?: unknown;
 };
 
-type Perf = {
-  totals?: { credits?: number; points?: number; games?: number };
+type DashboardSummary = {
+  balance?: number;
+  byGame?: Array<{
+    events?: number;
+    game?: string;
+    gains?: number;
+    losses?: number;
+    net?: number;
+    share?: number;
+    volume?: number;
+  }>;
+  chart?: Array<{
+    byGame?: Record<string, number>;
+    end?: string;
+    gains?: number;
+    losses?: number;
+    net?: number;
+    start?: string;
+    volume?: number;
+  }>;
+  period?: string;
   recent?: PerfEvent[];
+  startedAt?: string;
+  totals?: {
+    events?: number;
+    gains?: number;
+    losses?: number;
+    net?: number;
+    performance?: number;
+    volume?: number;
+  };
 };
 
 type Leader = {
@@ -51,7 +79,9 @@ type EggStatus = {
 };
 
 type GameKey = 'SLOTS' | 'ROULETTE' | 'POKER' | 'BLACKJACK' | 'CASINO';
+type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
+type ChartPeriod = 'day' | 'week' | 'month';
 type PieMode = 'games' | 'net';
 type LeaderFilter = 'credits' | 'points' | 'score';
 
@@ -60,6 +90,7 @@ type ChartPoint = {
   delta: number;
   date?: string;
   label: string;
+  period?: string;
   value: number;
   x: number;
   y: number;
@@ -98,8 +129,21 @@ const gameMeta: Record<GameKey, { color: string; image: string; label: string; h
   },
 };
 
+const chartPeriodLabels: Record<ChartPeriod, string> = {
+  day: '24h',
+  week: '7j',
+  month: '30j',
+};
+
+const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK'];
+
 function formatCredits(value: number | undefined | null) {
   return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+}
+
+function formatLeaderValue(value: number, filter: LeaderFilter) {
+  if (filter === 'points') return `${Number(value ?? 0).toLocaleString('fr-FR')} points`;
+  return formatCredits(value);
 }
 
 function formatDate(value?: string) {
@@ -110,6 +154,17 @@ function formatDate(value?: string) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+function formatChartRange(start?: string, end?: string) {
+  if (!start || !end) return 'Periode selectionnee';
+  const format = new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short',
+  });
+  return `${format.format(new Date(start))} - ${format.format(new Date(end))}`;
 }
 
 function toGameKey(game?: string): GameKey {
@@ -170,17 +225,21 @@ function describeDonutSlice(startAngle: number, endAngle: number, outerRadius = 
 
 function DashboardContent() {
   const { user, logout, refreshUser } = useAuth();
-  const [perf, setPerf] = useState<Perf | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [quests, setQuests] = useState<Quest[]>([]);
-  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const [leaders, setLeaders] = useState<Record<LeaderFilter, Leader[]>>({
+    credits: [],
+    points: [],
+    score: [],
+  });
   const [egg, setEgg] = useState<EggStatus | null>(null);
   const [claimingKey, setClaimingKey] = useState<string | null>(null);
   const [chartMode, setChartMode] = useState<ChartMode>('overview');
+  const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('week');
   const [pieMode, setPieMode] = useState<PieMode>('games');
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('credits');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
-  const [activityExpanded, setActivityExpanded] = useState(false);
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -188,15 +247,21 @@ function DashboardContent() {
   async function load() {
     setError('');
     try {
-      const [perfOut, questsOut, leadersOut, eggOut] = await Promise.all([
-        apiGet<Perf>('/dashboard/perf?limit=12').catch(() => null),
+      const [summaryOut, questsOut, creditsLeadersOut, pointsLeadersOut, scoreLeadersOut, eggOut] = await Promise.all([
+        apiGet<DashboardSummary>(`/dashboard/summary?period=${chartPeriod}&limit=12`).catch(() => null),
         apiGet<Quest[]>('/quests').catch(() => []),
         apiGet<Leader[]>('/dashboard/balance-leaderboard?limit=8', false).catch(() => []),
+        apiGet<Leader[]>('/dashboard/leaderboard?metric=points&period=week&limit=8', false).catch(() => []),
+        apiGet<Leader[]>('/dashboard/leaderboard?metric=credits&period=week&limit=8', false).catch(() => []),
         apiGet<EggStatus>('/easter-egg/status').catch(() => null),
       ]);
-      setPerf(perfOut);
+      setSummary(summaryOut);
       setQuests(Array.isArray(questsOut) ? questsOut : []);
-      setLeaders(Array.isArray(leadersOut) ? leadersOut : []);
+      setLeaders({
+        credits: Array.isArray(creditsLeadersOut) ? creditsLeadersOut : [],
+        points: Array.isArray(pointsLeadersOut) ? pointsLeadersOut : [],
+        score: Array.isArray(scoreLeadersOut) ? scoreLeadersOut : [],
+      });
       setEgg(eggOut);
       await refreshUser();
     } catch (err) {
@@ -206,7 +271,11 @@ function DashboardContent() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [chartPeriod]);
+
+  useEffect(() => {
+    setSelectedPoint(null);
+  }, [chartMode, chartPeriod]);
 
   async function claim(key: string) {
     setClaimingKey(key);
@@ -222,13 +291,44 @@ function DashboardContent() {
   }
 
   const activity = useMemo(() => {
-    const recent = perf?.recent && perf.recent.length > 0 ? perf.recent : [];
+    const recent = summary?.recent && summary.recent.length > 0 ? summary.recent : [];
     return recent.slice(0, 8);
-  }, [perf]);
+  }, [summary]);
 
-  const orderedActivity = useMemo(() => [...activity].reverse(), [activity]);
+  const chartBuckets = useMemo(() => {
+    if (summary?.chart && summary.chart.length > 0) return summary.chart;
+
+    return [...activity].reverse().map((event) => {
+      const delta = Number(event.deltaCredits ?? 0);
+      const game = toGameKey(event.game);
+      return {
+        byGame: {
+          SLOTS: game === 'SLOTS' ? delta : 0,
+          ROULETTE: game === 'ROULETTE' ? delta : 0,
+          POKER: game === 'POKER' ? delta : 0,
+          BLACKJACK: game === 'BLACKJACK' ? delta : 0,
+        },
+        end: event.createdAt,
+        gains: Math.max(0, delta),
+        losses: Math.abs(Math.min(0, delta)),
+        net: delta,
+        start: event.createdAt,
+        volume: Math.abs(delta),
+      };
+    });
+  }, [activity, summary]);
 
   const totals = useMemo(() => {
+    if (summary?.totals) {
+      return {
+        gains: Number(summary.totals.gains ?? 0),
+        losses: Number(summary.totals.losses ?? 0),
+        net: Number(summary.totals.net ?? 0),
+        performance: Number(summary.totals.performance ?? 0),
+        volume: Number(summary.totals.volume ?? 0),
+      };
+    }
+
     const gains = activity
       .filter((event) => Number(event.deltaCredits ?? 0) > 0)
       .reduce((sum, event) => sum + Number(event.deltaCredits ?? 0), 0);
@@ -241,19 +341,31 @@ function DashboardContent() {
     const net = gains - losses;
     const performance = volume > 0 ? (net / volume) * 100 : 0;
     return { gains, losses, net, performance, volume };
-  }, [activity]);
+  }, [activity, summary]);
 
   const gameTotals = useMemo(() => {
     const map = new Map<GameKey, { gains: number; losses: number; net: number; volume: number }>();
-    for (const event of activity) {
-      const key = toGameKey(event.game);
-      const delta = Number(event.deltaCredits ?? 0);
-      const current = map.get(key) ?? { gains: 0, losses: 0, net: 0, volume: 0 };
-      current.gains += delta > 0 ? delta : 0;
-      current.losses += delta < 0 ? Math.abs(delta) : 0;
-      current.net += delta;
-      current.volume += Math.abs(delta);
-      map.set(key, current);
+
+    if (summary?.byGame) {
+      for (const game of summary.byGame) {
+        map.set(toGameKey(game.game), {
+          gains: Number(game.gains ?? 0),
+          losses: Number(game.losses ?? 0),
+          net: Number(game.net ?? 0),
+          volume: Number(game.volume ?? 0),
+        });
+      }
+    } else {
+      for (const event of activity) {
+        const key = toGameKey(event.game);
+        const delta = Number(event.deltaCredits ?? 0);
+        const current = map.get(key) ?? { gains: 0, losses: 0, net: 0, volume: 0 };
+        current.gains += delta > 0 ? delta : 0;
+        current.losses += delta < 0 ? Math.abs(delta) : 0;
+        current.net += delta;
+        current.volume += Math.abs(delta);
+        map.set(key, current);
+      }
     }
 
     const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK'];
@@ -262,18 +374,19 @@ function DashboardContent() {
       ...gameMeta[key],
       ...(map.get(key) ?? { gains: 0, losses: 0, net: 0, volume: 0 }),
     }));
-  }, [activity]);
+  }, [activity, summary]);
 
   const chartSeries = useMemo(() => {
     if (chartMode === 'games') {
-      return (['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK'] as GameKey[]).map((key) => {
+      return chartGameKeys.map((key) => {
         let net = 0;
         return {
           color: gameMeta[key].color,
+          deltas: chartBuckets.map((bucket) => Number(bucket.byGame?.[key] ?? 0)),
           key,
           label: gameMeta[key].label,
-          values: orderedActivity.map((event) => {
-            if (toGameKey(event.game) === key) net += Number(event.deltaCredits ?? 0);
+          values: chartBuckets.map((bucket) => {
+            net += Number(bucket.byGame?.[key] ?? 0);
             return net;
           }),
         };
@@ -284,27 +397,30 @@ function DashboardContent() {
     return [
       {
         color: '#4193ff',
+        deltas: chartBuckets.map((bucket) => Number(bucket.net ?? 0)),
         key: 'net',
         label: 'Net',
-        values: orderedActivity.map((event) => {
-          cumulativeNet += Number(event.deltaCredits ?? 0);
+        values: chartBuckets.map((bucket) => {
+          cumulativeNet += Number(bucket.net ?? 0);
           return cumulativeNet;
         }),
       },
       {
         color: '#25df98',
+        deltas: chartBuckets.map((bucket) => Number(bucket.gains ?? 0)),
         key: 'gains',
         label: 'Gains',
-        values: orderedActivity.map((event) => Math.max(0, Number(event.deltaCredits ?? 0))),
+        values: chartBuckets.map((bucket) => Number(bucket.gains ?? 0)),
       },
       {
         color: '#ff625a',
+        deltas: chartBuckets.map((bucket) => -Number(bucket.losses ?? 0)),
         key: 'losses',
         label: 'Pertes',
-        values: orderedActivity.map((event) => Math.abs(Math.min(0, Number(event.deltaCredits ?? 0)))),
+        values: chartBuckets.map((bucket) => Number(bucket.losses ?? 0)),
       },
     ];
-  }, [chartMode, orderedActivity]);
+  }, [chartBuckets, chartMode]);
 
   const chartBounds = useMemo(() => {
     const values = chartSeries.flatMap((series) => series.values);
@@ -342,7 +458,7 @@ function DashboardContent() {
 
   const claimableQuests = quests.filter((quest) => quest.canClaim);
   const leaderRows = useMemo(() => {
-    return [...leaders]
+    return [...leaders[leaderFilter]]
       .map((leader) => ({
         label: leader.username ?? 'Joueur',
         value:
@@ -355,24 +471,19 @@ function DashboardContent() {
       .sort((a, b) => b.value - a.value);
   }, [leaderFilter, leaders]);
 
-  function selectChartPoint(series: { color: string; key: string; label: string; values: number[] }, index: number, point: { x: number; y: number }) {
-    const event = orderedActivity[index];
-    const delta = Number(event?.deltaCredits ?? 0);
-    const pointDelta =
-      chartMode === 'games'
-        ? toGameKey(event?.game) === series.key
-          ? delta
-          : 0
-        : series.key === 'gains'
-          ? Math.max(0, delta)
-          : series.key === 'losses'
-            ? Math.min(0, delta)
-            : delta;
+  function selectChartPoint(
+    series: { color: string; deltas: number[]; key: string; label: string; values: number[] },
+    index: number,
+    point: { x: number; y: number },
+  ) {
+    const bucket = chartBuckets[index];
+    const pointDelta = Number(series.deltas[index] ?? 0);
     setSelectedPoint({
       color: series.color,
-      date: event?.createdAt,
+      date: bucket?.start,
       delta: pointDelta,
       label: series.label,
+      period: formatChartRange(bucket?.start, bucket?.end),
       value: series.values[index],
       x: point.x,
       y: point.y,
@@ -397,9 +508,6 @@ function DashboardContent() {
               <SlidersHorizontal size={17} />
               <span>{showLeaderboard ? 'Masquer classement' : 'Afficher classement'}</span>
             </button>
-            <button className={activityExpanded ? 'date-filter active' : 'date-filter'} onClick={() => setActivityExpanded((value) => !value)} type="button">
-              <CalendarDays size={16} /> {activityExpanded ? 'Activite compacte' : 'Activite detaillee'}
-            </button>
             <button className="icon-button" type="button" title="Notifications">
               <Bell size={18} />
             </button>
@@ -412,7 +520,7 @@ function DashboardContent() {
           <article className="metric-card accent">
             <span>Volume joue</span>
             <strong>{formatCredits(totals.volume)}</strong>
-            <em>Base sur les derniers evenements</em>
+            <em>Periode selectionnee</em>
           </article>
           <article className="metric-card">
             <span>Gains</span>
@@ -434,13 +542,22 @@ function DashboardContent() {
         <section className="analytics-card chart-card interactive-card">
           <div className="card-heading">
             <h2>Evolution des performances</h2>
-            <div className="segmented-control">
-              <button className={chartMode === 'overview' ? 'active' : ''} onClick={() => setChartMode('overview')} type="button">
-                Net
-              </button>
-              <button className={chartMode === 'games' ? 'active' : ''} onClick={() => setChartMode('games')} type="button">
-                Par jeu
-              </button>
+            <div className="chart-controls">
+              <div className="segmented-control">
+                {(Object.keys(chartPeriodLabels) as ChartPeriod[]).map((period) => (
+                  <button className={chartPeriod === period ? 'active' : ''} key={period} onClick={() => setChartPeriod(period)} type="button">
+                    {chartPeriodLabels[period]}
+                  </button>
+                ))}
+              </div>
+              <div className="segmented-control">
+                <button className={chartMode === 'overview' ? 'active' : ''} onClick={() => setChartMode('overview')} type="button">
+                  Net
+                </button>
+                <button className={chartMode === 'games' ? 'active' : ''} onClick={() => setChartMode('games')} type="button">
+                  Par jeu
+                </button>
+              </div>
             </div>
           </div>
           <div className="chart-wrap">
@@ -494,7 +611,7 @@ function DashboardContent() {
                 <em className={selectedPoint.delta >= 0 ? 'positive' : 'negative'}>
                   Variation: {selectedPoint.delta >= 0 ? '+' : ''}{formatCredits(selectedPoint.delta)}
                 </em>
-                <small>{formatDate(selectedPoint.date)}</small>
+                <small>{selectedPoint.period ?? formatDate(selectedPoint.date)}</small>
               </div>
             ) : null}
           </div>
@@ -540,8 +657,10 @@ function DashboardContent() {
                   );
                 }) : <circle cx="110" cy="110" r="94" fill="none" stroke="rgba(150, 174, 190, 0.18)" strokeWidth="38" />}
                 <circle cx="110" cy="110" r="51" fill="#08151c" />
-                <text className="donut-center-label" x="110" y="105" textAnchor="middle">Total</text>
-                <text className="donut-center-value" x="110" y="128" textAnchor="middle">{formatCredits(totals.volume)}</text>
+                <text className="donut-center-label" x="110" y="105" textAnchor="middle">{pieMode === 'net' ? 'Net' : 'Total'}</text>
+                <text className="donut-center-value" x="110" y="128" textAnchor="middle">
+                  {pieMode === 'net' ? formatCredits(totals.net) : formatCredits(totals.volume)}
+                </text>
               </svg>
               <div className="distribution-list">
                 {pieSlices.map((slice) => (
@@ -560,8 +679,8 @@ function DashboardContent() {
               <h2>Activite recente</h2>
               <Link href="/games">Voir tous les jeux</Link>
             </div>
-            <div className={activityExpanded ? 'activity-table compact expanded' : 'activity-table compact'}>
-              {activity.length > 0 ? activity.slice(0, activityExpanded ? 8 : 5).map((event, index) => {
+            <div className="activity-table compact">
+              {activity.length > 0 ? activity.slice(0, 5).map((event, index) => {
                 const delta = Number(event.deltaCredits ?? 0);
                 const meta = gameMeta[toGameKey(event.game)];
                 return (
@@ -570,8 +689,6 @@ function DashboardContent() {
                       <Image src={meta.image} alt="" width={34} height={28} />
                       {meta.label}
                     </span>
-                    {activityExpanded ? <span>{delta >= 0 ? 'Gain' : 'Mise'}</span> : null}
-                    {activityExpanded ? <span>{formatCredits(Math.abs(delta))}</span> : null}
                     <strong className={delta >= 0 ? 'positive' : 'negative'}>
                       {delta >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
                       {formatCredits(delta)}
@@ -613,7 +730,7 @@ function DashboardContent() {
                 <div className="leader-row" key={`${leader.label}-${index}`}>
                   <span>#{index + 1}</span>
                   <strong>{leader.label}</strong>
-                  <em>{formatCredits(leader.value)}</em>
+                  <em>{formatLeaderValue(leader.value, leaderFilter)}</em>
                 </div>
               ))
             ) : (
@@ -622,7 +739,7 @@ function DashboardContent() {
           </div>
           <div className="sidebar-balance">
             <span>Solde total</span>
-            <strong>{formatCredits(user?.credits)}</strong>
+            <strong>{formatCredits(summary?.balance ?? user?.credits)}</strong>
             <Link href="/games">Jouer maintenant <ChevronRight size={14} /></Link>
           </div>
           <button className="button secondary small" onClick={logout} type="button">

@@ -12,6 +12,25 @@ export class StatsController {
   constructor(private readonly stats: StatsService) {}
 
   /**
+   * GET /dashboard/summary?period=week&limit=12
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('dashboard/summary')
+  async dashboardSummary(
+    @CurrentUser() user: JwtUser,
+    @Query('period') period?: StatsPeriod,
+    @Query('limit') limit?: string,
+  ) {
+    const p: StatsPeriod =
+      period === 'day' || period === 'week' || period === 'month' || period === 'year'
+        ? period
+        : 'week';
+    const n = limit ? Number(limit) : 12;
+
+    return this.stats.getDashboardSummary(user.username, p, n);
+  }
+
+  /**
    * GET /dashboard/perf?limit=10
    */
   @UseGuards(JwtAuthGuard)

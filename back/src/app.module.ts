@@ -17,6 +17,7 @@ import { PachinkoModule } from './games/pachinko/pachinko.module';
 import { RouletteModule } from './games/roulette/roulette.module';
 import { SlotsModule } from './games/slots/slots.module';
 import { HiLoModule } from './games/hilo/hilo.module';
+import { MinesModule } from './games/mines/mines.module';
 
 function envFlag(config: ConfigService, key: string, fallback = false): boolean {
   const value = config.get<string>(key);
@@ -73,6 +74,7 @@ function envFlag(config: ConfigService, key: string, fallback = false): boolean 
     CrapsModule,
     PachinkoModule,
     HiLoModule,
+    MinesModule,
     QuestsModule,
   ],
   controllers: [AppController],

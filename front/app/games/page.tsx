@@ -68,6 +68,15 @@ const games = [
     text: 'Devine plus haut ou plus bas et cashout avant de casser ta serie.',
     tone: 'hilo',
   },
+  {
+    href: '/games/mines',
+    image: '/assets/home/game-mines.svg',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Mines',
+    text: 'Ouvre les gemmes, evite les bombes et cashout au bon moment.',
+    tone: 'mines',
+  },
 ] as const;
 
 const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;

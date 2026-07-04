@@ -42,6 +42,7 @@ export class StatsService {
     if (key.includes('CRAPS')) return 'CRAPS';
     if (key.includes('PACHINKO')) return 'PACHINKO';
     if (key.includes('HILO') || key.includes('HI_LO') || key.includes('HI-LO')) return 'HILO';
+    if (key.includes('MINES')) return 'MINES';
     return key || 'CASINO';
   }
 
@@ -216,6 +217,7 @@ export class StatsService {
           CRAPS: 0,
           PACHINKO: 0,
           HILO: 0,
+          MINES: 0,
         } as Record<string, number>,
       };
     });

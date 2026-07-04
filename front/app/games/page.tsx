@@ -77,6 +77,15 @@ const games = [
     text: 'Ouvre les gemmes, evite les bombes et cashout au bon moment.',
     tone: 'mines',
   },
+  {
+    href: '/games/keno',
+    image: '/assets/home/game-keno.svg',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Keno',
+    text: 'Choisis tes numeros, suis le tirage et vise les gros multiplicateurs.',
+    tone: 'keno',
+  },
 ] as const;
 
 const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;

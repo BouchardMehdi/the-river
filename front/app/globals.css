@@ -3354,6 +3354,10 @@ main {
   --game-accent: #1de59d;
 }
 
+.casino-game-card.keno {
+  --game-accent: #8ad8ff;
+}
+
 .casino-game-image img.game-art-craps {
   width: min(126%, 352px);
   max-height: 178px;
@@ -3383,6 +3387,13 @@ main {
   width: min(118%, 330px);
   max-height: 178px;
   margin-bottom: -6px;
+}
+
+.casino-game-image img.game-art-keno {
+  width: min(118%, 330px);
+  max-height: 178px;
+  margin-bottom: -6px;
+  filter: drop-shadow(0 0 22px rgba(138, 216, 255, 0.24));
 }
 
 .casino-game-card::before {
@@ -5036,6 +5047,407 @@ main {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+/* Keno */
+.keno-page {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.keno-hero,
+.keno-board-panel,
+.keno-panel,
+.keno-rules-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+  box-shadow: var(--shadow);
+}
+
+.keno-hero {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 26px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  background:
+    radial-gradient(circle at 82% 22%, rgba(138, 216, 255, 0.22), transparent 34%),
+    radial-gradient(circle at 68% 74%, rgba(216, 168, 79, 0.15), transparent 30%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.keno-hero h1 {
+  margin: 16px 0 12px;
+  max-width: 760px;
+  font-size: clamp(46px, 6vw, 84px);
+  line-height: 0.94;
+}
+
+.keno-hero p {
+  max-width: 650px;
+  margin: 0 0 22px;
+  color: #c5d0d1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.keno-hero-balls {
+  display: grid;
+  grid-template-columns: repeat(2, 112px);
+  gap: 20px;
+  justify-content: center;
+  transform: rotate(-4deg);
+}
+
+.keno-hero-balls span {
+  width: 112px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 8px solid #d8a84f;
+  border-radius: 999px;
+  color: #fff8e9;
+  background:
+    radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.28), transparent 24%),
+    linear-gradient(180deg, #193b4a, #07131c);
+  font-size: 34px;
+  font-weight: 900;
+  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.34);
+}
+
+.keno-hero-balls span:nth-child(2) {
+  border-color: #1de59d;
+  transform: translateY(28px);
+}
+
+.keno-hero-balls span:nth-child(3) {
+  border-color: #ff625a;
+}
+
+.keno-hero-balls span:nth-child(4) {
+  border-color: #4193ff;
+  transform: translateY(28px);
+}
+
+.keno-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.keno-board-panel,
+.keno-panel {
+  padding: 18px;
+}
+
+.keno-board-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.keno-board-toolbar h2,
+.keno-panel h2 {
+  margin: 0;
+}
+
+.keno-board-toolbar p {
+  margin: 6px 0 0;
+  color: #aebcc0;
+}
+
+.keno-toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.keno-board {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 620px;
+  align-content: center;
+  padding: min(4vw, 40px);
+  border: 12px solid #143227;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(138, 216, 255, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(8, 28, 39, 0.98), rgba(4, 12, 18, 0.99));
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 255, 255, 0.06),
+    inset 0 36px 80px rgba(255, 255, 255, 0.04);
+}
+
+.keno-number {
+  position: relative;
+  min-height: 54px;
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 999px;
+  color: #c5d0d1;
+  background:
+    radial-gradient(circle at 36% 24%, rgba(255, 255, 255, 0.16), transparent 36%),
+    linear-gradient(180deg, rgba(24, 47, 60, 0.96), rgba(9, 24, 34, 0.98));
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+.keno-number:not(:disabled):hover {
+  transform: translateY(-3px);
+  border-color: rgba(216, 168, 79, 0.44);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.28);
+}
+
+.keno-number.selected {
+  color: #061018;
+  border-color: rgba(216, 168, 79, 0.66);
+  background: linear-gradient(180deg, #f4cc72, #d8a84f);
+}
+
+.keno-number.drawn {
+  color: #fff8e9;
+  border-color: rgba(138, 216, 255, 0.7);
+  background:
+    radial-gradient(circle at 36% 24%, rgba(255, 255, 255, 0.24), transparent 36%),
+    linear-gradient(180deg, #245a72, #0e2633);
+  animation: kenoDrawPop 220ms ease;
+}
+
+.keno-number.hit {
+  color: #061018;
+  border-color: rgba(29, 229, 157, 0.82);
+  background: linear-gradient(180deg, #43f1b4, #1bc283);
+  box-shadow: 0 0 0 4px rgba(29, 229, 157, 0.12), 0 0 28px rgba(29, 229, 157, 0.32);
+}
+
+.keno-number.miss {
+  color: #fff8e9;
+  border-color: rgba(255, 98, 90, 0.48);
+  background: linear-gradient(180deg, rgba(112, 38, 34, 0.86), rgba(38, 15, 14, 0.98));
+}
+
+.keno-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.keno-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.keno-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.keno-panel label span {
+  color: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.keno-panel input {
+  min-height: 44px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(12, 11, 9, 0.82);
+  padding: 0 12px;
+}
+
+.keno-kpis {
+  display: grid;
+  gap: 8px;
+}
+
+.keno-kpis span,
+.keno-result-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  color: #aebcc0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.keno-kpis strong {
+  color: #8ad8ff;
+}
+
+.keno-result-card strong.positive {
+  color: #1de59d;
+}
+
+.keno-result-card strong.negative {
+  color: #ff625a;
+}
+
+.keno-panel p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.keno-picked-list {
+  min-height: 84px;
+  display: flex;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.keno-picked-list span {
+  min-width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #061018;
+  background: #1de59d;
+  font-weight: 900;
+}
+
+.keno-picked-list em {
+  color: #aebcc0;
+  font-style: normal;
+}
+
+.keno-rules-drawer {
+  position: fixed;
+  z-index: 45;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: min(470px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 220ms ease;
+}
+
+.keno-rules-drawer.open {
+  transform: translateX(0);
+}
+
+.keno-rules-scroll {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.keno-rules-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.keno-rules-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.keno-rules-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 14, 21, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8ad8ff, #f1d28a);
+}
+
+.keno-rules-scroll article,
+.keno-paytable section {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.keno-rules-scroll article svg {
+  color: #8ad8ff;
+}
+
+.keno-rules-scroll h3,
+.keno-rules-scroll p {
+  margin: 0;
+}
+
+.keno-rules-scroll h3 {
+  margin-bottom: 6px;
+}
+
+.keno-rules-scroll p {
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.keno-paytable {
+  display: grid;
+  gap: 10px;
+}
+
+.keno-paytable section {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
+
+.keno-paytable strong {
+  color: #f1d28a;
+}
+
+.keno-paytable div {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.keno-paytable span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #c5d0d1;
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@keyframes kenoDrawPop {
+  from {
+    opacity: 0.45;
+    transform: scale(0.62) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
   }
 }
 
@@ -7242,7 +7654,9 @@ main {
   .craps-hero,
   .craps-layout,
   .pachinko-hero,
-  .pachinko-layout {
+  .pachinko-layout,
+  .keno-hero,
+  .keno-layout {
     grid-template-columns: 1fr;
   }
 
@@ -7252,6 +7666,10 @@ main {
 
   .pachinko-board {
     min-height: 680px;
+  }
+
+  .keno-board {
+    min-height: 560px;
   }
 
   .dashboard-shell.dashboard-modern {
@@ -7305,6 +7723,11 @@ main {
     font-size: 12px;
   }
 
+  .keno-board {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    min-height: 620px;
+  }
+
   .dashboard-modern .dashboard-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -7349,7 +7772,8 @@ main {
     padding-top: 18px;
   }
 
-  .pachinko-page {
+  .pachinko-page,
+  .keno-page {
     width: min(100% - 20px, 1560px);
     padding-top: 18px;
   }
@@ -7362,8 +7786,49 @@ main {
   .pachinko-board-panel,
   .pachinko-controls,
   .pachinko-result,
-  .pachinko-history {
+  .pachinko-history,
+  .keno-hero,
+  .keno-board-panel,
+  .keno-panel {
     padding: 16px;
+  }
+
+  .keno-hero-balls {
+    grid-template-columns: repeat(4, 64px);
+    gap: 8px;
+  }
+
+  .keno-hero-balls span {
+    width: 64px;
+    border-width: 5px;
+    font-size: 20px;
+  }
+
+  .keno-hero-balls span:nth-child(2),
+  .keno-hero-balls span:nth-child(4) {
+    transform: none;
+  }
+
+  .keno-board-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .keno-toolbar-actions {
+    justify-content: flex-start;
+  }
+
+  .keno-board {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
+    min-height: 720px;
+    padding: 14px;
+    border-width: 8px;
+  }
+
+  .keno-number {
+    min-height: 44px;
+    font-size: 13px;
   }
 
   .craps-dice-stage {

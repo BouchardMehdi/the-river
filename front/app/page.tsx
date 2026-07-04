@@ -63,6 +63,12 @@ const games = [
     title: 'Pachinko',
     variant: 'pachinko',
   },
+  {
+    href: '/games/keno',
+    image: '/assets/home/game-keno.svg',
+    title: 'Keno',
+    variant: 'keno',
+  },
 ] as const;
 
 export default function HomePage() {

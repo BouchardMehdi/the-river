@@ -3358,6 +3358,10 @@ main {
   --game-accent: #8ad8ff;
 }
 
+.casino-game-card.baccarat {
+  --game-accent: #d8a84f;
+}
+
 .casino-game-image img.game-art-craps {
   width: min(126%, 352px);
   max-height: 178px;
@@ -3394,6 +3398,13 @@ main {
   max-height: 178px;
   margin-bottom: -6px;
   filter: drop-shadow(0 0 22px rgba(138, 216, 255, 0.24));
+}
+
+.casino-game-image img.game-art-baccarat {
+  width: min(122%, 346px);
+  max-height: 178px;
+  margin-bottom: -7px;
+  filter: drop-shadow(0 0 22px rgba(216, 168, 79, 0.22));
 }
 
 .casino-game-card::before {
@@ -5448,6 +5459,427 @@ main {
   to {
     opacity: 1;
     transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Baccarat */
+.baccarat-page {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.baccarat-hero,
+.baccarat-table-panel,
+.baccarat-panel,
+.baccarat-rules-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+  box-shadow: var(--shadow);
+}
+
+.baccarat-hero {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 26px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  background:
+    radial-gradient(circle at 78% 26%, rgba(216, 168, 79, 0.24), transparent 34%),
+    radial-gradient(circle at 66% 78%, rgba(29, 229, 157, 0.13), transparent 30%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.baccarat-hero h1 {
+  margin: 16px 0 12px;
+  max-width: 760px;
+  font-size: clamp(46px, 6vw, 84px);
+  line-height: 0.94;
+}
+
+.baccarat-hero p {
+  max-width: 650px;
+  margin: 0 0 22px;
+  color: #c5d0d1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.baccarat-hero-badges {
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(29, 229, 157, 0.22), transparent 42%),
+    linear-gradient(90deg, rgba(20, 54, 44, 0.84), rgba(6, 16, 24, 0.94));
+  box-shadow: inset 0 0 0 12px rgba(90, 46, 28, 0.46);
+}
+
+.baccarat-hero-badges span,
+.baccarat-hero-badges strong {
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.baccarat-hero-badges span {
+  color: #c5d0d1;
+  border: 1px solid rgba(150, 174, 190, 0.16);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.baccarat-hero-badges strong {
+  color: #061018;
+  background: linear-gradient(180deg, #f4cc72, #d8a84f);
+  font-size: 48px;
+}
+
+.baccarat-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.baccarat-table-panel,
+.baccarat-panel {
+  padding: 18px;
+}
+
+.baccarat-table {
+  position: relative;
+  min-height: 650px;
+  overflow: hidden;
+  border: 24px solid #5a2e1c;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.12), transparent 36%),
+    radial-gradient(circle at 50% 50%, #1c956c, #082219 74%);
+  box-shadow:
+    inset 0 0 0 7px rgba(216, 168, 79, 0.26),
+    inset 0 40px 90px rgba(255, 255, 255, 0.08),
+    0 28px 52px rgba(0, 0, 0, 0.32);
+}
+
+.baccarat-score {
+  position: absolute;
+  top: 46px;
+  display: grid;
+  place-items: center;
+  min-width: 128px;
+  min-height: 78px;
+  border: 1px solid rgba(216, 168, 79, 0.32);
+  border-radius: 999px;
+  color: #c5d0d1;
+  background: rgba(6, 16, 24, 0.74);
+  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.22);
+}
+
+.baccarat-score.player {
+  left: 18%;
+}
+
+.baccarat-score.banker {
+  right: 18%;
+}
+
+.baccarat-score span {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.baccarat-score strong {
+  color: #f1d28a;
+  font-size: 34px;
+}
+
+.baccarat-hand {
+  position: absolute;
+  top: 48%;
+  width: 40%;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 22px;
+  border: 1px dashed rgba(255, 255, 255, 0.17);
+  border-radius: 32px;
+  background: rgba(6, 16, 24, 0.15);
+  transform: translateY(-50%);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.baccarat-hand::before {
+  content: attr(data-side);
+  position: absolute;
+  left: 50%;
+  bottom: -42px;
+  color: rgba(255, 248, 233, 0.76);
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0;
+  transform: translateX(-50%);
+}
+
+.baccarat-hand[data-side="Player"] {
+  left: 7%;
+}
+
+.baccarat-hand[data-side="Banker"] {
+  right: 7%;
+}
+
+.baccarat-hand.winner {
+  border-color: rgba(29, 229, 157, 0.72);
+  box-shadow: 0 0 0 5px rgba(29, 229, 157, 0.1), 0 0 42px rgba(29, 229, 157, 0.28);
+}
+
+.baccarat-card {
+  width: 92px;
+  transform: translateY(var(--card-offset)) rotate(var(--card-rotate));
+  animation: baccaratDeal 320ms ease both;
+}
+
+.baccarat-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 7px;
+  filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.38));
+}
+
+.baccarat-empty {
+  color: rgba(255, 248, 233, 0.38);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.baccarat-tie-badge {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  color: #061018;
+  background: linear-gradient(180deg, #f4cc72, #d8a84f);
+  font-size: 28px;
+  font-weight: 900;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.72);
+  transition: opacity 180ms ease, transform 180ms ease;
+  box-shadow: 0 0 34px rgba(216, 168, 79, 0.38);
+}
+
+.baccarat-tie-badge.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.baccarat-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.baccarat-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.baccarat-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.baccarat-panel label span {
+  color: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.baccarat-panel input {
+  min-height: 44px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(12, 11, 9, 0.82);
+  padding: 0 12px;
+}
+
+.baccarat-bet-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.baccarat-bet-grid button {
+  min-height: 74px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 12px;
+  border: 1px solid rgba(150, 174, 190, 0.16);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.baccarat-bet-grid button:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: rgba(216, 168, 79, 0.44);
+}
+
+.baccarat-bet-grid button.selected {
+  color: #061018;
+  border-color: rgba(216, 168, 79, 0.76);
+  background: linear-gradient(180deg, #f4cc72, #d8a84f);
+}
+
+.baccarat-bet-grid strong {
+  font-size: 18px;
+}
+
+.baccarat-bet-grid span {
+  color: inherit;
+  opacity: 0.74;
+}
+
+.baccarat-bet-grid em {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: inherit;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.baccarat-panel p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.baccarat-kpis {
+  display: grid;
+  gap: 8px;
+}
+
+.baccarat-kpis span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  color: #aebcc0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.baccarat-kpis strong {
+  color: #f1d28a;
+}
+
+.baccarat-kpis strong.positive {
+  color: #1de59d;
+}
+
+.baccarat-kpis strong.negative {
+  color: #ff625a;
+}
+
+.baccarat-rules-drawer {
+  position: fixed;
+  z-index: 45;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: min(450px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 220ms ease;
+}
+
+.baccarat-rules-drawer.open {
+  transform: translateX(0);
+}
+
+.baccarat-rules-scroll {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.baccarat-rules-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.baccarat-rules-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.baccarat-rules-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 14, 21, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f1d28a, #1de59d);
+}
+
+.baccarat-rules-scroll article {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.baccarat-rules-scroll svg {
+  color: #f1d28a;
+}
+
+.baccarat-rules-scroll h3 {
+  margin: 0 0 6px;
+}
+
+.baccarat-rules-scroll p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+@keyframes baccaratDeal {
+  from {
+    opacity: 0.4;
+    transform: translateY(-54px) scale(0.86) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -7656,7 +8088,9 @@ main {
   .pachinko-hero,
   .pachinko-layout,
   .keno-hero,
-  .keno-layout {
+  .keno-layout,
+  .baccarat-hero,
+  .baccarat-layout {
     grid-template-columns: 1fr;
   }
 
@@ -7669,6 +8103,10 @@ main {
   }
 
   .keno-board {
+    min-height: 560px;
+  }
+
+  .baccarat-table {
     min-height: 560px;
   }
 
@@ -7773,7 +8211,8 @@ main {
   }
 
   .pachinko-page,
-  .keno-page {
+  .keno-page,
+  .baccarat-page {
     width: min(100% - 20px, 1560px);
     padding-top: 18px;
   }
@@ -7789,7 +8228,10 @@ main {
   .pachinko-history,
   .keno-hero,
   .keno-board-panel,
-  .keno-panel {
+  .keno-panel,
+  .baccarat-hero,
+  .baccarat-table-panel,
+  .baccarat-panel {
     padding: 16px;
   }
 
@@ -7829,6 +8271,58 @@ main {
   .keno-number {
     min-height: 44px;
     font-size: 13px;
+  }
+
+  .baccarat-hero-badges {
+    grid-template-columns: 1fr;
+    min-height: 260px;
+    border-radius: 42px;
+  }
+
+  .baccarat-table {
+    min-height: 720px;
+    border-width: 14px;
+    border-radius: 42px;
+  }
+
+  .baccarat-score {
+    top: 22px;
+    min-width: 110px;
+  }
+
+  .baccarat-score.player {
+    left: 24px;
+  }
+
+  .baccarat-score.banker {
+    right: 24px;
+  }
+
+  .baccarat-hand {
+    left: 50%;
+    right: auto;
+    width: min(88%, 360px);
+    min-height: 210px;
+    transform: translateX(-50%);
+  }
+
+  .baccarat-hand[data-side="Player"] {
+    left: 50%;
+    top: 38%;
+  }
+
+  .baccarat-hand[data-side="Banker"] {
+    left: 50%;
+    right: auto;
+    top: 70%;
+  }
+
+  .baccarat-card {
+    width: 74px;
+  }
+
+  .baccarat-tie-badge {
+    top: 54%;
   }
 
   .craps-dice-stage {

@@ -86,6 +86,15 @@ const games = [
     text: 'Choisis tes numeros, suis le tirage et vise les gros multiplicateurs.',
     tone: 'keno',
   },
+  {
+    href: '/games/baccarat',
+    image: '/assets/home/game-baccarat.svg',
+    kind: 'Table',
+    status: 'Disponible',
+    title: 'Baccarat',
+    text: 'Mise sur Player, Banker ou Tie et suis une distribution elegante.',
+    tone: 'baccarat',
+  },
 ] as const;
 
 const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;

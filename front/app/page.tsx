@@ -69,6 +69,12 @@ const games = [
     title: 'Keno',
     variant: 'keno',
   },
+  {
+    href: '/games/baccarat',
+    image: '/assets/home/game-baccarat.svg',
+    title: 'Baccarat',
+    variant: 'baccarat',
+  },
 ] as const;
 
 export default function HomePage() {

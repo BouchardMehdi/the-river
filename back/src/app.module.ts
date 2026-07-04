@@ -19,6 +19,7 @@ import { SlotsModule } from './games/slots/slots.module';
 import { HiLoModule } from './games/hilo/hilo.module';
 import { MinesModule } from './games/mines/mines.module';
 import { KenoModule } from './games/keno/keno.module';
+import { BaccaratModule } from './games/baccarat/baccarat.module';
 
 function envFlag(config: ConfigService, key: string, fallback = false): boolean {
   const value = config.get<string>(key);
@@ -77,6 +78,7 @@ function envFlag(config: ConfigService, key: string, fallback = false): boolean 
     HiLoModule,
     MinesModule,
     KenoModule,
+    BaccaratModule,
     QuestsModule,
   ],
   controllers: [AppController],

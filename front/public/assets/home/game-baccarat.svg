@@ -1,0 +1,29 @@
+<svg width="720" height="460" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="460" rx="34" fill="#081620"/>
+  <rect x="42" y="48" width="636" height="364" rx="182" fill="#123b33" stroke="#5a2e1c" stroke-width="34"/>
+  <rect x="76" y="82" width="568" height="296" rx="148" fill="url(#felt)" stroke="#d8a84f" stroke-opacity=".38" stroke-width="4"/>
+  <g filter="url(#shadow)">
+    <rect x="164" y="124" width="112" height="156" rx="12" fill="#fff8e9" transform="rotate(-8 164 124)"/>
+    <text x="197" y="174" fill="#d42b2b" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="900" transform="rotate(-8 197 174)">A</text>
+    <path d="M204 204c14-24 45-8 28 17-9 13-28 23-30 23-3-1-17-22-18-38-2-25 29-27 20-2z" fill="#d42b2b" transform="rotate(-8 208 218)"/>
+    <rect x="254" y="112" width="112" height="156" rx="12" fill="#fff8e9" transform="rotate(5 254 112)"/>
+    <text x="292" y="164" fill="#141414" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="900" transform="rotate(5 292 164)">K</text>
+    <path d="M313 210c-19-12-32-30-18-44 10-10 24-3 29 8 6-11 20-18 30-8 14 14 1 32-18 44l-12 8-11-8z" fill="#141414" transform="rotate(5 324 190)"/>
+    <rect x="426" y="126" width="112" height="156" rx="12" fill="#fff8e9" transform="rotate(8 426 126)"/>
+    <text x="465" y="178" fill="#d42b2b" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="900" transform="rotate(8 465 178)">9</text>
+    <path d="M489 221c-19-12-32-30-18-44 10-10 24-3 29 8 6-11 20-18 30-8 14 14 1 32-18 44l-12 8-11-8z" fill="#d42b2b" transform="rotate(8 500 202)"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="360" y="344" fill="#fff8e9" font-size="42">BACCARAT</text>
+    <text x="360" y="376" fill="#f1d28a" font-size="18">PLAYER • BANKER • TIE</text>
+  </g>
+  <defs>
+    <radialGradient id="felt" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 224) rotate(90) scale(168 300)">
+      <stop stop-color="#1d8c65"/>
+      <stop offset="1" stop-color="#082219"/>
+    </radialGradient>
+    <filter id="shadow" x="122" y="80" width="466" height="242" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+</svg>

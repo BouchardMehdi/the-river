@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 
-type AssetVariant = 'hero' | 'slots' | 'roulette' | 'poker' | 'blackjack' | 'craps' | 'pachinko' | 'keno';
+type AssetVariant =
+  | 'hero'
+  | 'slots'
+  | 'roulette'
+  | 'poker'
+  | 'blackjack'
+  | 'craps'
+  | 'pachinko'
+  | 'keno'
+  | 'baccarat';
 
 type HomeAssetProps = {
   alt: string;
@@ -61,6 +70,7 @@ function AssetFallback({ variant }: { variant: AssetVariant }) {
       {variant === 'craps' ? <span>7</span> : null}
       {variant === 'pachinko' ? <span>9x</span> : null}
       {variant === 'keno' ? <span>22</span> : null}
+      {variant === 'baccarat' ? <span>9</span> : null}
     </div>
   );
 }

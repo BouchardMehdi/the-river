@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/auth-context';
+import { BALANCE_FEEDBACK_EVENT, type BalanceDeltaDetail } from '@/lib/balance-events';
 
 const nav = [
   { href: '/', label: 'Accueil', icon: Home },
@@ -15,12 +17,33 @@ const nav = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [balancePulse, setBalancePulse] = useState<'gain' | 'loss' | ''>('');
+  const [balanceFlashes, setBalanceFlashes] = useState<Array<{ delta: number; id: number }>>([]);
+
+  useEffect(() => {
+    function handleBalanceDelta(event: Event) {
+      const { delta } = (event as CustomEvent<BalanceDeltaDetail>).detail ?? {};
+      if (!Number.isFinite(delta) || delta === 0) return;
+
+      const id = Date.now() + Math.random();
+      setBalancePulse(delta > 0 ? 'gain' : 'loss');
+      setBalanceFlashes((current) => [...current.slice(-3), { delta: Math.trunc(delta), id }]);
+
+      window.setTimeout(() => {
+        setBalanceFlashes((current) => current.filter((item) => item.id !== id));
+      }, 1050);
+      window.setTimeout(() => setBalancePulse(''), 520);
+    }
+
+    window.addEventListener(BALANCE_FEEDBACK_EVENT, handleBalanceDelta);
+    return () => window.removeEventListener(BALANCE_FEEDBACK_EVENT, handleBalanceDelta);
+  }, []);
 
   return (
     <>
       <header className="topbar">
         <Link href="/" className="brand" aria-label="THE RIVER">
-          <Image src="/assets/logo-the-river.png" alt="" width={42} height={42} priority />
+          <Image src="/assets/logo-the-river.png" alt="" width={72} height={72} priority />
           <span>THE RIVER</span>
         </Link>
 
@@ -40,9 +63,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="account-zone">
           {user ? (
             <>
-              <Link className="balance-pill" href="/dashboard">
+              <Link className={balancePulse ? `balance-pill ${balancePulse}` : 'balance-pill'} href="/dashboard">
                 <Coins size={17} />
                 <span>{user.credits} credits</span>
+                <span className="balance-flash-stack" aria-hidden="true">
+                  {balanceFlashes.map((item) => (
+                    <span className={item.delta > 0 ? 'balance-flash gain' : 'balance-flash loss'} key={item.id}>
+                      {item.delta > 0 ? '+' : ''}{item.delta}
+                    </span>
+                  ))}
+                </span>
               </Link>
               <button className="icon-button" onClick={logout} title="Se deconnecter" type="button">
                 <LogOut size={18} />

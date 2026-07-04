@@ -40,6 +40,7 @@ export class StatsService {
     if (key.includes('POKER')) return 'POKER';
     if (key.includes('BLACKJACK')) return 'BLACKJACK';
     if (key.includes('CRAPS')) return 'CRAPS';
+    if (key.includes('PACHINKO')) return 'PACHINKO';
     return key || 'CASINO';
   }
 
@@ -212,6 +213,7 @@ export class StatsService {
           POKER: 0,
           BLACKJACK: 0,
           CRAPS: 0,
+          PACHINKO: 0,
         } as Record<string, number>,
       };
     });

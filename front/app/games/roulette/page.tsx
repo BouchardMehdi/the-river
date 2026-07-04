@@ -6,6 +6,7 @@ import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
+import { emitBalanceDelta } from '@/lib/balance-events';
 
 type RouletteColor = 'RED' | 'BLACK' | 'GREEN';
 
@@ -380,6 +381,7 @@ function RouletteContent() {
     const startedAt = Date.now();
 
     try {
+      emitBalanceDelta(-totalStake, 'roulette-bet');
       const out = await apiPost<RouletteResponse>('/roulette/solo/spin', { bets: bets.map(buildBetFromDraft) });
       const targetWheel = -resultAngle(out.result.number);
       const spinDelay = Math.max(90 - (Date.now() - startedAt), 0);
@@ -392,10 +394,14 @@ function RouletteContent() {
       window.setTimeout(async () => {
         setResult(out);
         setSpinning(false);
+        if (out.settlement.totalReturn > 0) {
+          emitBalanceDelta(out.settlement.totalReturn, 'roulette-payout');
+        }
         await refreshUser();
         await loadStats();
       }, remainingSpinMs);
     } catch (err) {
+      emitBalanceDelta(totalStake, 'roulette-refund');
       setSpinning(false);
       setError(err instanceof Error ? err.message : 'Spin impossible');
     }

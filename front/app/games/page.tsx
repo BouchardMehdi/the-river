@@ -43,12 +43,21 @@ const games = [
   },
   {
     href: '/games/craps',
-    image: '/assets/logo-the-river.png',
+    image: '/assets/home/game-craps.png',
     kind: 'Solo',
     status: 'Disponible',
     title: 'Craps',
     text: 'Table de des, pass line, field, hardways et mises rapides.',
     tone: 'craps',
+  },
+  {
+    href: '/games/pachinko',
+    image: '/assets/home/game-pachinko.png',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Pachinko',
+    text: 'Bille, pegs, risques et multiplicateurs en cascade.',
+    tone: 'pachinko',
   },
 ] as const;
 

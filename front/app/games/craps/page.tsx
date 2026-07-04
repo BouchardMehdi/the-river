@@ -14,6 +14,7 @@ import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
+import { emitBalanceDelta } from '@/lib/balance-events';
 
 type CrapsBetType =
   | 'PASS_LINE'
@@ -126,6 +127,7 @@ function CrapsContent() {
     }, 90);
 
     try {
+      emitBalanceDelta(-totalBet, 'craps-bet');
       const payload = {
         bets: bets.map(({ amount, target, type }) => ({
           amount: Number(amount),
@@ -139,8 +141,12 @@ function CrapsContent() {
       ]);
       setDice(out.dice);
       setResult(out);
+      if (out.payout > 0) {
+        emitBalanceDelta(out.payout, 'craps-payout');
+      }
       await refreshUser();
     } catch (err) {
+      emitBalanceDelta(totalBet, 'craps-refund');
       setError(err instanceof Error ? err.message : 'Craps indisponible');
     } finally {
       window.clearInterval(rollTimer);

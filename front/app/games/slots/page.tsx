@@ -16,6 +16,7 @@ import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
+import { emitBalanceDelta } from '@/lib/balance-events';
 
 type SlotMachineType = 'SLOT_3X3' | 'SLOT_3X5' | 'SLOT_5X5';
 type SymbolId = 'CHERRY' | 'LEMON' | 'BELL' | 'CLUB' | 'DIAMOND' | 'CHEST' | 'SEVEN';
@@ -244,6 +245,7 @@ function SlotsContent() {
 
   async function spin(spins: 1 | 10) {
     if (spinning) return;
+    const spinCost = cfg.prices[spins];
     setError('');
     setSpinning(true);
     setReelsMoving(true);
@@ -253,6 +255,7 @@ function SlotsContent() {
     setRevealedSpinCount(0);
 
     try {
+      emitBalanceDelta(-spinCost, 'slots-bet');
       const startedAt = Date.now();
       const out = await apiPost<SlotsResponse>('/slots/spin', { machine, spins });
       const minDuration = 2000;
@@ -299,6 +302,9 @@ function SlotsContent() {
         setReelsMoving(false);
         setStoppingCols([]);
 
+        if (spinResult.payout > 0) {
+          emitBalanceDelta(spinResult.payout, 'slots-payout');
+        }
         await wait(spinResult.wins.length ? Math.min(1200, 360 + spinResult.wins.length * 260) : 280);
       };
 
@@ -312,6 +318,7 @@ function SlotsContent() {
       setStoppingCols([]);
       await refreshUser();
     } catch (err) {
+      emitBalanceDelta(spinCost, 'slots-refund');
       setSpinning(false);
       setReelsMoving(false);
       setStoppingCols([]);

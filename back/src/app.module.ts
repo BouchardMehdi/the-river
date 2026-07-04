@@ -13,6 +13,7 @@ import { EasterEggModule } from './games/easter-egg/easter-egg.module';
 import { TablesModule } from './games/poker/tables.module';
 import { LeaderboardModule } from './games/poker/leaderboard/leaderboard.module';
 import { QuestsModule } from './games/quests/quests.module';
+import { PachinkoModule } from './games/pachinko/pachinko.module';
 import { RouletteModule } from './games/roulette/roulette.module';
 import { SlotsModule } from './games/slots/slots.module';
 
@@ -69,6 +70,7 @@ function envFlag(config: ConfigService, key: string, fallback = false): boolean 
     RouletteModule,
     SlotsModule,
     CrapsModule,
+    PachinkoModule,
     QuestsModule,
   ],
   controllers: [AppController],

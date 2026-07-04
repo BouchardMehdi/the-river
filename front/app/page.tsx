@@ -51,6 +51,18 @@ const games = [
     title: 'Blackjack',
     variant: 'blackjack',
   },
+  {
+    href: '/games/craps',
+    image: '/assets/home/game-craps.png',
+    title: 'Craps',
+    variant: 'craps',
+  },
+  {
+    href: '/games/pachinko',
+    image: '/assets/home/game-pachinko.png',
+    title: 'Pachinko',
+    variant: 'pachinko',
+  },
 ] as const;
 
 export default function HomePage() {
@@ -135,7 +147,7 @@ export default function HomePage() {
 
       <footer className="landing-footer">
         <div className="footer-brand">
-          <Image src="/assets/logo-the-river.png" alt="THE RIVER" width={42} height={42} />
+          <Image src="/assets/logo-the-river.png" alt="THE RIVER" width={76} height={76} />
           <strong>THE RIVER</strong>
         </div>
         <div>

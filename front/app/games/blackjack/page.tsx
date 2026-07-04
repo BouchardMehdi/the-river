@@ -27,6 +27,7 @@ import { apiBaseUrl, apiGet, apiPost, getToken } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { EmptyState, StatusMessage } from '@/components/ui';
+import { emitBalanceDelta } from '@/lib/balance-events';
 import type { BlackjackState, BlackjackTable, Card } from '@/types/api';
 
 type TableForm = {
@@ -288,14 +289,20 @@ function BlackjackContent() {
     }
   }
 
-  async function call(path: string, body: unknown = {}) {
+  async function call(path: string, body: unknown = {}, optimisticDelta = 0) {
     if (!tableCode) return;
     setError('');
     try {
+      if (optimisticDelta !== 0) {
+        emitBalanceDelta(optimisticDelta, `blackjack-${path}`);
+      }
       const out = await apiPost<BlackjackState>(`/blackjack/tables/${tableCode}/${path}`, body);
       setState(out);
       await refreshUser();
     } catch (err) {
+      if (optimisticDelta !== 0) {
+        emitBalanceDelta(-optimisticDelta, `blackjack-${path}-refund`);
+      }
       setError(err instanceof Error ? err.message : 'Action impossible');
     }
   }
@@ -550,16 +557,16 @@ function BlackjackContent() {
               <span>Mise</span>
               <input min={state.table.minBet} max={state.table.tableMaxBet ?? undefined} type="number" value={bet} onChange={(event) => setBet(Number(event.target.value))} />
             </label>
-            <button className="button secondary" disabled={!canBet} onClick={() => void call('bet', { amount: bet })} type="button">
+            <button className="button secondary" disabled={!canBet} onClick={() => void call('bet', { amount: bet }, -Number(bet))} type="button">
               <BadgeDollarSign size={18} /> Miser
             </button>
             <button className="button secondary" disabled={!canAct} onClick={() => void call('action', { action: 'hit' })} type="button">
               <Plus size={18} /> Hit
             </button>
-            <button className="button secondary" disabled={!canDouble} onClick={() => void call('action', { action: 'double' })} type="button">
+            <button className="button secondary" disabled={!canDouble} onClick={() => void call('action', { action: 'double' }, -Number(myActiveHand?.bet ?? myRound?.bet ?? bet))} type="button">
               x2 Double
             </button>
-            <button className="button secondary" disabled={!canSplit} onClick={() => void call('action', { action: 'split' })} type="button">
+            <button className="button secondary" disabled={!canSplit} onClick={() => void call('action', { action: 'split' }, -Number(myActiveHand?.bet ?? myRound?.bet ?? bet))} type="button">
               Split
             </button>
             <button className="button stand" disabled={!canAct} onClick={() => void call('action', { action: 'stand' })} type="button">

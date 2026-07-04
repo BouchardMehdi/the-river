@@ -3346,6 +3346,10 @@ main {
   --game-accent: #a58cff;
 }
 
+.casino-game-card.hilo {
+  --game-accent: #f1d28a;
+}
+
 .casino-game-image img.game-art-craps {
   width: min(126%, 352px);
   max-height: 178px;
@@ -3357,6 +3361,18 @@ main {
   max-height: 178px;
   margin-bottom: -8px;
   filter: drop-shadow(0 0 22px rgba(165, 140, 255, 0.26));
+}
+
+.casino-game-image img.game-art-hilo {
+  width: min(78%, 180px);
+  max-height: 166px;
+  margin-bottom: -4px;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.42));
+}
+
+.casino-game-card:hover .casino-game-image img.game-art-hilo {
+  transform: rotate(-5deg) scale(1.06);
 }
 
 .casino-game-card::before {
@@ -4272,6 +4288,406 @@ main {
   color: #aebcc0;
   border-color: rgba(150, 174, 190, 0.18);
   background: transparent;
+}
+
+/* Hi-Lo */
+.hilo-page {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.hilo-hero,
+.hilo-table,
+.hilo-panel,
+.hilo-rules-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+  box-shadow: var(--shadow);
+}
+
+.hilo-hero {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 26px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  background:
+    radial-gradient(circle at 78% 28%, rgba(216, 168, 79, 0.24), transparent 34%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.hilo-hero h1 {
+  margin: 16px 0 12px;
+  max-width: 760px;
+  font-size: clamp(46px, 6vw, 84px);
+  line-height: 0.94;
+}
+
+.hilo-hero p {
+  max-width: 650px;
+  margin: 0 0 22px;
+  color: #c5d0d1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.hilo-hero-stack {
+  position: relative;
+  min-height: 240px;
+}
+
+.hilo-hero-stack .hilo-card {
+  position: absolute;
+  right: 42px;
+  top: 12px;
+  transform: rotate(9deg);
+}
+
+.hilo-hero-stack .hilo-card:first-child {
+  right: 150px;
+  top: 34px;
+  transform: rotate(-13deg);
+}
+
+.hilo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.hilo-table,
+.hilo-panel {
+  padding: 18px;
+}
+
+.hilo-table-felt {
+  position: relative;
+  min-height: 600px;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1fr);
+  align-items: center;
+  gap: 28px;
+  overflow: hidden;
+  padding: 46px;
+  border: 12px solid #4b2818;
+  border-radius: 46px;
+  background:
+    radial-gradient(ellipse at 50% 44%, rgba(47, 209, 136, 0.92), rgba(9, 100, 65, 0.98) 60%, rgba(5, 48, 36, 1)),
+    #0c4a35;
+  box-shadow:
+    inset 0 0 0 4px rgba(2, 13, 18, 0.72),
+    inset 0 34px 90px rgba(255, 255, 255, 0.08);
+}
+
+.hilo-card-zone {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.hilo-card-zone > span {
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #f1d28a;
+  background: rgba(4, 13, 18, 0.62);
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hilo-card-zone.current {
+  animation: hiloCardArrival 360ms ease;
+}
+
+.hilo-card-zone.current.win .hilo-card {
+  box-shadow: 0 0 0 4px rgba(37, 223, 152, 0.2), 0 0 42px rgba(37, 223, 152, 0.42);
+}
+
+.hilo-card-zone.current.lose .hilo-card {
+  box-shadow: 0 0 0 4px rgba(255, 98, 90, 0.22), 0 0 42px rgba(255, 98, 90, 0.38);
+}
+
+.hilo-card-zone.current.push .hilo-card {
+  box-shadow: 0 0 0 4px rgba(216, 168, 79, 0.2), 0 0 42px rgba(216, 168, 79, 0.35);
+}
+
+.hilo-card {
+  position: relative;
+  width: min(220px, 32vw);
+  aspect-ratio: 190 / 266;
+  border-radius: 14px;
+  filter: drop-shadow(0 26px 22px rgba(0, 0, 0, 0.42));
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    opacity 220ms ease;
+}
+
+.hilo-card.muted {
+  opacity: 0.58;
+  transform: scale(0.92);
+}
+
+.hilo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.hilo-card span {
+  position: absolute;
+  right: -12px;
+  bottom: -10px;
+  min-width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(216, 168, 79, 0.62);
+  border-radius: 50%;
+  color: #17110a;
+  background: #f1d28a;
+  font-weight: 1000;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hilo-streak-orbit {
+  position: absolute;
+  left: 50%;
+  top: 46px;
+  width: 122px;
+  height: 122px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 1px solid rgba(216, 168, 79, 0.32);
+  border-radius: 50%;
+  color: #f1d28a;
+  background: rgba(4, 13, 18, 0.5);
+  transform: translateX(-50%);
+}
+
+.hilo-streak-orbit strong {
+  font-size: 38px;
+}
+
+.hilo-streak-orbit span {
+  color: #c5d0d1;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.hilo-action-strip {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.hilo-action-strip .button {
+  min-height: 54px;
+}
+
+.hilo-lower {
+  border-color: rgba(65, 147, 255, 0.48);
+}
+
+.hilo-higher {
+  border-color: rgba(37, 223, 152, 0.48);
+}
+
+.hilo-cashout {
+  box-shadow: 0 0 24px rgba(216, 168, 79, 0.18);
+}
+
+.hilo-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.hilo-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.hilo-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.hilo-panel label span {
+  color: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.hilo-panel input {
+  min-height: 44px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(12, 11, 9, 0.82);
+  padding: 0 12px;
+}
+
+.hilo-kpis {
+  display: grid;
+  gap: 8px;
+}
+
+.hilo-kpis span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  color: #aebcc0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.hilo-kpis strong {
+  color: #f1d28a;
+}
+
+.hilo-panel p,
+.hilo-history p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.hilo-history {
+  display: grid;
+  gap: 8px;
+}
+
+.hilo-history article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px 72px;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.hilo-history article.win {
+  border-color: rgba(37, 223, 152, 0.34);
+}
+
+.hilo-history article.lose {
+  border-color: rgba(255, 98, 90, 0.34);
+}
+
+.hilo-history article.push {
+  border-color: rgba(216, 168, 79, 0.32);
+}
+
+.hilo-history strong {
+  color: #fff8e9;
+  font-size: 20px;
+  text-align: center;
+}
+
+.hilo-history span,
+.hilo-history em {
+  color: #aebcc0;
+  font-style: normal;
+  font-size: 13px;
+}
+
+.hilo-history em {
+  text-align: right;
+}
+
+.hilo-rules-drawer {
+  position: fixed;
+  z-index: 45;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: min(430px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 220ms ease;
+}
+
+.hilo-rules-drawer.open {
+  transform: translateX(0);
+}
+
+.hilo-rules-scroll {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.hilo-rules-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.hilo-rules-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.hilo-rules-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 14, 21, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f1d28a, #25df98);
+}
+
+.hilo-rules-scroll article {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.hilo-rules-scroll svg {
+  color: #f1d28a;
+}
+
+.hilo-rules-scroll h3 {
+  margin: 0 0 6px;
+}
+
+.hilo-rules-scroll p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+@keyframes hiloCardArrival {
+  from {
+    opacity: 0.65;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Poker room */

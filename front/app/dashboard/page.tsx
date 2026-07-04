@@ -78,7 +78,7 @@ type EggStatus = {
   visited?: boolean;
 };
 
-type GameKey = 'SLOTS' | 'ROULETTE' | 'POKER' | 'BLACKJACK' | 'CRAPS' | 'PACHINKO' | 'CASINO';
+type GameKey = 'SLOTS' | 'ROULETTE' | 'POKER' | 'BLACKJACK' | 'CRAPS' | 'PACHINKO' | 'HILO' | 'CASINO';
 type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
 type ChartPeriod = 'day' | 'week' | 'month';
@@ -133,6 +133,12 @@ const gameMeta: Record<GameKey, { color: string; image: string; label: string; h
     image: '/assets/home/game-pachinko.png',
     label: 'Pachinko',
   },
+  HILO: {
+    color: '#f1d28a',
+    href: '/games/hi-lo',
+    image: '/assets/cards/spades_A.png',
+    label: 'Hi-Lo',
+  },
   CASINO: {
     color: '#c5d0d1',
     href: '/games',
@@ -147,7 +153,7 @@ const chartPeriodLabels: Record<ChartPeriod, string> = {
   month: '30j',
 };
 
-const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO'];
+const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO'];
 
 function formatCredits(value: number | undefined | null) {
   return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
@@ -187,6 +193,7 @@ function toGameKey(game?: string): GameKey {
   if (key.includes('BLACKJACK')) return 'BLACKJACK';
   if (key.includes('CRAPS')) return 'CRAPS';
   if (key.includes('PACHINKO')) return 'PACHINKO';
+  if (key.includes('HILO') || key.includes('HI_LO') || key.includes('HI-LO')) return 'HILO';
   return 'CASINO';
 }
 
@@ -323,6 +330,7 @@ function DashboardContent() {
           BLACKJACK: game === 'BLACKJACK' ? delta : 0,
           CRAPS: game === 'CRAPS' ? delta : 0,
           PACHINKO: game === 'PACHINKO' ? delta : 0,
+          HILO: game === 'HILO' ? delta : 0,
         },
         end: event.createdAt,
         gains: Math.max(0, delta),
@@ -384,7 +392,7 @@ function DashboardContent() {
       }
     }
 
-    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO'];
+    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO'];
     return ordered.map((key) => ({
       key,
       ...gameMeta[key],

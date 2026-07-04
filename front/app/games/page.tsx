@@ -59,6 +59,15 @@ const games = [
     text: 'Bille, pegs, risques et multiplicateurs en cascade.',
     tone: 'pachinko',
   },
+  {
+    href: '/games/hi-lo',
+    image: '/assets/cards/spades_A.png',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Hi-Lo',
+    text: 'Devine plus haut ou plus bas et cashout avant de casser ta serie.',
+    tone: 'hilo',
+  },
 ] as const;
 
 const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;

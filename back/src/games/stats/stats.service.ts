@@ -45,6 +45,7 @@ export class StatsService {
     if (key.includes('MINES')) return 'MINES';
     if (key.includes('KENO')) return 'KENO';
     if (key.includes('BACCARAT')) return 'BACCARAT';
+    if (key.includes('WHEEL')) return 'WHEEL';
     return key || 'CASINO';
   }
 
@@ -222,6 +223,7 @@ export class StatsService {
           MINES: 0,
           KENO: 0,
           BACCARAT: 0,
+          WHEEL: 0,
         } as Record<string, number>,
       };
     });

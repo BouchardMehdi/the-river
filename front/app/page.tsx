@@ -75,6 +75,12 @@ const games = [
     title: 'Baccarat',
     variant: 'baccarat',
   },
+  {
+    href: '/games/wheel-of-fortune',
+    image: '/assets/home/game-wheel.svg',
+    title: 'Wheel of Fortune',
+    variant: 'wheel',
+  },
 ] as const;
 
 export default function HomePage() {

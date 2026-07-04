@@ -3362,6 +3362,10 @@ main {
   --game-accent: #d8a84f;
 }
 
+.casino-game-card.wheel {
+  --game-accent: #a58cff;
+}
+
 .casino-game-image img.game-art-craps {
   width: min(126%, 352px);
   max-height: 178px;
@@ -3405,6 +3409,13 @@ main {
   max-height: 178px;
   margin-bottom: -7px;
   filter: drop-shadow(0 0 22px rgba(216, 168, 79, 0.22));
+}
+
+.casino-game-image img.game-art-wheel {
+  width: min(112%, 310px);
+  max-height: 178px;
+  margin-bottom: -6px;
+  filter: drop-shadow(0 0 24px rgba(165, 140, 255, 0.26));
 }
 
 .casino-game-card::before {
@@ -5883,6 +5894,375 @@ main {
   }
 }
 
+/* Wheel of Fortune */
+.wheel-page {
+  width: min(1480px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.wheel-hero,
+.wheel-stage,
+.wheel-panel,
+.wheel-rules-drawer {
+  border: 1px solid rgba(150, 174, 190, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+  box-shadow: var(--shadow);
+}
+
+.wheel-hero {
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 26px;
+  align-items: center;
+  overflow: hidden;
+  padding: 36px;
+  background:
+    radial-gradient(circle at 80% 28%, rgba(165, 140, 255, 0.24), transparent 34%),
+    radial-gradient(circle at 66% 78%, rgba(216, 168, 79, 0.16), transparent 30%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.wheel-hero h1 {
+  margin: 16px 0 12px;
+  max-width: 760px;
+  font-size: clamp(46px, 6vw, 84px);
+  line-height: 0.94;
+}
+
+.wheel-hero p {
+  max-width: 650px;
+  margin: 0 0 22px;
+  color: #c5d0d1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.wheel-hero-preview {
+  width: min(310px, 72vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border: 18px solid #5a2e1c;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #07131c 0 26%, transparent 27%),
+    conic-gradient(from -90deg, #ff625a 0 12%, #8ad8ff 12% 24%, #f1d28a 24% 36%, #1de59d 36% 48%, #a58cff 48% 60%, #d8a84f 60% 72%, #ff625a 72% 84%, #8ad8ff 84% 100%);
+  box-shadow:
+    inset 0 0 0 8px rgba(216, 168, 79, 0.42),
+    0 24px 44px rgba(0, 0, 0, 0.36);
+}
+
+.wheel-hero-preview span {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  color: #061018;
+  background: linear-gradient(180deg, #f4cc72, #d8a84f);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.wheel-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.wheel-stage,
+.wheel-panel {
+  padding: 18px;
+}
+
+.wheel-stage {
+  position: relative;
+  min-height: 720px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(165, 140, 255, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(16, 29, 40, 0.94), rgba(6, 14, 21, 0.98));
+}
+
+.wheel-pointer {
+  position: absolute;
+  z-index: 4;
+  top: 52px;
+  left: 50%;
+  width: 54px;
+  height: 82px;
+  background: #fff8e9;
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  transform: translateX(-50%);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.35));
+}
+
+.fortune-wheel-shell {
+  width: min(620px, 82vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 26px solid #5a2e1c;
+  border-radius: 999px;
+  background: #2d180f;
+  box-shadow:
+    inset 0 0 0 8px rgba(216, 168, 79, 0.24),
+    0 36px 70px rgba(0, 0, 0, 0.42);
+}
+
+.fortune-wheel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 10px solid #d8a84f;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, #07131c 0 21%, transparent 22%),
+    var(--wheel-gradient);
+  transform: rotate(var(--wheel-rotation));
+  transition: transform 4.15s cubic-bezier(0.12, 0.72, 0.12, 1);
+  box-shadow: inset 0 0 0 6px rgba(255, 248, 233, 0.14);
+}
+
+.fortune-wheel::before {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  width: 118px;
+  aspect-ratio: 1;
+  border: 7px solid #f1d28a;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #fff8e9, #d8a84f 45%, #6d4517);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 32px rgba(216, 168, 79, 0.32);
+}
+
+.fortune-wheel strong {
+  position: absolute;
+  inset: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 94px;
+  height: 94px;
+  color: #061018;
+  font-size: 24px;
+  transform: translate(-50%, -50%);
+}
+
+.fortune-wheel span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  color: #fff8e9;
+  font-size: 15px;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.46);
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--segment-angle))
+    translateY(-232px)
+    rotate(90deg);
+}
+
+.fortune-wheel span.hit {
+  color: #061018;
+  text-shadow: none;
+}
+
+.wheel-side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.wheel-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.wheel-panel label {
+  display: grid;
+  gap: 7px;
+}
+
+.wheel-panel label span {
+  color: #aebcc0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.wheel-panel input {
+  min-height: 44px;
+  border: 1px solid rgba(216, 168, 79, 0.28);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: rgba(12, 11, 9, 0.82);
+  padding: 0 12px;
+}
+
+.wheel-kpis {
+  display: grid;
+  gap: 8px;
+}
+
+.wheel-kpis span,
+.wheel-history article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(150, 174, 190, 0.13);
+  border-radius: 8px;
+  color: #aebcc0;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.wheel-kpis strong {
+  color: #f1d28a;
+}
+
+.wheel-kpis strong.positive {
+  color: #1de59d;
+}
+
+.wheel-kpis strong.negative {
+  color: #ff625a;
+}
+
+.wheel-panel p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.wheel-history {
+  display: grid;
+  gap: 8px;
+}
+
+.wheel-history article {
+  justify-content: start;
+}
+
+.wheel-history span {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+}
+
+.wheel-history strong {
+  min-width: 54px;
+  color: #fff8e9;
+}
+
+.wheel-history em {
+  margin-left: auto;
+  color: #c5d0d1;
+  font-style: normal;
+}
+
+.wheel-rules-drawer {
+  position: fixed;
+  z-index: 45;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: min(450px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 220ms ease;
+}
+
+.wheel-rules-drawer.open {
+  transform: translateX(0);
+}
+
+.wheel-rules-scroll {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.wheel-rules-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.wheel-rules-scroll::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wheel-rules-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(6, 14, 21, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #a58cff, #f1d28a);
+}
+
+.wheel-rules-scroll article {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.wheel-rules-scroll svg {
+  color: #a58cff;
+}
+
+.wheel-rules-scroll h3 {
+  margin: 0 0 6px;
+}
+
+.wheel-rules-scroll p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.5;
+}
+
+.wheel-segment-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wheel-segment-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1px solid rgba(150, 174, 190, 0.14);
+  border-radius: 999px;
+  color: #c5d0d1;
+  background: rgba(255, 255, 255, 0.035);
+  font-weight: 800;
+}
+
+.wheel-segment-list i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
 /* Poker room */
 .poker-page,
 .poker-game-shell {
@@ -8090,7 +8470,9 @@ main {
   .keno-hero,
   .keno-layout,
   .baccarat-hero,
-  .baccarat-layout {
+  .baccarat-layout,
+  .wheel-hero,
+  .wheel-layout {
     grid-template-columns: 1fr;
   }
 
@@ -8108,6 +8490,10 @@ main {
 
   .baccarat-table {
     min-height: 560px;
+  }
+
+  .wheel-stage {
+    min-height: 650px;
   }
 
   .dashboard-shell.dashboard-modern {
@@ -8212,7 +8598,8 @@ main {
 
   .pachinko-page,
   .keno-page,
-  .baccarat-page {
+  .baccarat-page,
+  .wheel-page {
     width: min(100% - 20px, 1560px);
     padding-top: 18px;
   }
@@ -8231,7 +8618,10 @@ main {
   .keno-panel,
   .baccarat-hero,
   .baccarat-table-panel,
-  .baccarat-panel {
+  .baccarat-panel,
+  .wheel-hero,
+  .wheel-stage,
+  .wheel-panel {
     padding: 16px;
   }
 
@@ -8323,6 +8713,48 @@ main {
 
   .baccarat-tie-badge {
     top: 54%;
+  }
+
+  .wheel-hero-preview {
+    width: min(250px, 68vw);
+  }
+
+  .wheel-stage {
+    min-height: 520px;
+  }
+
+  .wheel-pointer {
+    top: 32px;
+    width: 42px;
+    height: 64px;
+  }
+
+  .fortune-wheel-shell {
+    width: min(390px, 84vw);
+    border-width: 16px;
+  }
+
+  .fortune-wheel {
+    border-width: 7px;
+  }
+
+  .fortune-wheel::before {
+    width: 86px;
+  }
+
+  .fortune-wheel strong {
+    width: 72px;
+    height: 72px;
+    font-size: 18px;
+  }
+
+  .fortune-wheel span {
+    font-size: 11px;
+    transform:
+      translate(-50%, -50%)
+      rotate(var(--segment-angle))
+      translateY(-146px)
+      rotate(90deg);
   }
 
   .craps-dice-stage {

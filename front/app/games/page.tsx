@@ -95,6 +95,15 @@ const games = [
     text: 'Mise sur Player, Banker ou Tie et suis une distribution elegante.',
     tone: 'baccarat',
   },
+  {
+    href: '/games/wheel-of-fortune',
+    image: '/assets/home/game-wheel.svg',
+    kind: 'Solo',
+    status: 'Disponible',
+    title: 'Wheel of Fortune',
+    text: 'Fais tourner la roue et vise les gros multiplicateurs.',
+    tone: 'wheel',
+  },
 ] as const;
 
 const dayIndex = Math.floor(Date.now() / 86_400_000) % games.length;

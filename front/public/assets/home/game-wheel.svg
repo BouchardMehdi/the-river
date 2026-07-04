@@ -1,0 +1,50 @@
+<svg width="720" height="460" viewBox="0 0 720 460" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="460" rx="34" fill="#081620"/>
+  <g filter="url(#shadow)">
+    <circle cx="360" cy="230" r="176" fill="#5a2e1c"/>
+    <circle cx="360" cy="230" r="154" fill="url(#wheel)" stroke="#d8a84f" stroke-width="10"/>
+    <circle cx="360" cy="230" r="58" fill="#07131c" stroke="#f1d28a" stroke-width="8"/>
+    <circle cx="360" cy="230" r="34" fill="url(#gold)"/>
+  </g>
+  <path d="M360 32l28 70h-56l28-70z" fill="#fff8e9" stroke="#d8a84f" stroke-width="5"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900" text-anchor="middle">
+    <text x="360" y="226" fill="#fff8e9" font-size="30">WHEEL</text>
+    <text x="360" y="260" fill="#f1d28a" font-size="24">50x</text>
+  </g>
+  <defs>
+    <conicGradient id="wheel" from="-90deg" cx="50%" cy="50%">
+      <stop offset="0" stop-color="#ff625a"/>
+      <stop offset=".08" stop-color="#ff625a"/>
+      <stop offset=".08" stop-color="#8ad8ff"/>
+      <stop offset=".16" stop-color="#8ad8ff"/>
+      <stop offset=".16" stop-color="#f1d28a"/>
+      <stop offset=".24" stop-color="#f1d28a"/>
+      <stop offset=".24" stop-color="#1de59d"/>
+      <stop offset=".32" stop-color="#1de59d"/>
+      <stop offset=".32" stop-color="#a58cff"/>
+      <stop offset=".40" stop-color="#a58cff"/>
+      <stop offset=".40" stop-color="#d8a84f"/>
+      <stop offset=".48" stop-color="#d8a84f"/>
+      <stop offset=".48" stop-color="#ff625a"/>
+      <stop offset=".56" stop-color="#ff625a"/>
+      <stop offset=".56" stop-color="#8ad8ff"/>
+      <stop offset=".64" stop-color="#8ad8ff"/>
+      <stop offset=".64" stop-color="#1de59d"/>
+      <stop offset=".72" stop-color="#1de59d"/>
+      <stop offset=".72" stop-color="#f1d28a"/>
+      <stop offset=".80" stop-color="#f1d28a"/>
+      <stop offset=".80" stop-color="#a58cff"/>
+      <stop offset=".90" stop-color="#a58cff"/>
+      <stop offset=".90" stop-color="#d8a84f"/>
+      <stop offset="1" stop-color="#d8a84f"/>
+    </conicGradient>
+    <radialGradient id="gold" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(346 214) rotate(52) scale(72)">
+      <stop stop-color="#fff8e9"/>
+      <stop offset=".35" stop-color="#f1d28a"/>
+      <stop offset="1" stop-color="#9b6820"/>
+    </radialGradient>
+    <filter id="shadow" x="154" y="24" width="412" height="412" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="20" flood-color="#000" flood-opacity=".42"/>
+    </filter>
+  </defs>
+</svg>

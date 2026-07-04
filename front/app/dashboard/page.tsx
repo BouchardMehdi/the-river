@@ -89,6 +89,7 @@ type GameKey =
   | 'MINES'
   | 'KENO'
   | 'BACCARAT'
+  | 'WHEEL'
   | 'CASINO';
 type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
@@ -168,6 +169,12 @@ const gameMeta: Record<GameKey, { color: string; image: string; label: string; h
     image: '/assets/home/game-baccarat.svg',
     label: 'Baccarat',
   },
+  WHEEL: {
+    color: '#a58cff',
+    href: '/games/wheel-of-fortune',
+    image: '/assets/home/game-wheel.svg',
+    label: 'Wheel of Fortune',
+  },
   CASINO: {
     color: '#c5d0d1',
     href: '/games',
@@ -182,7 +189,7 @@ const chartPeriodLabels: Record<ChartPeriod, string> = {
   month: '30j',
 };
 
-const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT'];
+const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL'];
 
 function formatCredits(value: number | undefined | null) {
   return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
@@ -226,6 +233,7 @@ function toGameKey(game?: string): GameKey {
   if (key.includes('MINES')) return 'MINES';
   if (key.includes('KENO')) return 'KENO';
   if (key.includes('BACCARAT')) return 'BACCARAT';
+  if (key.includes('WHEEL')) return 'WHEEL';
   return 'CASINO';
 }
 
@@ -366,6 +374,7 @@ function DashboardContent() {
           MINES: game === 'MINES' ? delta : 0,
           KENO: game === 'KENO' ? delta : 0,
           BACCARAT: game === 'BACCARAT' ? delta : 0,
+          WHEEL: game === 'WHEEL' ? delta : 0,
         },
         end: event.createdAt,
         gains: Math.max(0, delta),
@@ -427,7 +436,7 @@ function DashboardContent() {
       }
     }
 
-    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT'];
+    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL'];
     return ordered.map((key) => ({
       key,
       ...gameMeta[key],

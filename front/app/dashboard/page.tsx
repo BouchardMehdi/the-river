@@ -78,7 +78,7 @@ type EggStatus = {
   visited?: boolean;
 };
 
-type GameKey = 'SLOTS' | 'ROULETTE' | 'POKER' | 'BLACKJACK' | 'CASINO';
+type GameKey = 'SLOTS' | 'ROULETTE' | 'POKER' | 'BLACKJACK' | 'CRAPS' | 'CASINO';
 type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
 type ChartPeriod = 'day' | 'week' | 'month';
@@ -121,6 +121,12 @@ const gameMeta: Record<GameKey, { color: string; image: string; label: string; h
     image: '/assets/home/game-blackjack.png',
     label: 'Blackjack',
   },
+  CRAPS: {
+    color: '#d8a84f',
+    href: '/games/craps',
+    image: '/assets/logo-the-river.png',
+    label: 'Craps',
+  },
   CASINO: {
     color: '#c5d0d1',
     href: '/games',
@@ -135,7 +141,7 @@ const chartPeriodLabels: Record<ChartPeriod, string> = {
   month: '30j',
 };
 
-const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK'];
+const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS'];
 
 function formatCredits(value: number | undefined | null) {
   return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
@@ -173,6 +179,7 @@ function toGameKey(game?: string): GameKey {
   if (key.includes('ROULETTE')) return 'ROULETTE';
   if (key.includes('POKER')) return 'POKER';
   if (key.includes('BLACKJACK')) return 'BLACKJACK';
+  if (key.includes('CRAPS')) return 'CRAPS';
   return 'CASINO';
 }
 
@@ -307,6 +314,7 @@ function DashboardContent() {
           ROULETTE: game === 'ROULETTE' ? delta : 0,
           POKER: game === 'POKER' ? delta : 0,
           BLACKJACK: game === 'BLACKJACK' ? delta : 0,
+          CRAPS: game === 'CRAPS' ? delta : 0,
         },
         end: event.createdAt,
         gains: Math.max(0, delta),
@@ -368,7 +376,7 @@ function DashboardContent() {
       }
     }
 
-    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK'];
+    const ordered: GameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS'];
     return ordered.map((key) => ({
       key,
       ...gameMeta[key],

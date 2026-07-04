@@ -12,8 +12,13 @@ export class CrapsController {
   @Post('play')
   async play(
     @CurrentUser() user: JwtUser,
-    @Body() body: { guessTotal: number; bet: number },
+    @Body()
+    body: {
+      bet?: number;
+      bets?: Array<{ amount: number; target?: number; type: string }>;
+      guessTotal?: number;
+    },
   ) {
-    return this.craps.play(user, body);
+    return this.craps.play(user, body as any);
   }
 }

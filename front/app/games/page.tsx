@@ -44,11 +44,11 @@ const games = [
   {
     href: '/games/craps',
     image: '/assets/logo-the-river.png',
-    kind: 'Secret',
-    status: 'A debloquer',
+    kind: 'Solo',
+    status: 'Disponible',
     title: 'Craps',
-    text: 'Jeu cache lie aux cles et aux routes secretes.',
-    tone: 'secret',
+    text: 'Table de des, pass line, field, hardways et mises rapides.',
+    tone: 'craps',
   },
 ] as const;
 
@@ -64,7 +64,7 @@ export default function GamesPage() {
             <Sparkles size={15} /> Hub des jeux
           </span>
           <h1>Choisis ta table.</h1>
-          <p>Lance une session, rejoins une table ou explore les jeux secrets de THE RIVER.</p>
+          <p>Lance une session, rejoins une table ou choisis ton jeu casino prefere.</p>
           <div className="button-row">
             <Link className="button" href={featured.href}>
               Jouer maintenant <ArrowRight size={17} />

@@ -95,9 +95,7 @@ type GameKey =
 type ChartGameKey = Exclude<GameKey, 'CASINO'>;
 type ChartMode = 'overview' | 'games';
 type ChartPeriod = 'day' | 'week' | 'month';
-type PieMode = 'games' | 'net';
 type LeaderFilter = 'credits' | 'points' | 'score';
-type StatsGameFilter = 'ALL' | ChartGameKey;
 
 type ChartPoint = {
   color: string;
@@ -306,8 +304,7 @@ function DashboardContent() {
   const [claimingKey, setClaimingKey] = useState<string | null>(null);
   const [chartMode, setChartMode] = useState<ChartMode>('overview');
   const [chartPeriod, setChartPeriod] = useState<ChartPeriod>('week');
-  const [pieMode, setPieMode] = useState<PieMode>('games');
-  const [statsGameFilter, setStatsGameFilter] = useState<StatsGameFilter>('ALL');
+  const [selectedStatsGames, setSelectedStatsGames] = useState<ChartGameKey[]>(chartGameKeys);
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('credits');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
@@ -346,7 +343,16 @@ function DashboardContent() {
 
   useEffect(() => {
     setSelectedPoint(null);
-  }, [chartMode, chartPeriod, statsGameFilter]);
+  }, [chartMode, chartPeriod, selectedStatsGames]);
+
+  function toggleStatsGame(key: ChartGameKey) {
+    setSelectedStatsGames((current) => {
+      const next = current.includes(key)
+        ? current.filter((item) => item !== key)
+        : chartGameKeys.filter((item) => item === key || current.includes(item));
+      return next;
+    });
+  }
 
   async function claim(key: string) {
     setClaimingKey(key);
@@ -367,9 +373,8 @@ function DashboardContent() {
   }, [summary]);
 
   const visibleActivity = useMemo(() => {
-    if (statsGameFilter === 'ALL') return activity;
-    return activity.filter((event) => toGameKey(event.game) === statsGameFilter);
-  }, [activity, statsGameFilter]);
+    return activity.filter((event) => selectedStatsGames.includes(toGameKey(event.game) as ChartGameKey));
+  }, [activity, selectedStatsGames]);
 
   const chartBuckets = useMemo(() => {
     if (summary?.chart && summary.chart.length > 0) return summary.chart;
@@ -461,26 +466,24 @@ function DashboardContent() {
   }, [activity, summary]);
 
   const visibleGameTotals = useMemo(() => {
-    if (statsGameFilter === 'ALL') return gameTotals;
-    return gameTotals.filter((game) => game.key === statsGameFilter);
-  }, [gameTotals, statsGameFilter]);
+    return gameTotals.filter((game) => selectedStatsGames.includes(game.key as ChartGameKey));
+  }, [gameTotals, selectedStatsGames]);
 
   const displayTotals = useMemo(() => {
-    if (statsGameFilter === 'ALL') return totals;
-    const selectedGame = gameTotals.find((game) => game.key === statsGameFilter);
-    const gains = Number(selectedGame?.gains ?? 0);
-    const losses = Number(selectedGame?.losses ?? 0);
-    const net = Number(selectedGame?.net ?? 0);
-    const volume = Number(selectedGame?.volume ?? 0);
+    if (selectedStatsGames.length === chartGameKeys.length) return totals;
+    const gains = visibleGameTotals.reduce((sum, game) => sum + Number(game.gains ?? 0), 0);
+    const losses = visibleGameTotals.reduce((sum, game) => sum + Number(game.losses ?? 0), 0);
+    const net = gains - losses;
+    const volume = gains + losses;
     const performance = volume > 0 ? (net / volume) * 100 : 0;
     return { gains, losses, net, performance, volume };
-  }, [gameTotals, statsGameFilter, totals]);
+  }, [selectedStatsGames, totals, visibleGameTotals]);
 
   const chartBucketsForStats = useMemo(() => {
-    if (statsGameFilter === 'ALL') return chartBuckets;
+    if (selectedStatsGames.length === chartGameKeys.length) return chartBuckets;
 
     return chartBuckets.map((bucket) => {
-      const delta = Number(bucket.byGame?.[statsGameFilter] ?? 0);
+      const delta = selectedStatsGames.reduce((sum, key) => sum + Number(bucket.byGame?.[key] ?? 0), 0);
       return {
         ...bucket,
         gains: Math.max(0, delta),
@@ -489,12 +492,11 @@ function DashboardContent() {
         volume: Math.abs(delta),
       };
     });
-  }, [chartBuckets, statsGameFilter]);
+  }, [chartBuckets, selectedStatsGames]);
 
   const chartSeries = useMemo(() => {
     if (chartMode === 'games') {
-      const activeGameKeys = statsGameFilter === 'ALL' ? chartGameKeys : [statsGameFilter];
-      return activeGameKeys.map((key) => {
+      return selectedStatsGames.map((key) => {
         let net = 0;
         return {
           color: gameMeta[key].color,
@@ -536,7 +538,7 @@ function DashboardContent() {
         values: chartBucketsForStats.map((bucket) => Number(bucket.losses ?? 0)),
       },
     ];
-  }, [chartBucketsForStats, chartMode, statsGameFilter]);
+  }, [chartBucketsForStats, chartMode, selectedStatsGames]);
 
   const chartBounds = useMemo(() => {
     const values = chartSeries.flatMap((series) => series.values);
@@ -547,30 +549,23 @@ function DashboardContent() {
   }, [chartSeries]);
 
   const pieSlices = useMemo(() => {
-    const raw =
-      pieMode === 'games'
-        ? visibleGameTotals.map((game) => ({
-            color: game.color,
-            key: game.key,
-            label: game.label,
-            meta: `${formatCredits(game.net)} net`,
-            value: game.volume,
-          }))
-        : [
-            {
-              color: displayTotals.net >= 0 ? '#25df98' : '#ff625a',
-              key: 'net',
-              label: 'Net',
-              meta: `${formatCredits(displayTotals.gains)} gagnes / ${formatCredits(displayTotals.losses)} perdus`,
-              value: Math.abs(displayTotals.net),
-            },
-          ];
-    return raw;
-  }, [displayTotals, pieMode, visibleGameTotals]);
+    return visibleGameTotals
+      .filter((game) => game.volume > 0)
+      .sort((a, b) => b.volume - a.volume)
+      .map((game) => ({
+        color: game.color,
+        image: game.image,
+        key: game.key,
+        label: game.label,
+        meta: `${formatCredits(game.net)} net`,
+        value: game.volume,
+      }));
+  }, [visibleGameTotals]);
 
   const pieTotal = pieSlices.reduce((sum, slice) => sum + slice.value, 0);
   const hasPieData = pieTotal > 0;
   let sliceCursor = 0;
+  const selectedStatsCount = selectedStatsGames.length;
 
   const claimableQuests = quests.filter((quest) => quest.canClaim);
   const leaderRows = useMemo(() => {
@@ -615,17 +610,6 @@ function DashboardContent() {
             <p>Vue claire de tes credits, resultats et objectifs actifs.</p>
           </div>
           <div className="dashboard-actions">
-            <label className="dashboard-game-filter">
-              <span>Stats</span>
-              <select value={statsGameFilter} onChange={(event) => setStatsGameFilter(event.target.value as StatsGameFilter)}>
-                <option value="ALL">Tous les jeux</option>
-                {chartGameKeys.map((key) => (
-                  <option key={key} value={key}>
-                    {gameMeta[key].label}
-                  </option>
-                ))}
-              </select>
-            </label>
             <button className="button secondary small quest-open-button" onClick={() => setQuestPanelOpen(true)} type="button">
               <ListChecks size={17} />
               <span>Quetes</span>
@@ -642,6 +626,36 @@ function DashboardContent() {
         </header>
 
         {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
+
+        <section className="stats-filter-card">
+          <div className="stats-filter-heading">
+            <div>
+              <span>Stats par jeux</span>
+              <strong>{selectedStatsCount}/{chartGameKeys.length} actifs</strong>
+            </div>
+            <div className="stats-filter-actions">
+              <button onClick={() => setSelectedStatsGames(chartGameKeys)} type="button">
+                Tous
+              </button>
+              <button onClick={() => setSelectedStatsGames([])} type="button">
+                Effacer
+              </button>
+            </div>
+          </div>
+          <div className="stats-filter-grid">
+            {chartGameKeys.map((key) => {
+              const checked = selectedStatsGames.includes(key);
+              return (
+                <label className={checked ? 'stats-chip active' : 'stats-chip'} key={key}>
+                  <input checked={checked} onChange={() => toggleStatsGame(key)} type="checkbox" />
+                  <i style={{ background: gameMeta[key].color }} />
+                  <span>{gameMeta[key].label}</span>
+                  {checked ? <Check size={15} /> : null}
+                </label>
+              );
+            })}
+          </div>
+        </section>
 
         <div className="dashboard-kpis">
           <article className="metric-card accent">
@@ -750,78 +764,89 @@ function DashboardContent() {
         </section>
 
         <div className="dashboard-grid compact">
-          <section className="analytics-card interactive-card">
+          <section className="analytics-card distribution-card interactive-card">
             <div className="card-heading">
-              <h2>{pieMode === 'games' ? 'Repartition par jeu' : 'Resultat net'}</h2>
-              <div className="segmented-control">
-                <button className={pieMode === 'games' ? 'active' : ''} onClick={() => setPieMode('games')} type="button">
-                  Jeux
-                </button>
-                <button className={pieMode === 'net' ? 'active' : ''} onClick={() => setPieMode('net')} type="button">
-                  Net
-                </button>
+              <div>
+                <h2>Repartition par jeu</h2>
+                <span className="card-subtitle">Basee sur les jeux selectionnes</span>
               </div>
             </div>
-            <div className="donut-row">
-              <svg className="donut-svg" viewBox="0 0 220 220" role="img" aria-label="Repartition">
-                <filter id="sliceGlow" x="-45%" y="-45%" width="190%" height="190%">
-                  <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#f1d28a" floodOpacity="0.95" />
-                </filter>
-                {hasPieData ? pieSlices.map((slice) => {
-                  const start = (sliceCursor / pieTotal) * 360;
-                  sliceCursor += slice.value;
-                  const end = (sliceCursor / pieTotal) * 360;
-                  return (
-                    <path
-                      className="donut-slice"
-                      d={describeDonutSlice(start, end)}
-                      fill={slice.color}
-                      filter={hoveredSlice === slice.key ? 'url(#sliceGlow)' : undefined}
-                      key={slice.key}
-                      onMouseEnter={() => setHoveredSlice(slice.key)}
-                      onMouseLeave={() => setHoveredSlice(null)}
-                    />
-                  );
-                }) : <circle cx="110" cy="110" r="94" fill="none" stroke="rgba(150, 174, 190, 0.18)" strokeWidth="38" />}
-                <circle cx="110" cy="110" r="51" fill="#08151c" />
-                <text className="donut-center-label" x="110" y="105" textAnchor="middle">{pieMode === 'net' ? 'Net' : 'Total'}</text>
-                <text className="donut-center-value" x="110" y="128" textAnchor="middle">
-                  {pieMode === 'net' ? formatCredits(displayTotals.net) : formatCredits(displayTotals.volume)}
-                </text>
-              </svg>
+            <div className="distribution-layout">
+              <div className="donut-frame">
+                <svg className="donut-svg" viewBox="0 0 220 220" role="img" aria-label="Repartition">
+                  <filter id="sliceGlow" x="-45%" y="-45%" width="190%" height="190%">
+                    <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#f1d28a" floodOpacity="0.95" />
+                  </filter>
+                  {hasPieData ? pieSlices.map((slice) => {
+                    const start = (sliceCursor / pieTotal) * 360;
+                    sliceCursor += slice.value;
+                    const end = (sliceCursor / pieTotal) * 360;
+                    return (
+                      <path
+                        className="donut-slice"
+                        d={describeDonutSlice(start, end)}
+                        fill={slice.color}
+                        filter={hoveredSlice === slice.key ? 'url(#sliceGlow)' : undefined}
+                        key={slice.key}
+                        onMouseEnter={() => setHoveredSlice(slice.key)}
+                        onMouseLeave={() => setHoveredSlice(null)}
+                      />
+                    );
+                  }) : <circle cx="110" cy="110" r="94" fill="none" stroke="rgba(150, 174, 190, 0.18)" strokeWidth="38" />}
+                  <circle cx="110" cy="110" r="51" fill="#08151c" />
+                  <text className="donut-center-label" x="110" y="105" textAnchor="middle">Total</text>
+                  <text className="donut-center-value" x="110" y="128" textAnchor="middle">
+                    {formatCredits(displayTotals.volume)}
+                  </text>
+                </svg>
+              </div>
               <div className="distribution-list">
-                {pieSlices.map((slice) => (
-                  <div className={hoveredSlice === slice.key ? 'distribution-item active' : 'distribution-item'} key={slice.key}>
-                    <span><i style={{ background: slice.color }} /> {slice.label}</span>
-                    <strong>{hasPieData ? Math.round((slice.value / pieTotal) * 100) : 0}%</strong>
-                    <em>{slice.meta}</em>
-                  </div>
-                ))}
+                {pieSlices.length > 0 ? pieSlices.map((slice) => {
+                  const percent = hasPieData ? Math.round((slice.value / pieTotal) * 100) : 0;
+                  return (
+                    <div className={hoveredSlice === slice.key ? 'distribution-item active' : 'distribution-item'} key={slice.key}>
+                      <span className="distribution-game">
+                        {'image' in slice && slice.image ? <Image src={slice.image} alt="" width={42} height={34} /> : <i style={{ background: slice.color }} />}
+                        <span>
+                          <strong>{slice.label}</strong>
+                          <em>{slice.meta}</em>
+                        </span>
+                      </span>
+                      <strong>{percent}%</strong>
+                      <span className="distribution-bar">
+                        <span style={{ background: slice.color, width: `${percent}%` }} />
+                      </span>
+                    </div>
+                  );
+                }) : <div className="activity-empty">Aucune donnee sur cette selection.</div>}
               </div>
             </div>
           </section>
 
-          <section className="analytics-card interactive-card">
+          <section className="analytics-card activity-card-panel interactive-card">
             <div className="card-heading">
-              <h2>Activite recente</h2>
+              <div>
+                <h2>Activite recente</h2>
+                <span className="card-subtitle">Dernieres actions des jeux selectionnes</span>
+              </div>
               <Link href="/games">Voir tous les jeux</Link>
             </div>
-            <div className="activity-table compact">
-              {visibleActivity.length > 0 ? visibleActivity.slice(0, 5).map((event, index) => {
+            <div className="activity-card-list">
+              {visibleActivity.length > 0 ? visibleActivity.slice(0, 8).map((event, index) => {
                 const delta = Number(event.deltaCredits ?? 0);
                 const meta = gameMeta[toGameKey(event.game)];
                 return (
-                  <div className="activity-row" key={`${event.game}-${event.createdAt}-${index}`}>
-                    <span className="activity-game">
-                      <Image src={meta.image} alt="" width={34} height={28} />
-                      {meta.label}
-                    </span>
-                    <strong className={delta >= 0 ? 'positive' : 'negative'}>
+                  <article className="activity-card" key={`${event.game}-${event.createdAt}-${index}`}>
+                    <Image src={meta.image} alt="" width={46} height={38} />
+                    <div>
+                      <strong>{meta.label}</strong>
+                      <span>{formatDate(event.createdAt)}</span>
+                    </div>
+                    <em className={delta >= 0 ? 'positive' : 'negative'}>
                       {delta >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-                      {formatCredits(delta)}
-                    </strong>
-                    <span>{formatDate(event.createdAt)}</span>
-                  </div>
+                      {delta >= 0 ? '+' : ''}{formatCredits(delta)}
+                    </em>
+                  </article>
                 );
               }) : <div className="activity-empty">Aucune activite recente pour le moment.</div>}
             </div>

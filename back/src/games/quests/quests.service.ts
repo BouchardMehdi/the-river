@@ -7,7 +7,34 @@ import { UserEntity } from '../../users/entities/user.entity';
 import { GameEventEntity } from '../stats/entities/game-event.entity';
 import { UserQuestStateEntity } from './entities/user-quest-state.entity';
 
-type GameKey = 'POKER' | 'BLACKJACK' | 'ROULETTE' | 'SLOTS';
+type GameKey =
+  | 'POKER'
+  | 'BLACKJACK'
+  | 'ROULETTE'
+  | 'SLOTS'
+  | 'CRAPS'
+  | 'PACHINKO'
+  | 'HILO'
+  | 'MINES'
+  | 'KENO'
+  | 'BACCARAT'
+  | 'WHEEL'
+  | 'CRASH';
+
+const CASINO_GAME_KEYS: GameKey[] = [
+  'SLOTS',
+  'ROULETTE',
+  'POKER',
+  'BLACKJACK',
+  'CRAPS',
+  'PACHINKO',
+  'HILO',
+  'MINES',
+  'KENO',
+  'BACCARAT',
+  'WHEEL',
+  'CRASH',
+];
 
 type QuestKind =
   | 'LOGIN'
@@ -18,6 +45,7 @@ type QuestKind =
   | 'PLAY_N_SAME_GAME' // jouer N rounds dans le même jeu (n’importe lequel)
   | 'PLAY_N_IN_GAME' // jouer N rounds dans un jeu spécifique
   | 'WIN_N_IN_GAME' // gagner N rounds (deltaCredits > 0) dans un jeu spécifique
+  | 'WIN_DIFFERENT_GAMES'
   | 'POKER_WIN_HAND' // gagner 1 main (deltaCredits > 0) au poker
   | 'GAIN_POINTS' // gagner X points (somme deltaPoints)
   | 'GAIN_POINTS_SERIES_TABLES' // gagner des points sur X tables différe
@@ -29,8 +57,13 @@ type QuestKind =
   | 'BLACKJACK_WIN_NO_HIT'
   | 'POKER_WIN_FLUSH_PLUS'
   // ✅ AJOUTS (quêtes demandées)
-  | 'SECRET_FIRST_STEPS'
-  | 'SLOTS_TRIPLE_JACKPOT';
+  | 'ACCOUNT_CASINO_TOUR'
+  | 'SLOTS_TRIPLE_JACKPOT'
+  | 'CASHOUT_MULTIPLIER_IN_GAME'
+  | 'HILO_STREAK_CASHOUT'
+  | 'MINES_CASHOUT_SAFE'
+  | 'KENO_HITS'
+  | 'CRAPS_BET_TYPE_WINS';
 
 type QuestDef = {
   key: string;
@@ -48,6 +81,11 @@ type QuestDef = {
   minBet?: number;
   creditsMax?: number;
   targetCredits?: number;
+  multiplierMin?: number;
+  streakMin?: number;
+  safeRevealsMin?: number;
+  hitsMin?: number;
+  betType?: string;
 };
 
 type QuestView = {
@@ -105,7 +143,7 @@ export class QuestsService {
       description:
         'Termine 1 round/partie (roulette spin / slot spin / blackjack round / poker hand).',
       cooldownHours: 24,
-      rewardCredits: 40,
+      rewardCredits: 30,
       kind: 'PLAY_ANY',
     },
     {
@@ -113,9 +151,10 @@ export class QuestsService {
       title: 'Explorer les jeux',
       description: 'Joue 1 fois à 2 jeux différents (ex: roulette + slots).',
       cooldownHours: 24,
-      rewardCredits: 80,
+      rewardCredits: 90,
       kind: 'PLAY_DIFFERENT_GAMES',
-      goal: 2,
+      goal: 3,
+      minBet: 5,
     },
     {
       key: 'daily_play_3_same_game_min5',
@@ -124,7 +163,7 @@ export class QuestsService {
       cooldownHours: 24,
       rewardCredits: 60,
       kind: 'PLAY_N_SAME_GAME',
-      goal: 3,
+      goal: 4,
       minBet: 5,
     },
 
@@ -133,8 +172,8 @@ export class QuestsService {
       key: 'rescue_slots_1_min2',
       title: 'Un spin de secours (Slots)',
       description: 'Fais 1 spin slots (min bet ≥ 2).',
-      cooldownHours: 6,
-      rewardCredits: 15,
+      cooldownHours: 12,
+      rewardCredits: 10,
       kind: 'PLAY_GAME',
       game: 'SLOTS',
       minBet: 2,
@@ -143,8 +182,8 @@ export class QuestsService {
       key: 'rescue_roulette_1_min2',
       title: 'Mise de secours (Roulette)',
       description: 'Fais 1 spin roulette (min bet ≥ 2).',
-      cooldownHours: 6,
-      rewardCredits: 15,
+      cooldownHours: 12,
+      rewardCredits: 10,
       kind: 'PLAY_GAME',
       game: 'ROULETTE',
       minBet: 2,
@@ -153,8 +192,8 @@ export class QuestsService {
       key: 'rescue_blackjack_1_min2',
       title: 'Main de secours (Blackjack)',
       description: 'Termine 1 round blackjack (min bet ≥ 2).',
-      cooldownHours: 8,
-      rewardCredits: 20,
+      cooldownHours: 12,
+      rewardCredits: 10,
       kind: 'PLAY_GAME',
       game: 'BLACKJACK',
       minBet: 2,
@@ -206,12 +245,12 @@ export class QuestsService {
     // -------------------- ✅ Quête secrète “Premiers pas” (1 fois / compte) --------------------
     {
       key: 'secret_first_steps',
-      title: '???',
-      description: 'Un défi unique… Remporte ta toute première partie sur chaque jeu (0/4).',
+      title: 'Tour du casino',
+      description: 'Joue a 8 jeux differents pour debloquer cette recompense unique.',
       cooldownHours: 0, // 1 seule fois / compte (géré comme EASTER_EGG)
-      rewardCredits: 3000,
-      kind: 'SECRET_FIRST_STEPS',
-      goal: 4,
+      rewardCredits: 1200,
+      kind: 'ACCOUNT_CASINO_TOUR',
+      goal: 8,
     },
 
     // -------------------- ✅ Triple Jackpot (15 jours) --------------------
@@ -268,6 +307,122 @@ export class QuestsService {
       kind: 'WIN_N_IN_GAME',
       game: 'BLACKJACK',
       goal: 3,
+      minBet: 5,
+    },
+
+    {
+      key: 'weekly_crash_cashout_x2_3_min5',
+      title: 'Crash prudent',
+      description: 'Cashout 3 fois a x2 ou plus sur Crash (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 250,
+      kind: 'CASHOUT_MULTIPLIER_IN_GAME',
+      game: 'CRASH',
+      goal: 3,
+      minBet: 5,
+      multiplierMin: 2,
+    },
+    {
+      key: 'weekly_mines_safe_5_3_min5',
+      title: 'Demineur patient',
+      description: 'Cashout 3 parties Mines apres au moins 5 cases safe (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 250,
+      kind: 'MINES_CASHOUT_SAFE',
+      game: 'MINES',
+      goal: 3,
+      minBet: 5,
+      safeRevealsMin: 5,
+    },
+    {
+      key: 'weekly_keno_hit_4_min5',
+      title: 'Keno precis',
+      description: 'Touche au moins 4 numeros sur une grille Keno (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 220,
+      kind: 'KENO_HITS',
+      game: 'KENO',
+      goal: 1,
+      minBet: 5,
+      hitsMin: 4,
+    },
+    {
+      key: 'weekly_baccarat_win_5_min5',
+      title: 'Baccarat regulier',
+      description: 'Gagne 5 mains Baccarat (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 250,
+      kind: 'WIN_N_IN_GAME',
+      game: 'BACCARAT',
+      goal: 5,
+      minBet: 5,
+    },
+    {
+      key: 'weekly_wheel_x3_min5',
+      title: 'Roue chanceuse',
+      description: 'Tombe sur un multiplicateur x3 ou plus a la Wheel (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 200,
+      kind: 'CASHOUT_MULTIPLIER_IN_GAME',
+      game: 'WHEEL',
+      goal: 1,
+      minBet: 5,
+      multiplierMin: 3,
+    },
+    {
+      key: 'weekly_hilo_streak_4_min5',
+      title: 'Hi-Lo serie',
+      description: 'Reussis une serie de 4 predictions puis cashout (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 250,
+      kind: 'HILO_STREAK_CASHOUT',
+      game: 'HILO',
+      goal: 1,
+      minBet: 5,
+      streakMin: 4,
+    },
+    {
+      key: 'weekly_pachinko_x32_min5',
+      title: 'Pachinko haut risque',
+      description: 'Obtiens un multiplicateur x3.2 ou plus au Pachinko (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 220,
+      kind: 'CASHOUT_MULTIPLIER_IN_GAME',
+      game: 'PACHINKO',
+      goal: 1,
+      minBet: 5,
+      multiplierMin: 3.2,
+    },
+    {
+      key: 'weekly_craps_pass_line_3_min5',
+      title: 'Craps propre',
+      description: 'Gagne 3 mises Pass Line au Craps (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 220,
+      kind: 'CRAPS_BET_TYPE_WINS',
+      game: 'CRAPS',
+      goal: 3,
+      minBet: 5,
+      betType: 'PASS_LINE',
+    },
+    {
+      key: 'weekly_tour_8_games_min5',
+      title: 'Tour complet',
+      description: 'Joue a 8 jeux differents dans la semaine (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 700,
+      kind: 'PLAY_DIFFERENT_GAMES',
+      goal: 8,
+      minBet: 5,
+    },
+    {
+      key: 'weekly_win_5_games_min5',
+      title: 'Polyvalent',
+      description: 'Gagne sur 5 jeux differents dans la semaine (min bet >= 5).',
+      cooldownHours: 24 * 7,
+      rewardCredits: 700,
+      kind: 'WIN_DIFFERENT_GAMES',
+      goal: 5,
       minBet: 5,
     },
 
@@ -417,6 +572,38 @@ export class QuestsService {
       (meta.payload ? meta.payload.balanceAfter ?? meta.payload.creditsAfter : null);
     const n = Number(c);
     return Number.isFinite(n) ? n : null;
+  }
+
+  private eventMeta(e: any): any | null {
+    return this.safeJsonParse((e as any).metaJson) ?? this.safeJsonParse((e as any).meta) ?? null;
+  }
+
+  private eventGame(e: any): GameKey | null {
+    const game = String(e?.game ?? '').toUpperCase();
+    return (CASINO_GAME_KEYS as string[]).includes(game) ? (game as GameKey) : null;
+  }
+
+  private extractMultiplier(meta: any): number {
+    const value =
+      meta?.multiplier ??
+      meta?.segment?.multiplier ??
+      meta?.result?.multiplier ??
+      meta?.payoutMultiplier ??
+      meta?.cashoutMultiplier;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private extractSafeReveals(meta: any): number {
+    if (Array.isArray(meta?.revealed)) return meta.revealed.length;
+    const n = Number(meta?.safeReveals ?? meta?.safeRevealed ?? meta?.revealedCount);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private extractKenoHits(meta: any): number {
+    if (Array.isArray(meta?.hits)) return meta.hits.length;
+    const n = Number(meta?.hits ?? meta?.hitCount ?? meta?.matches);
+    return Number.isFinite(n) ? n : 0;
   }
 
   private async getUserById(userId: number): Promise<UserEntity | null> {
@@ -620,43 +807,19 @@ export class QuestsService {
     }
 
     // ✅ SECRET_FIRST_STEPS : gagner la toute première partie sur chaque jeu (4 jeux)
-    if (q.kind === 'SECRET_FIRST_STEPS') {
+    if (q.kind === 'ACCOUNT_CASINO_TOUR') {
       // On prend tous les events (ASC) et on récupère le 1er event pour chaque jeu.
       const all = await this.fetchEventsAscAllTime(userId, 10000);
 
-      const games: GameKey[] = ['SLOTS', 'ROULETTE', 'BLACKJACK', 'POKER'];
-      const firstByGame: Partial<Record<GameKey, any>> = {};
+      const played = new Set<GameKey>();
 
       for (const e of all) {
-        const g = String(e.game || '').toUpperCase();
-        if (g !== 'SLOTS' && g !== 'ROULETTE' && g !== 'BLACKJACK' && g !== 'POKER') continue;
-
-        const gg = g as GameKey;
-        if (!firstByGame[gg]) firstByGame[gg] = e;
-        const done = games.every((x) => firstByGame[x]);
-        if (done) break;
+        const game = this.eventGame(e);
+        if (game) played.add(game);
       }
 
-      let progress = 0;
-      let impossible = false;
-
-      for (const g of games) {
-        const ev = firstByGame[g];
-        if (!ev) continue; // pas encore joué ce jeu
-
-        const won = Number(ev.deltaCredits || 0) > 0;
-        if (!won) {
-          // 1ère partie perdue => impossible définitif
-          impossible = true;
-        } else {
-          progress++;
-        }
-      }
-
-      const clamped = this.clamp(progress, 0, 4);
-      const complete = !impossible && clamped >= 4;
-
-      return { progress: clamped, goal: 4, complete, impossible };
+      const p = this.clamp(played.size, 0, goal);
+      return { progress: p, goal, complete: played.size >= goal };
     }
 
     // ✅ SLOTS_TRIPLE_JACKPOT : 3 jackpots sur 3 machines différentes
@@ -801,12 +964,11 @@ export class QuestsService {
 
     if (q.kind === 'PLAY_DIFFERENT_GAMES') {
       const rows = await this.fetchEvents(userId, since, 1200);
-      const played = new Set<string>();
-      for (const e of rows) {
-        const g = String(e.game || '').toUpperCase();
-        if (g === 'POKER' || g === 'BLACKJACK' || g === 'ROULETTE' || g === 'SLOTS') {
-          played.add(g);
-        }
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const played = new Set<GameKey>();
+      for (const e of rows2) {
+        const game = this.eventGame(e);
+        if (game) played.add(game);
       }
       const p = this.clamp(played.size, 0, goal);
       return { progress: p, goal, complete: played.size >= goal };
@@ -823,13 +985,16 @@ export class QuestsService {
       const rows = await this.fetchEvents(userId, since, 2000);
       const rows2 = this.filterByMinBet(rows, q.minBet);
 
-      const counts: Record<string, number> = { POKER: 0, BLACKJACK: 0, ROULETTE: 0, SLOTS: 0 };
+      const counts = Object.fromEntries(CASINO_GAME_KEYS.map((game) => [game, 0])) as Record<
+        GameKey,
+        number
+      >;
       for (const e of rows2) {
-        const g = String(e.game || '').toUpperCase();
-        if (counts[g] !== undefined) counts[g]++;
+        const game = this.eventGame(e);
+        if (game) counts[game]++;
       }
 
-      const best = Math.max(counts.POKER, counts.BLACKJACK, counts.ROULETTE, counts.SLOTS);
+      const best = Math.max(...CASINO_GAME_KEYS.map((game) => counts[game]));
       const p = this.clamp(best, 0, goal);
       return { progress: p, goal, complete: best >= goal };
     }
@@ -847,6 +1012,100 @@ export class QuestsService {
       const wins = this.countWins(rows2);
       const p = this.clamp(wins, 0, goal);
       return { progress: p, goal, complete: wins >= goal };
+    }
+
+    if (q.kind === 'WIN_DIFFERENT_GAMES') {
+      const rows = await this.fetchEvents(userId, since, 3000);
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const won = new Set<GameKey>();
+
+      for (const e of rows2) {
+        if (Number(e.deltaCredits || 0) <= 0) continue;
+        const game = this.eventGame(e);
+        if (game) won.add(game);
+      }
+
+      const p = this.clamp(won.size, 0, goal);
+      return { progress: p, goal, complete: won.size >= goal };
+    }
+
+    if (q.kind === 'CASHOUT_MULTIPLIER_IN_GAME') {
+      const rows = await this.fetchEvents(userId, since, 3000, q.game);
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const minMultiplier = Number(q.multiplierMin ?? 1);
+      const count = rows2.filter((e) => {
+        if (Number(e.deltaCredits || 0) <= 0) return false;
+        const meta = this.eventMeta(e);
+        return this.extractMultiplier(meta) >= minMultiplier;
+      }).length;
+      const p = this.clamp(count, 0, goal);
+      return { progress: p, goal, complete: count >= goal };
+    }
+
+    if (q.kind === 'HILO_STREAK_CASHOUT') {
+      const rows = await this.fetchEvents(userId, since, 3000, 'HILO');
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const minStreak = Number(q.streakMin ?? 1);
+      const count = rows2.filter((e) => {
+        const meta = this.eventMeta(e);
+        return (
+          Number(e.deltaCredits || 0) > 0 &&
+          String(meta?.result ?? '').toUpperCase() === 'CASHOUT' &&
+          Number(meta?.streak ?? 0) >= minStreak
+        );
+      }).length;
+      const p = this.clamp(count, 0, goal);
+      return { progress: p, goal, complete: count >= goal };
+    }
+
+    if (q.kind === 'MINES_CASHOUT_SAFE') {
+      const rows = await this.fetchEvents(userId, since, 3000, 'MINES');
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const minSafe = Number(q.safeRevealsMin ?? 1);
+      const count = rows2.filter((e) => {
+        const meta = this.eventMeta(e);
+        return (
+          Number(e.deltaCredits || 0) > 0 &&
+          String(meta?.result ?? '').toUpperCase() === 'CASHOUT' &&
+          this.extractSafeReveals(meta) >= minSafe
+        );
+      }).length;
+      const p = this.clamp(count, 0, goal);
+      return { progress: p, goal, complete: count >= goal };
+    }
+
+    if (q.kind === 'KENO_HITS') {
+      const rows = await this.fetchEvents(userId, since, 3000, 'KENO');
+      const rows2 = this.filterByMinBet(rows, q.minBet);
+      const minHits = Number(q.hitsMin ?? 1);
+      const count = rows2.filter((e) => this.extractKenoHits(this.eventMeta(e)) >= minHits).length;
+      const p = this.clamp(count, 0, goal);
+      return { progress: p, goal, complete: count >= goal };
+    }
+
+    if (q.kind === 'CRAPS_BET_TYPE_WINS') {
+      const rows = await this.fetchEvents(userId, since, 3000, 'CRAPS');
+      const wantedType = String(q.betType ?? '').toUpperCase();
+      const minBet = Number(q.minBet ?? 0);
+      let count = 0;
+
+      for (const e of rows) {
+        const meta = this.eventMeta(e);
+        const bets = Array.isArray(meta?.bets) ? meta.bets : [];
+        if (
+          bets.some(
+            (bet: any) =>
+              String(bet?.type ?? '').toUpperCase() === wantedType &&
+              String(bet?.outcome ?? '').toLowerCase() === 'win' &&
+              Number(bet?.amount ?? 0) >= minBet,
+          )
+        ) {
+          count++;
+        }
+      }
+
+      const p = this.clamp(count, 0, goal);
+      return { progress: p, goal, complete: count >= goal };
     }
 
     if (q.kind === 'POKER_WIN_HAND') {
@@ -914,25 +1173,14 @@ export class QuestsService {
         }
       }
 
-      // 🕵️ Secret “Premiers pas” UX
-      if (q.kind === 'SECRET_FIRST_STEPS') {
-        const goalLocal = 4;
-
+      if (q.kind === 'ACCOUNT_CASINO_TOUR') {
+        title = 'Tour du casino';
         if (alreadyClaimed) {
-          // après claim: on révèle le vrai nom/desc
-          title = 'Premiers pas';
-          description = 'Tu as déjà récupéré la récompense de cette quête.';
-        } else if (impossible) {
-          // visible ??? + impossible
-          title = '???';
-          description = 'Impossible à compléter (une première partie a été perdue).';
-        } else if (!complete) {
-          title = '???';
-          description = `Un défi unique… mais gare à toi, car si tu échoue il sera impossible de le compléter !`;
+          description = 'Tu as deja recupere la recompense de cette quete.';
+        } else if (complete) {
+          description = 'Tu as fait le tour du casino. Recupere ta recompense.';
         } else {
-          // réussi => on révèle
-          title = 'Premiers pas';
-          description = 'Tu as gagné ta première partie sur chaque jeu ! Récupère ta récompense.';
+          description = `Joue a ${goal} jeux differents pour debloquer cette recompense unique.`;
         }
       }
 
@@ -940,12 +1188,12 @@ export class QuestsService {
       const canClaim =
         q.kind === 'EASTER_EGG_KEYS'
           ? complete && !alreadyClaimed
-          : q.kind === 'SECRET_FIRST_STEPS'
+          : q.kind === 'ACCOUNT_CASINO_TOUR'
             ? complete && !alreadyClaimed
             : cooldownReady && complete;
 
       const next =
-        q.kind === 'EASTER_EGG_KEYS' || q.kind === 'SECRET_FIRST_STEPS'
+        q.kind === 'EASTER_EGG_KEYS' || q.kind === 'ACCOUNT_CASINO_TOUR'
           ? null
           : this.computeNextAvailableAt(lastClaimedAt, q.cooldownHours);
 
@@ -975,7 +1223,7 @@ export class QuestsService {
     const state = await this.getState(userId, q.key);
 
     // quests "1 fois par compte"
-    if (q.kind === 'EASTER_EGG_KEYS' || q.kind === 'SECRET_FIRST_STEPS') {
+    if (q.kind === 'EASTER_EGG_KEYS' || q.kind === 'ACCOUNT_CASINO_TOUR') {
       if (state.lastClaimedAt) {
         throw new BadRequestException('QUEST_ALREADY_CLAIMED');
       }
@@ -987,11 +1235,6 @@ export class QuestsService {
     }
 
     const pr = await this.progressForQuest(userId, q, state.lastClaimedAt);
-
-    // bloquer claim si impossible sur "Premiers pas"
-    if (q.kind === 'SECRET_FIRST_STEPS' && pr.impossible) {
-      throw new BadRequestException('QUEST_IMPOSSIBLE');
-    }
 
     if (!pr.complete) throw new BadRequestException('QUEST_NOT_COMPLETE');
 

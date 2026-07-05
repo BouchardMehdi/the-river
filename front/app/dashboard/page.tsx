@@ -252,7 +252,44 @@ function questProgress(quest: Quest) {
   return Math.min(Number(quest.progress ?? 0), questGoal(quest));
 }
 
-function questStatus(quest: Quest) {
+function formatCooldown(ms: number) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}j ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
+function questCooldownInfo(quest: Quest, nowMs: number) {
+  if (!quest.lastClaimedAt || !quest.nextAvailableAt) return null;
+
+  const start = new Date(quest.lastClaimedAt).getTime();
+  const end = new Date(quest.nextAvailableAt).getTime();
+  const fallbackTotal = Math.max(1, Number(quest.cooldownHours ?? 0) * 3600_000);
+  const total = Number.isFinite(end - start) && end > start ? end - start : fallbackTotal;
+  const elapsed = Math.max(0, Math.min(total, nowMs - start));
+  const remainingMs = Math.max(0, end - nowMs);
+  const percent = Math.round((elapsed / total) * 100);
+
+  return {
+    label: remainingMs > 0 ? formatCooldown(remainingMs) : 'Disponible',
+    percent,
+    ready: remainingMs <= 0,
+    remainingMs,
+  };
+}
+
+function questStatus(quest: Quest, nowMs: number) {
+  const cooldown = questCooldownInfo(quest, nowMs);
+  const readyFromCooldown = Boolean(cooldown?.ready && questProgress(quest) >= questGoal(quest));
+
+  if (quest.canClaim || readyFromCooldown) return { className: 'ready', label: 'Pret' };
+  if (cooldown && !cooldown.ready) return { className: 'cooldown', label: 'Recharge' };
   if (quest.canClaim) return { className: 'ready', label: 'Pret' };
   if (quest.lastClaimedAt && quest.nextAvailableAt) return { className: 'cooldown', label: 'Recharge' };
   if (quest.lastClaimedAt && !quest.nextAvailableAt) return { className: 'claimed', label: 'Recupere' };
@@ -308,6 +345,7 @@ function DashboardContent() {
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('credits');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
+  const [questClock, setQuestClock] = useState(() => Date.now());
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -344,6 +382,14 @@ function DashboardContent() {
   useEffect(() => {
     setSelectedPoint(null);
   }, [chartMode, chartPeriod, selectedStatsGames]);
+
+  useEffect(() => {
+    if (!questPanelOpen) return;
+
+    setQuestClock(Date.now());
+    const interval = window.setInterval(() => setQuestClock(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [questPanelOpen]);
 
   function toggleStatsGame(key: ChartGameKey) {
     setSelectedStatsGames((current) => {
@@ -916,7 +962,9 @@ function DashboardContent() {
             quests.map((quest) => {
               const goal = questGoal(quest);
               const progress = questProgress(quest);
-              const status = questStatus(quest);
+              const cooldown = questCooldownInfo(quest, questClock);
+              const canClaimNow = Boolean(quest.canClaim || (cooldown?.ready && progress >= goal));
+              const status = questStatus(quest, questClock);
               const percent = Math.round((progress / goal) * 100);
               return (
                 <article className="quest-mini-card interactive-card" key={quest.key}>
@@ -929,11 +977,22 @@ function DashboardContent() {
                   <div className="quest-progress" aria-label={`${percent}%`}>
                     <span style={{ width: `${percent}%` }} />
                   </div>
+                  {cooldown && !quest.canClaim ? (
+                    <div className={cooldown.ready ? 'quest-cooldown ready' : 'quest-cooldown'}>
+                      <div className="quest-cooldown-meta">
+                        <span>{cooldown.ready ? 'Recharge terminee' : 'Recharge dans'}</span>
+                        <strong>{cooldown.label}</strong>
+                      </div>
+                      <div className="quest-cooldown-bar" aria-label={`Recharge ${cooldown.percent}%`}>
+                        <span style={{ width: `${cooldown.percent}%` }} />
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="quest-footer">
                     <span>{progress}/{goal}</span>
                     <strong>+{formatCredits(quest.rewardCredits ?? 0)}</strong>
                   </div>
-                  {quest.canClaim ? (
+                  {canClaimNow ? (
                     <button className="button small" disabled={claimingKey === quest.key} onClick={() => void claim(quest.key)} type="button">
                       {claimingKey === quest.key ? 'Recuperation...' : 'Recuperer'}
                     </button>

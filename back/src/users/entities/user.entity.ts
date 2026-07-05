@@ -32,23 +32,6 @@ export class UserEntity {
   @Column({ type: 'tinyint', default: 0 })
   emailVerified: boolean;
 
-  // 🥚 Easter Egg Keys (0/1)
-  @Column({ type: 'tinyint', default: 0 })
-  eggKeySlots: boolean;
-
-  @Column({ type: 'tinyint', default: 0 })
-  eggKeyBlackjack: boolean;
-
-  @Column({ type: 'tinyint', default: 0 })
-  eggKeyRoulette: boolean;
-
-  @Column({ type: 'tinyint', default: 0 })
-  eggKeyPoker: boolean;
-
-  // ✅ Flag final : passe à true quand le joueur clique "Retour dashboard" sur /easter-egg
-  @Column({ type: 'tinyint', default: 0 })
-  eggEasterEggVisited: boolean;
-
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 

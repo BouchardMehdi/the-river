@@ -24,8 +24,6 @@ function looksLikeBcryptHash(s: string): boolean {
   );
 }
 
-export type EasterEggKey = 'slots' | 'blackjack' | 'roulette' | 'poker';
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -75,11 +73,6 @@ export class UsersService {
       emailVerified: false,
 
       // 🥚 defaults (robuste même si DB ancienne)
-      eggKeySlots: false as any,
-      eggKeyBlackjack: false as any,
-      eggKeyRoulette: false as any,
-      eggKeyPoker: false as any,
-      eggEasterEggVisited: false as any,
     });
 
     return this.usersRepo.save(u);
@@ -245,41 +238,19 @@ export class UsersService {
   // 🥚 EASTER EGG HELPERS
   // =========================================================
 
-  async getEasterEggStatusByUserId(userId: number) {
-    const u = await this.findById(Number(userId));
-    if (!u) throw new NotFoundException('User not found');
-
-    const keys = {
-      slots: Boolean((u as any).eggKeySlots),
-      blackjack: Boolean((u as any).eggKeyBlackjack),
-      roulette: Boolean((u as any).eggKeyRoulette),
-      poker: Boolean((u as any).eggKeyPoker),
-    };
-
-    const unlockedCount = Object.values(keys).filter(Boolean).length;
-
-    return {
-      keys,
-      unlockedCount,
-      total: 4,
-      allKeys: unlockedCount >= 4,
-      visited: Boolean((u as any).eggEasterEggVisited),
-    };
-  }
-
   /**
    * Débloque une clé si pas déjà débloquée.
    * Retourne true si la DB a réellement changé (donc popup côté front).
    */
-  async unlockEasterEggKeyByUserId(userId: number, key: EasterEggKey): Promise<boolean> {
+  private async legacyEasterEggKeyDisabled(userId: number, key: 'slots' | 'blackjack' | 'roulette' | 'poker'): Promise<boolean> {
     const id = Number(userId);
     if (!Number.isFinite(id) || id <= 0) return false;
 
-    const map: Record<EasterEggKey, keyof UserEntity> = {
-      slots: 'eggKeySlots',
-      blackjack: 'eggKeyBlackjack',
-      roulette: 'eggKeyRoulette',
-      poker: 'eggKeyPoker',
+    const map: Record<'slots' | 'blackjack' | 'roulette' | 'poker', keyof UserEntity> = {
+      slots: 'userId',
+      blackjack: 'userId',
+      roulette: 'userId',
+      poker: 'userId',
     };
 
     const col = map[key];
@@ -296,20 +267,16 @@ export class UsersService {
     return !!res.affected && res.affected > 0;
   }
 
-  /**
-   * Appelé quand le joueur clique "Retour dashboard" sur /easter-egg.
-   * Marque visited=true (une seule fois).
-   */
-  async markEasterEggVisitedByUserId(userId: number): Promise<boolean> {
+  private async legacyEasterEggVisitDisabled(userId: number): Promise<boolean> {
     const id = Number(userId);
     if (!Number.isFinite(id) || id <= 0) return false;
 
     const res = await this.usersRepo
       .createQueryBuilder()
       .update(UserEntity)
-      .set({ eggEasterEggVisited: () => '1' } as any)
+      .set({ userId: () => 'userId' } as any)
       .where('userId = :id', { id })
-      .andWhere('eggEasterEggVisited = 0')
+      .andWhere('1 = 0')
       .execute();
 
     return !!res.affected && res.affected > 0;

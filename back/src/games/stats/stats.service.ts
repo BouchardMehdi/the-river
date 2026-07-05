@@ -47,6 +47,7 @@ export class StatsService {
     if (key.includes('BACCARAT')) return 'BACCARAT';
     if (key.includes('WHEEL')) return 'WHEEL';
     if (key.includes('CRASH')) return 'CRASH';
+    if (key.includes('DRAGON') || key.includes('TIGER')) return 'DRAGON_TIGER';
     return key || 'CASINO';
   }
 

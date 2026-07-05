@@ -194,18 +194,7 @@ export class SlotsService {
     });
 
     // 🥚 Easter egg: jackpot (pattern JACKPOT gagnant)
-    const unlockedNow: string[] = [];
-
-    if (hitJackpot) {
-      try {
-        const did = await this.usersService.unlockEasterEggKeyByUserId(user.userId, 'slots');
-        if (did) unlockedNow.push('slots');
-      } catch {
-        // ignore
-      }
-    }
-
-    return { ...payload, unlockedNow };
+    return payload;
   }
 
   // ---------------- PRICING HELPERS ----------------

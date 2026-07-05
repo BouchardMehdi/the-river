@@ -11,8 +11,8 @@ import {
   ChevronRight,
   ListChecks,
   SlidersHorizontal,
+  Sparkles,
   Target,
-  Trophy,
   X,
 } from 'lucide-react';
 import { apiGet, apiPost } from '@/api/client';
@@ -71,11 +71,11 @@ type Leader = {
 };
 
 type EggStatus = {
-  keys?: Record<string, boolean>;
-  unlockedCount?: number;
-  total?: number;
-  allKeys?: boolean;
-  visited?: boolean;
+  unlocked?: boolean;
+  title?: string;
+  game?: string | null;
+  href?: string | null;
+  claimedAt?: string | null;
 };
 
 type GameKey =
@@ -661,6 +661,12 @@ function DashboardContent() {
               <span>Quetes</span>
               {claimableQuests.length > 0 ? <strong>{claimableQuests.length}</strong> : null}
             </button>
+            {egg?.unlocked ? (
+              <Link className="button secondary small secret-salon-link" href="/easter-egg">
+                <Sparkles size={17} />
+                <span>Salon du Dragon</span>
+              </Link>
+            ) : null}
             <button className="button secondary small" onClick={() => setShowLeaderboard((value) => !value)} type="button">
               <SlidersHorizontal size={17} />
               <span>{showLeaderboard ? 'Masquer classement' : 'Afficher classement'}</span>
@@ -1007,16 +1013,6 @@ function DashboardContent() {
               <p>Les quetes apparaitront ici des que le backend repondra.</p>
             </article>
           )}
-          <div className="secret-keys">
-            <h3>Indices secrets</h3>
-            {Object.entries(egg?.keys ?? { slots: false, blackjack: false, roulette: false, poker: false }).map(([key, unlocked]) => (
-              <div className="secret-key-row" key={key}>
-                <Trophy size={16} />
-                <span>{key}</span>
-                <strong>{unlocked ? <><Check size={14} /> Trouve</> : 'A trouver'}</strong>
-              </div>
-            ))}
-          </div>
         </div>
       </aside>
     </section>

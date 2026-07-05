@@ -22,6 +22,7 @@ import { KenoModule } from './games/keno/keno.module';
 import { BaccaratModule } from './games/baccarat/baccarat.module';
 import { WheelModule } from './games/wheel/wheel.module';
 import { CrashModule } from './games/crash/crash.module';
+import { DragonTigerModule } from './games/dragon-tiger/dragon-tiger.module';
 
 function envFlag(config: ConfigService, key: string, fallback = false): boolean {
   const value = config.get<string>(key);
@@ -83,6 +84,7 @@ function envFlag(config: ConfigService, key: string, fallback = false): boolean 
     BaccaratModule,
     WheelModule,
     CrashModule,
+    DragonTigerModule,
     QuestsModule,
   ],
   controllers: [AppController],

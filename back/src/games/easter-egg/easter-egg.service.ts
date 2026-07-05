@@ -1,17 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../../users/users.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { UserQuestStateEntity } from '../quests/entities/user-quest-state.entity';
 
 @Injectable()
 export class EasterEggService {
-  constructor(private readonly usersService: UsersService) {}
+  private readonly invitationQuestKey = 'secret_dragon_invitation';
+
+  constructor(
+    @InjectRepository(UserQuestStateEntity)
+    private readonly questRepo: Repository<UserQuestStateEntity>,
+  ) {}
 
   async getStatus(userId: number) {
-    return this.usersService.getEasterEggStatusByUserId(userId);
-  }
+    const state = await this.questRepo.findOne({
+      where: { userId: Number(userId), questKey: this.invitationQuestKey } as any,
+    });
+    const unlocked = Boolean(state?.lastClaimedAt);
 
-  async markVisited(userId: number) {
-    const changed = await this.usersService.markEasterEggVisitedByUserId(userId);
-    const status = await this.usersService.getEasterEggStatusByUserId(userId);
-    return { ok: true, changed, status };
+    return {
+      key: this.invitationQuestKey,
+      unlocked,
+      title: unlocked ? 'Salon du Dragon' : '???',
+      game: unlocked ? 'Dragon Tiger' : null,
+      href: unlocked ? '/easter-egg' : null,
+      claimedAt: state?.lastClaimedAt ? state.lastClaimedAt.toISOString() : null,
+    };
   }
 }

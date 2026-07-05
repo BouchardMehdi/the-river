@@ -49,7 +49,7 @@ type QuestKind =
   | 'POKER_WIN_HAND' // gagner 1 main (deltaCredits > 0) au poker
   | 'GAIN_POINTS' // gagner X points (somme deltaPoints)
   | 'GAIN_POINTS_SERIES_TABLES' // gagner des points sur X tables différe
-  | 'EASTER_EGG_KEYS' // quête secrète : débloquer 4 clés (et valider via page)
+  | 'DRAGON_INVITATION'
   | 'SURVIVOR_PLAY' // condition credits <= threshold, puis jouer N rounds
   | 'COMEBACK_TO_CREDITS' // condition: balanceAfter==0 dans les 24h ou credits==0, objectif atteindre >= targetCredits
   // ✅ AJOUTS (nouveaux kinds)
@@ -201,13 +201,14 @@ export class QuestsService {
 
     // -------------------- SECRET (1 fois par compte) --------------------
     {
-      key: 'secret_easter_egg',
+      key: 'secret_dragon_invitation',
       title: '???',
       description: 'Une présence étrange rôde dans le casino… Trouve 4 indices (0/4).',
       cooldownHours: 0, // pas de cooldown (mais claimable 1 seule fois)
-      rewardCredits: 5000,
-      kind: 'EASTER_EGG_KEYS',
-      goal: 4,
+      rewardCredits: 300,
+      kind: 'DRAGON_INVITATION',
+      goal: 3,
+      minBet: 5,
     },
 
     // -------------------- ✅ NOUVELLES QUÊTES (A/B/C) --------------------
@@ -791,19 +792,35 @@ export class QuestsService {
     const user = await this.getUserById(userId);
 
     // 🥚 SECRET: 4 clés + validation via page (/easter-egg -> bouton retour)
-    if (q.kind === 'EASTER_EGG_KEYS') {
-      const s = Boolean((user as any)?.eggKeySlots);
-      const b = Boolean((user as any)?.eggKeyBlackjack);
-      const r = Boolean((user as any)?.eggKeyRoulette);
-      const p = Boolean((user as any)?.eggKeyPoker);
+    if (q.kind === 'DRAGON_INVITATION') {
+      const rows = this.filterByMinBet(await this.fetchEvents(userId, null, 10000), q.minBet);
+      const played = new Set<GameKey>();
+      const wins = new Set<GameKey>();
+      let rareEvent = false;
 
-      const keysCount = [s, b, r, p].filter(Boolean).length;
-      const visited = Boolean((user as any)?.eggEasterEggVisited);
+      for (const e of rows) {
+        const game = this.eventGame(e);
+        if (!game) continue;
 
-      const progress = this.clamp(keysCount, 0, 4);
-      const complete = keysCount >= 4 && visited;
+        const delta = Number(e.deltaCredits || 0);
+        const meta = this.eventMeta(e);
+        played.add(game);
+        if (delta > 0) wins.add(game);
 
-      return { progress, goal: 4, complete };
+        if (
+          (this.extractMultiplier(meta) >= 3 && delta > 0) ||
+          (game === 'ROULETTE' && Number(meta?.number ?? meta?.result?.number ?? meta?.spin?.number) === 0 && delta > 0) ||
+          (game === 'BLACKJACK' && (meta?.blackjack === true || meta?.natural === true) && delta > 0) ||
+          (game === 'POKER' && this.pokerRankValue(meta?.handRank ?? meta?.winnerHandRank ?? meta?.rank) >= this.pokerRankValue('FLUSH'))
+        ) {
+          rareEvent = true;
+        }
+      }
+
+      const fragments = [played.size >= 5, wins.size >= 3, rareEvent].filter(Boolean).length;
+      const pDragon = this.clamp(fragments, 0, goal);
+      return { progress: pDragon, goal, complete: fragments >= goal };
+
     }
 
     // ✅ SECRET_FIRST_STEPS : gagner la toute première partie sur chaque jeu (4 jeux)
@@ -1158,7 +1175,20 @@ export class QuestsService {
       let description = q.description;
 
       // 🥚 Easter egg special UX
-      if (q.kind === 'EASTER_EGG_KEYS') {
+      if (q.kind === 'DRAGON_INVITATION') {
+        if (alreadyClaimed) {
+          title = 'Invitation du Dragon';
+          description = 'Le Salon du Dragon est ouvert. Une table Dragon Tiger t attend.';
+        } else if (complete) {
+          title = '???';
+          description = 'Les fragments sont reunis. Recupere l invitation.';
+        } else {
+          title = '???';
+          description = 'Une invitation circule dans les salles privees du casino.';
+        }
+      }
+
+      if (false) {
         if (alreadyClaimed) {
           title = "Trouver l'easter egg";
           description = 'Tu as déjà récupéré la récompense de cette quête.';
@@ -1186,14 +1216,14 @@ export class QuestsService {
 
       // canClaim rules
       const canClaim =
-        q.kind === 'EASTER_EGG_KEYS'
+        q.kind === 'DRAGON_INVITATION'
           ? complete && !alreadyClaimed
           : q.kind === 'ACCOUNT_CASINO_TOUR'
             ? complete && !alreadyClaimed
             : cooldownReady && complete;
 
       const next =
-        q.kind === 'EASTER_EGG_KEYS' || q.kind === 'ACCOUNT_CASINO_TOUR'
+        q.kind === 'DRAGON_INVITATION' || q.kind === 'ACCOUNT_CASINO_TOUR'
           ? null
           : this.computeNextAvailableAt(lastClaimedAt, q.cooldownHours);
 
@@ -1223,7 +1253,7 @@ export class QuestsService {
     const state = await this.getState(userId, q.key);
 
     // quests "1 fois par compte"
-    if (q.kind === 'EASTER_EGG_KEYS' || q.kind === 'ACCOUNT_CASINO_TOUR') {
+    if (q.kind === 'DRAGON_INVITATION' || q.kind === 'ACCOUNT_CASINO_TOUR') {
       if (state.lastClaimedAt) {
         throw new BadRequestException('QUEST_ALREADY_CLAIMED');
       }

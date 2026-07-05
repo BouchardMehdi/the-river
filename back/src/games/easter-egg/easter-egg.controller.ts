@@ -16,9 +16,8 @@ export class EasterEggController {
     return this.egg.getStatus(user.userId);
   }
 
-  // ✅ appelé quand le joueur clique sur "Retour dashboard"
   @Post('visit')
   async visit(@CurrentUser() user: JwtUser) {
-    return this.egg.markVisited(user.userId);
+    return { ok: true, status: await this.egg.getStatus(user.userId) };
   }
 }

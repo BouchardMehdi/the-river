@@ -6,6 +6,7 @@ import { UsersService } from '../../users/users.service';
 import { UserEntity } from '../../users/entities/user.entity';
 import { GameEventEntity } from '../stats/entities/game-event.entity';
 import { UserQuestStateEntity } from './entities/user-quest-state.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 type GameKey =
   | 'POKER'
@@ -124,6 +125,7 @@ export class QuestsService {
     private readonly usersRepo: Repository<UserEntity>,
 
     private readonly usersService: UsersService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ✅ Toutes les quêtes de ta liste
@@ -1243,6 +1245,8 @@ export class QuestsService {
       });
     }
 
+    void this.notifications.notifyQuestSnapshot(userId, out).catch(() => undefined);
+
     return out;
   }
 
@@ -1272,6 +1276,20 @@ export class QuestsService {
 
     state.lastClaimedAt = this.now();
     await this.questRepo.save(state);
+
+    const nextAvailableAt =
+      q.kind === 'DRAGON_INVITATION' || q.kind === 'ACCOUNT_CASINO_TOUR'
+        ? null
+        : this.computeNextAvailableAt(state.lastClaimedAt, q.cooldownHours);
+
+    void this.notifications
+      .notifyQuestClaimed(userId, {
+        key: q.key,
+        title: q.title,
+        nextAvailableAt: nextAvailableAt ? nextAvailableAt.toISOString() : null,
+        rewardCredits: q.rewardCredits,
+      })
+      .catch(() => undefined);
 
     const u = await this.usersService.findByUsername(username);
 

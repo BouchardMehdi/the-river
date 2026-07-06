@@ -1301,6 +1301,28 @@ main {
   cursor: pointer;
 }
 
+.notification-button {
+  position: relative;
+}
+
+.notification-button.subscribed::after {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid rgba(5, 8, 8, 0.95);
+  border-radius: 999px;
+  background: #1de59d;
+  content: '';
+  box-shadow: 0 0 12px rgba(29, 229, 157, 0.7);
+}
+
+.notification-button.busy {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
 .button {
   min-width: 124px;
   padding: 0 16px;

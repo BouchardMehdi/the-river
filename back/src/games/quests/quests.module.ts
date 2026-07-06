@@ -9,6 +9,7 @@ import { GameEventEntity } from '../stats/entities/game-event.entity';
 import { UserEntity } from '../../users/entities/user.entity';
 
 import { UsersModule } from '../../users/users.module';
+import { NotificationsModule } from '../../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from '../../users/users.module';
       UserEntity, // ✅ FIX ICI
     ]),
     UsersModule, // pour UsersService
+    NotificationsModule,
   ],
   providers: [QuestsService],
   controllers: [QuestsController],

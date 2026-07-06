@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Bell,
   Check,
   ChevronRight,
   ListChecks,
@@ -19,6 +18,7 @@ import {
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { NotificationButton } from '@/components/notification-button';
 import { StatusMessage } from '@/components/ui';
 import type { Quest } from '@/types/api';
 
@@ -702,9 +702,7 @@ function DashboardContent() {
               <Trophy size={17} />
               <span>Classement</span>
             </button>
-            <button className="icon-button" type="button" title="Notifications">
-              <Bell size={18} />
-            </button>
+            <NotificationButton className="icon-button" />
           </div>
         </header>
 

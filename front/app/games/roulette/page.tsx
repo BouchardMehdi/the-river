@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, FormEvent, useEffect, useMemo, useState } from 'react';
-import { BookOpen, CircleDot, Coins, Plus, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
+import { BarChart3, BookOpen, CircleDot, Plus, RotateCcw, Sparkles, Trash2, X } from 'lucide-react';
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
@@ -257,6 +257,7 @@ function RouletteContent() {
   const [error, setError] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [stats, setStats] = useState<RouletteStats | null>(null);
   const [statsError, setStatsError] = useState('');
   const [wheelAngle, setWheelAngle] = useState(0);
@@ -500,6 +501,9 @@ function RouletteContent() {
               <button className="icon-button" onClick={addBet} type="button" aria-label="Ajouter une mise">
                 <Plus size={18} />
               </button>
+              <button className="icon-button" onClick={() => setStatsOpen(true)} type="button" aria-label="Ouvrir les stats">
+                <BarChart3 size={18} />
+              </button>
               <button className="icon-button" onClick={() => setRulesOpen(true)} type="button" aria-label="Ouvrir les regles">
                 <BookOpen size={18} />
               </button>
@@ -609,46 +613,41 @@ function RouletteContent() {
         </aside>
       </div>
 
-      <section className="roulette-table-card">
-        <div>
-          <span className="eyebrow"><Coins size={14} /> Tapis</span>
-          <h2>Schema des mises</h2>
-        </div>
-        <RouletteTableDiagram
-          activeBetType={activeBet.type}
-          activeNumbers={coveredNumbers}
-          activeSelectionKey={activeBet.selectionKey}
-          onSelectBet={selectTableBet}
-        />
-      </section>
-
-      <section className="roulette-stats-card">
-        <div className="roulette-stats-head">
-          <div>
-            <span className="eyebrow"><Sparkles size={14} /> Historique joueur</span>
-            <h2>Stats roulette</h2>
-            <p>Reinitialise chaque lundi.</p>
-          </div>
-          <strong>{stats?.totalSpins ?? 0} lances</strong>
-        </div>
-
-        {statsError ? <StatusMessage type="error">{statsError}</StatusMessage> : null}
-
-        <div className="roulette-stats-grid">
-          <RouletteNumberStats title="Numeros chauds" numbers={stats?.hotNumbers ?? []} />
-          <RouletteNumberStats title="Numeros froids" numbers={stats?.coldNumbers ?? []} />
-          <div className="roulette-distribution-card">
-            {distributionRows.map(([label, value]) => (
-              <div key={String(label)}>
-                <span>{String(label)}</span>
-                <strong>{value?.percentage ?? 0}%</strong>
-                <em>{value?.count ?? 0} fois</em>
-                <i style={{ width: `${value?.percentage ?? 0}%` }} />
+      {statsOpen ? (
+        <>
+          <button className="drawer-backdrop poker-rules-backdrop" onClick={() => setStatsOpen(false)} type="button" aria-label="Fermer les stats" />
+          <aside className="roulette-stats-card roulette-stats-drawer open">
+            <div className="roulette-stats-head">
+              <div>
+                <span className="eyebrow"><Sparkles size={14} /> Historique joueur</span>
+                <h2>Stats roulette</h2>
+                <p>Reinitialise chaque lundi.</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              <button className="icon-button" onClick={() => setStatsOpen(false)} type="button" aria-label="Fermer les stats">
+                <X size={18} />
+              </button>
+            </div>
+            <strong className="roulette-stats-count">{stats?.totalSpins ?? 0} lances</strong>
+
+            {statsError ? <StatusMessage type="error">{statsError}</StatusMessage> : null}
+
+            <div className="roulette-stats-grid">
+              <RouletteNumberStats title="Numeros chauds" numbers={stats?.hotNumbers ?? []} />
+              <RouletteNumberStats title="Numeros froids" numbers={stats?.coldNumbers ?? []} />
+              <div className="roulette-distribution-card">
+                {distributionRows.map(([label, value]) => (
+                  <div key={String(label)}>
+                    <span>{String(label)}</span>
+                    <strong>{value?.percentage ?? 0}%</strong>
+                    <em>{value?.count ?? 0} fois</em>
+                    <i style={{ width: `${value?.percentage ?? 0}%` }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </>
+      ) : null}
 
       {rulesOpen ? (
         <>

@@ -193,17 +193,23 @@ function BaccaratContent() {
 
             <div className={result?.winner === 'PLAYER' ? 'baccarat-hand winner' : 'baccarat-hand'} data-side="Player">
               {playerCards.map((card, index) => <BaccaratCardView card={card} index={index} key={`${card.suit}-${card.rank}-${index}`} />)}
-              {playerCards.length === 0 ? <span className="baccarat-empty">Player</span> : null}
             </div>
 
             <div className={result?.winner === 'BANKER' ? 'baccarat-hand winner' : 'baccarat-hand'} data-side="Banker">
               {bankerCards.map((card, index) => <BaccaratCardView card={card} index={index} key={`${card.suit}-${card.rank}-${index}`} />)}
-              {bankerCards.length === 0 ? <span className="baccarat-empty">Banker</span> : null}
             </div>
 
             <div className={result?.winner === 'TIE' ? 'baccarat-tie-badge show' : 'baccarat-tie-badge'}>
               Tie
             </div>
+          </div>
+          <div className="baccarat-table-actions">
+            <button className="button" disabled={dealing || bet <= 0} onClick={() => void play()} type="button">
+              <Play size={18} /> Distribuer
+            </button>
+            <button className="button secondary" disabled={dealing} onClick={resetTable} type="button">
+              <RotateCcw size={18} /> Nouvelle main
+            </button>
           </div>
         </section>
 

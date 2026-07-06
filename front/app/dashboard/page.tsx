@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Target,
+  Trophy,
   X,
 } from 'lucide-react';
 import { apiGet, apiPost } from '@/api/client';
@@ -296,11 +297,13 @@ function questStatus(quest: Quest, nowMs: number) {
   return { className: 'progress', label: 'En cours' };
 }
 
-function pointFor(value: number, index: number, count: number, min: number, max: number) {
+function pointFor(value: number, index: number, count: number, min: number, max: number, scale = 1) {
   const range = max - min || 1;
+  const normalized = (value - min) / range;
+  const scaled = Math.min(0.98, Math.max(0.02, (normalized - 0.5) * scale + 0.5));
   return {
     x: 32 + index * (696 / Math.max(count - 1, 1)),
-    y: 224 - ((value - min) / range) * 168,
+    y: 300 - scaled * 240,
   };
 }
 
@@ -345,6 +348,7 @@ function DashboardContent() {
   const [leaderFilter, setLeaderFilter] = useState<LeaderFilter>('credits');
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [questPanelOpen, setQuestPanelOpen] = useState(false);
+  const [statsPanelOpen, setStatsPanelOpen] = useState(false);
   const [questClock, setQuestClock] = useState(() => Date.now());
   const [selectedPoint, setSelectedPoint] = useState<ChartPoint | null>(null);
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
@@ -380,6 +384,13 @@ function DashboardContent() {
   }, [chartPeriod]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      setShowLeaderboard(false);
+    }
+  }, []);
+
+  useEffect(() => {
     setSelectedPoint(null);
   }, [chartMode, chartPeriod, selectedStatsGames]);
 
@@ -390,6 +401,21 @@ function DashboardContent() {
     const interval = window.setInterval(() => setQuestClock(Date.now()), 1000);
     return () => window.clearInterval(interval);
   }, [questPanelOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mobileLeaderboardOpen = showLeaderboard && window.matchMedia('(max-width: 900px)').matches;
+    const shouldLock = questPanelOpen || statsPanelOpen || mobileLeaderboardOpen;
+    if (!shouldLock) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [questPanelOpen, showLeaderboard, statsPanelOpen]);
 
   function toggleStatsGame(key: ChartGameKey) {
     setSelectedStatsGames((current) => {
@@ -656,20 +682,25 @@ function DashboardContent() {
             <p>Vue claire de tes credits, resultats et objectifs actifs.</p>
           </div>
           <div className="dashboard-actions">
-            <button className="button secondary small quest-open-button" onClick={() => setQuestPanelOpen(true)} type="button">
+            <button className="button secondary small dashboard-action-button quest-open-button" onClick={() => setQuestPanelOpen(true)} type="button">
               <ListChecks size={17} />
               <span>Quetes</span>
               {claimableQuests.length > 0 ? <strong>{claimableQuests.length}</strong> : null}
             </button>
+            <button className="button secondary small dashboard-action-button stats-filter-button" onClick={() => setStatsPanelOpen(true)} type="button">
+              <SlidersHorizontal size={17} />
+              <span>Filtres</span>
+              <strong>{selectedStatsCount}/{chartGameKeys.length}</strong>
+            </button>
             {egg?.unlocked ? (
-              <Link className="button secondary small secret-salon-link" href="/easter-egg">
+              <Link className="button secondary small dashboard-action-button secret-salon-link" href="/easter-egg">
                 <Sparkles size={17} />
                 <span>Salon du Dragon</span>
               </Link>
             ) : null}
-            <button className="button secondary small" onClick={() => setShowLeaderboard((value) => !value)} type="button">
-              <SlidersHorizontal size={17} />
-              <span>{showLeaderboard ? 'Masquer classement' : 'Afficher classement'}</span>
+            <button className="button secondary small dashboard-action-button" onClick={() => setShowLeaderboard((value) => !value)} type="button">
+              <Trophy size={17} />
+              <span>Classement</span>
             </button>
             <button className="icon-button" type="button" title="Notifications">
               <Bell size={18} />
@@ -678,36 +709,6 @@ function DashboardContent() {
         </header>
 
         {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
-
-        <section className="stats-filter-card">
-          <div className="stats-filter-heading">
-            <div>
-              <span>Stats par jeux</span>
-              <strong>{selectedStatsCount}/{chartGameKeys.length} actifs</strong>
-            </div>
-            <div className="stats-filter-actions">
-              <button onClick={() => setSelectedStatsGames(chartGameKeys)} type="button">
-                Tous
-              </button>
-              <button onClick={() => setSelectedStatsGames([])} type="button">
-                Effacer
-              </button>
-            </div>
-          </div>
-          <div className="stats-filter-grid">
-            {chartGameKeys.map((key) => {
-              const checked = selectedStatsGames.includes(key);
-              return (
-                <label className={checked ? 'stats-chip active' : 'stats-chip'} key={key}>
-                  <input checked={checked} onChange={() => toggleStatsGame(key)} type="checkbox" />
-                  <i style={{ background: gameMeta[key].color }} />
-                  <span>{gameMeta[key].label}</span>
-                  {checked ? <Check size={15} /> : null}
-                </label>
-              );
-            })}
-          </div>
-        </section>
 
         <div className="dashboard-kpis">
           <article className="metric-card accent">
@@ -754,12 +755,13 @@ function DashboardContent() {
             </div>
           </div>
           <div className="chart-wrap">
-            <svg className="performance-chart" viewBox="0 0 760 260" role="img" aria-label="Evolution des performances">
-              {[40, 90, 140, 190, 240].map((y) => (
+            <svg className="performance-chart" viewBox="0 0 760 340" role="img" aria-label="Evolution des performances">
+              {[60, 120, 180, 240, 300].map((y) => (
                 <line className="chart-grid-line" x1="20" x2="740" y1={y} y2={y} key={y} />
               ))}
               {chartSeries.map((series) => {
-                const points = series.values.map((value, index) => pointFor(value, index, series.values.length, chartBounds.min, chartBounds.max));
+                const curveScale = chartMode === 'games' ? 1.28 : 1.55;
+                const points = series.values.map((value, index) => pointFor(value, index, series.values.length, chartBounds.min, chartBounds.max, curveScale));
                 return (
                   <g key={series.label}>
                     <polyline
@@ -795,7 +797,7 @@ function DashboardContent() {
               })}
             </svg>
             {selectedPoint ? (
-              <div className="chart-tooltip" style={{ left: `${(selectedPoint.x / 760) * 100}%`, top: `${(selectedPoint.y / 260) * 100}%` }}>
+              <div className="chart-tooltip" style={{ left: `${(selectedPoint.x / 760) * 100}%`, top: `${(selectedPoint.y / 340) * 100}%` }}>
                 <span style={{ color: selectedPoint.color }}>{selectedPoint.label}</span>
                 <strong className={selectedPoint.value >= 0 && selectedPoint.label !== 'Pertes' ? 'positive' : 'negative'}>
                   {selectedPoint.value >= 0 && selectedPoint.label !== 'Pertes' ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
@@ -906,6 +908,7 @@ function DashboardContent() {
         </div>
       </div>
 
+      {showLeaderboard ? <button className="drawer-backdrop dashboard-leaderboard-backdrop" onClick={() => setShowLeaderboard(false)} type="button" aria-label="Fermer le classement" /> : null}
       {showLeaderboard ? (
         <aside className="dashboard-panel">
           <div className="panel-heading">
@@ -952,7 +955,40 @@ function DashboardContent() {
         </aside>
       ) : null}
 
+      {statsPanelOpen ? <button className="drawer-backdrop" onClick={() => setStatsPanelOpen(false)} type="button" aria-label="Fermer les filtres" /> : null}
       {questPanelOpen ? <button className="drawer-backdrop" onClick={() => setQuestPanelOpen(false)} type="button" aria-label="Fermer les quetes" /> : null}
+      <aside className={statsPanelOpen ? 'stats-filter-card stats-filter-drawer open' : 'stats-filter-card stats-filter-drawer'} aria-hidden={!statsPanelOpen}>
+        <div className="stats-filter-heading">
+          <div>
+            <span>Stats par jeux</span>
+            <strong>{selectedStatsCount}/{chartGameKeys.length} actifs</strong>
+          </div>
+          <button className="icon-button" onClick={() => setStatsPanelOpen(false)} type="button" title="Fermer">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="stats-filter-actions">
+          <button onClick={() => setSelectedStatsGames(chartGameKeys)} type="button">
+            Tous
+          </button>
+          <button onClick={() => setSelectedStatsGames([])} type="button">
+            Effacer
+          </button>
+        </div>
+        <div className="stats-filter-grid">
+          {chartGameKeys.map((key) => {
+            const checked = selectedStatsGames.includes(key);
+            return (
+              <label className={checked ? 'stats-chip active' : 'stats-chip'} key={key}>
+                <input checked={checked} onChange={() => toggleStatsGame(key)} type="checkbox" />
+                <i style={{ background: gameMeta[key].color }} />
+                <span>{gameMeta[key].label}</span>
+                {checked ? <Check size={15} /> : null}
+              </label>
+            );
+          })}
+        </div>
+      </aside>
       <aside className={questPanelOpen ? 'quest-drawer open' : 'quest-drawer'} aria-hidden={!questPanelOpen}>
         <div className="panel-heading">
           <div>

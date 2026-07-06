@@ -321,7 +321,7 @@ function PokerContent() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [betAmount, setBetAmount] = useState(20);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -641,9 +641,27 @@ function PokerContent() {
     setChatDraft('');
   }
 
-  function copyCode() {
+  async function copyCode() {
     if (!activeId || typeof navigator === 'undefined') return;
-    void navigator.clipboard?.writeText(activeId);
+
+    try {
+      await navigator.clipboard?.writeText(activeId);
+      pushSystemMessage(`Code ${activeId} copie.`);
+      return;
+    } catch {
+      if (typeof document === 'undefined') return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = activeId;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    pushSystemMessage(`Code ${activeId} copie.`);
   }
 
   const seats = useMemo(() => {
@@ -654,7 +672,7 @@ function PokerContent() {
       stack: active?.stacks?.[name] ?? (index === 0 ? user?.credits ?? 0 : 1000 - index * 75),
       bet: active?.bets?.[name] ?? (index % 2 === 0 ? 0 : form.bigBlindAmount),
       isHero: name === user?.username || index === 0,
-      isDealer: name === active?.ownerPlayerId || index === 1,
+      isDealer: active?.dealerPlayerId ? name === active.dealerPlayerId : index === (active?.dealerIndex ?? 1),
     }));
   }, [active, form.bigBlindAmount, form.maxPlayers, user?.credits, user?.username]);
 
@@ -862,6 +880,29 @@ function PokerContent() {
 
       {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
 
+      <div className="table-chat-mobile">
+        {messages.length > 0 ? (
+          <button className="table-chat-peek" onClick={() => setChatOpen(true)} type="button">
+            {messages.slice(-5).map((message) => (
+              <span key={message.id}>
+                <strong>{message.author}</strong> {message.text}
+              </span>
+            ))}
+          </button>
+        ) : null}
+        <form className="table-chat-dock" onSubmit={sendMessage}>
+          <input
+            value={chatDraft}
+            onChange={(event) => setChatDraft(event.target.value)}
+            onFocus={() => setChatOpen(true)}
+            placeholder="Chat..."
+          />
+          <button className="icon-button" type="submit" aria-label="Envoyer">
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
+
       <div className="poker-game-layout">
         <main className="poker-table-zone">
           <section className="poker-felt-table">
@@ -902,8 +943,6 @@ function PokerContent() {
               )}
             </div>
 
-            <div className="dealer-button">D</div>
-
             {seats.map((seat, index) => (
               <article className={`poker-seat seat-${index + 1} ${seat.isHero ? 'hero-seat' : ''}`} key={`${seat.name}-${index}`}>
                 <div className="seat-avatar">{seat.isDealer ? <Crown size={16} /> : seat.name.slice(0, 1).toUpperCase()}</div>
@@ -911,12 +950,7 @@ function PokerContent() {
                   <strong>{seat.name}</strong>
                   <span>{seat.stack} credits</span>
                 </div>
-                {seat.bet ? (
-                  <em className="seat-bet">
-                    <ChipStack amount={seat.bet} compact />
-                    <span>{seat.bet}</span>
-                  </em>
-                ) : null}
+                {seat.isDealer ? <span className="dealer-seat-tag">Dealer</span> : null}
               </article>
             ))}
             {isShowdown ? <div className="showdown-shield">Nouvelle main en preparation...</div> : null}
@@ -964,15 +998,6 @@ function PokerContent() {
                 <span>Mise</span>
                 <strong>{clampedBetAmount} credits</strong>
               </label>
-              <input
-                aria-label="Montant de la mise rapide"
-                min={1}
-                max={maxBetAmount}
-                step={1}
-                type="range"
-                value={clampedBetAmount}
-                onChange={(event) => setBetAmount(Number(event.target.value))}
-              />
               <input
                 aria-label="Montant exact de la mise"
                 className="bet-amount-input"

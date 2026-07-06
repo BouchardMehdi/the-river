@@ -174,8 +174,10 @@ function WheelContent() {
                   </span>
                 );
               })}
-              <strong>{result?.segment.label ?? 'SPIN'}</strong>
             </div>
+            <button className="fortune-wheel-center" disabled={spinning || bet <= 0} onClick={() => void spin()} type="button">
+              {spinning ? '...' : result?.segment.label ?? 'SPIN'}
+            </button>
           </div>
         </section>
 

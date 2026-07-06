@@ -180,42 +180,6 @@ function CrapsContent() {
       {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
 
       <div className="craps-layout">
-        <section className="craps-table-panel interactive-card">
-          <div className="craps-table">
-            <div className="craps-table-top">
-              <button onClick={() => addBet('ANY_SEVEN')} type="button">Any 7</button>
-              <button onClick={() => addBet('ANY_CRAPS')} type="button">Any craps</button>
-              <button onClick={() => addBet('YO')} type="button">Yo 11</button>
-            </div>
-            <div className="craps-number-grid">
-              {[4, 5, 6, 8, 9, 10].map((number) => (
-                <button onClick={() => addBet('EXACT_TOTAL', number)} type="button" key={number}>
-                  <span>{number}</span>
-                  <em>Total exact</em>
-                </button>
-              ))}
-            </div>
-            <button className="craps-field" onClick={() => addBet('FIELD')} type="button">
-              <span>FIELD</span>
-              <strong>2 3 4 9 10 11 12</strong>
-              <em>2 et 12 paient double</em>
-            </button>
-            <div className="craps-hardways">
-              {[4, 6, 8, 10].map((number) => (
-                <button onClick={() => addBet('HARDWAY', number)} type="button" key={number}>
-                  Hard {number}
-                </button>
-              ))}
-            </div>
-            <button className="craps-pass-line" onClick={() => addBet('PASS_LINE')} type="button">
-              PASS LINE
-            </button>
-            <button className="craps-dont-pass" onClick={() => addBet('DONT_PASS')} type="button">
-              DON'T PASS
-            </button>
-          </div>
-        </section>
-
         <aside className="craps-side">
           <form className="craps-ticket interactive-card" id="craps-ticket" onSubmit={play}>
             <div className="card-heading">

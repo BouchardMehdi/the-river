@@ -106,7 +106,7 @@ function BlackjackContent() {
   const [bet, setBet] = useState(20);
   const [error, setError] = useState('');
   const [roundOver, setRoundOver] = useState<RoundOverSummary | null>(null);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [form, setForm] = useState<TableForm>({
@@ -472,6 +472,29 @@ function BlackjackContent() {
       </header>
 
       {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
+
+      <div className="table-chat-mobile">
+        {messages.length > 0 ? (
+          <button className="table-chat-peek" onClick={() => setChatOpen(true)} type="button">
+            {messages.slice(-5).map((message) => (
+              <span key={message.id}>
+                <strong>{message.author}</strong> {message.text}
+              </span>
+            ))}
+          </button>
+        ) : null}
+        <form className="table-chat-dock" onSubmit={sendMessage}>
+          <input
+            value={chatDraft}
+            onChange={(event) => setChatDraft(event.target.value)}
+            onFocus={() => setChatOpen(true)}
+            placeholder="Chat..."
+          />
+          <button className="icon-button" type="submit" aria-label="Envoyer">
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
 
       <main className="blackjack-game-layout">
         <div className="blackjack-play-area">

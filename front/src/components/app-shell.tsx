@@ -39,6 +39,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(BALANCE_FEEDBACK_EVENT, handleBalanceDelta);
   }, []);
 
+  function renderNavLinks() {
+    return nav.map((item) => {
+      const Icon = item.icon;
+      const active = item.href === '/games' ? pathname.startsWith('/games') : pathname === item.href;
+      return (
+        <Link key={item.href} href={item.href} className={active ? 'navlink active' : 'navlink'}>
+          <Icon size={18} />
+          <span>{item.label}</span>
+        </Link>
+      );
+    });
+  }
+
   return (
     <>
       <header className="topbar">
@@ -48,16 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
 
         <nav className="topnav" aria-label="Navigation principale">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            const active = item.href === '/games' ? pathname.startsWith('/games') : pathname === item.href;
-            return (
-              <Link key={item.href} href={item.href} className={active ? 'navlink active' : 'navlink'}>
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+          {renderNavLinks()}
         </nav>
 
         <div className="account-zone">
@@ -87,6 +91,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main>{children}</main>
+      <nav className="mobile-app-nav" aria-label="Navigation mobile">
+        {renderNavLinks()}
+      </nav>
     </>
   );
 }

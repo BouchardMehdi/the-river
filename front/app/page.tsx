@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BarChart3, Radar, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 import { HomeAsset } from '@/components/home-asset';
+import { PwaInstallButton } from '@/components/pwa-install-button';
 
 const benefits = [
   {
@@ -135,6 +136,8 @@ export default function HomePage() {
           variant="hero"
         />
       </div>
+
+      <PwaInstallButton />
 
       <div className="benefit-grid">
         {benefits.map((benefit) => {

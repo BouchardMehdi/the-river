@@ -47,6 +47,8 @@ export type PokerTable = {
   stacks?: Record<string, number>;
   bets?: Record<string, number>;
   ownerPlayerId?: string;
+  dealerIndex?: number;
+  dealerPlayerId?: string;
   mode?: string;
   visibility?: string;
   lastWinnerId?: string;

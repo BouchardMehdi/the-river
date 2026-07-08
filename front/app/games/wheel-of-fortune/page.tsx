@@ -34,22 +34,22 @@ type WheelResult = {
 };
 
 const defaultSegments: WheelSegment[] = [
-  { color: '#ff625a', label: '0x', multiplier: 0 },
-  { color: '#8ad8ff', label: '1.2x', multiplier: 1.2 },
-  { color: '#f1d28a', label: '2x', multiplier: 2 },
-  { color: '#1de59d', label: '1.5x', multiplier: 1.5 },
-  { color: '#ff625a', label: '0.5x', multiplier: 0.5 },
-  { color: '#d8a84f', label: '5x', multiplier: 5 },
-  { color: '#8ad8ff', label: '1x', multiplier: 1 },
-  { color: '#a58cff', label: '3x', multiplier: 3 },
-  { color: '#ff625a', label: '0x', multiplier: 0 },
-  { color: '#1de59d', label: '1.8x', multiplier: 1.8 },
-  { color: '#f1d28a', label: '10x', multiplier: 10 },
-  { color: '#8ad8ff', label: '1.2x', multiplier: 1.2 },
-  { color: '#ff625a', label: '0.5x', multiplier: 0.5 },
-  { color: '#d8a84f', label: '20x', multiplier: 20 },
-  { color: '#1de59d', label: '2.5x', multiplier: 2.5 },
-  { color: '#f1d28a', label: '50x', multiplier: 50 },
+  { color: 'var(--color-danger)', label: '0x', multiplier: 0 },
+  { color: 'var(--color-info)', label: '1.2x', multiplier: 1.2 },
+  { color: 'var(--color-gold-highlight)', label: '2x', multiplier: 2 },
+  { color: 'var(--color-success-bright)', label: '1.5x', multiplier: 1.5 },
+  { color: 'var(--color-danger)', label: '0.5x', multiplier: 0.5 },
+  { color: 'var(--gold)', label: '5x', multiplier: 5 },
+  { color: 'var(--color-info)', label: '1x', multiplier: 1 },
+  { color: 'var(--color-purple)', label: '3x', multiplier: 3 },
+  { color: 'var(--color-danger)', label: '0x', multiplier: 0 },
+  { color: 'var(--color-success-bright)', label: '1.8x', multiplier: 1.8 },
+  { color: 'var(--color-gold-highlight)', label: '10x', multiplier: 10 },
+  { color: 'var(--color-info)', label: '1.2x', multiplier: 1.2 },
+  { color: 'var(--color-danger)', label: '0.5x', multiplier: 0.5 },
+  { color: 'var(--gold)', label: '20x', multiplier: 20 },
+  { color: 'var(--color-success-bright)', label: '2.5x', multiplier: 2.5 },
+  { color: 'var(--color-gold-highlight)', label: '50x', multiplier: 50 },
 ];
 
 function formatCredits(value?: number) {

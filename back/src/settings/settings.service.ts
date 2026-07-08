@@ -44,6 +44,7 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
     autoOpenRules: false,
   },
   interface: {
+    theme: 'system',
     showLeaderboardByDefault: true,
     compactStats: true,
     highContrast: false,
@@ -194,6 +195,9 @@ export class SettingsService implements OnModuleInit {
         autoOpenRules: this.bool(gameplay.autoOpenRules, DEFAULT_USER_SETTINGS.gameplay.autoOpenRules),
       },
       interface: {
+        theme: ['system', 'light', 'dark'].includes(String(ui.theme))
+          ? (ui.theme as UserSettings['interface']['theme'])
+          : DEFAULT_USER_SETTINGS.interface.theme,
         showLeaderboardByDefault: this.bool(
           ui.showLeaderboardByDefault,
           DEFAULT_USER_SETTINGS.interface.showLeaderboardByDefault,

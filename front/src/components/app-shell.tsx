@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
+import { apiGet, getToken } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
 import { BALANCE_FEEDBACK_EVENT, type BalanceDeltaDetail } from '@/lib/balance-events';
+import { applyThemePreference, isThemePreference, readCachedTheme, THEME_EVENT, type ThemePreference } from '@/lib/theme';
+import type { UserSettings } from '@/types/api';
 import { UserAvatar } from './user-avatar';
 
 const nav = [
@@ -20,6 +23,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [balancePulse, setBalancePulse] = useState<'gain' | 'loss' | ''>('');
   const [balanceFlashes, setBalanceFlashes] = useState<Array<{ delta: number; id: number }>>([]);
+
+  useEffect(() => {
+    const cached = readCachedTheme();
+    if (cached) applyThemePreference(cached, false);
+
+    let alive = true;
+
+    async function loadTheme() {
+      if (!getToken()) {
+        if (!cached) applyThemePreference('system', false);
+        return;
+      }
+
+      try {
+        const settings = await apiGet<UserSettings>('/settings');
+        if (alive) applyThemePreference(settings.interface.theme, false);
+      } catch {
+        if (alive && !cached) applyThemePreference('system', false);
+      }
+    }
+
+    function handleThemeEvent(event: Event) {
+      const theme = (event as CustomEvent<{ theme?: ThemePreference }>).detail?.theme;
+      if (isThemePreference(theme)) applyThemePreference(theme, false);
+    }
+
+    window.addEventListener(THEME_EVENT, handleThemeEvent);
+    void loadTheme();
+
+    return () => {
+      alive = false;
+      window.removeEventListener(THEME_EVENT, handleThemeEvent);
+    };
+  }, []);
 
   useEffect(() => {
     function handleBalanceDelta(event: Event) {

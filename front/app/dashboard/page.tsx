@@ -113,79 +113,79 @@ type ChartPoint = {
 
 const gameMeta: Record<GameKey, { color: string; image: string; label: string; href: string }> = {
   SLOTS: {
-    color: '#4193ff',
+    color: 'var(--color-info)',
     href: '/games/slots',
     image: '/assets/home/game-slot.png',
     label: 'Machine a sous',
   },
   ROULETTE: {
-    color: '#25df98',
+    color: 'var(--color-success)',
     href: '/games/roulette',
     image: '/assets/home/game-roulette.png',
     label: 'Roulette',
   },
   POKER: {
-    color: '#ff625a',
+    color: 'var(--color-danger)',
     href: '/games/poker',
     image: '/assets/home/game-poker.png',
     label: 'Poker',
   },
   BLACKJACK: {
-    color: '#f7c657',
+    color: 'var(--color-gold-highlight)',
     href: '/games/blackjack',
     image: '/assets/home/game-blackjack.png',
     label: 'Blackjack',
   },
   CRAPS: {
-    color: '#d8a84f',
+    color: 'var(--gold)',
     href: '/games/craps',
     image: '/assets/home/game-craps.png',
     label: 'Craps',
   },
   PACHINKO: {
-    color: '#a58cff',
+    color: 'var(--color-purple)',
     href: '/games/pachinko',
     image: '/assets/home/game-pachinko.png',
     label: 'Pachinko',
   },
   HILO: {
-    color: '#f1d28a',
+    color: 'var(--color-gold-highlight)',
     href: '/games/hi-lo',
     image: '/assets/cards/spades_A.png',
     label: 'Hi-Lo',
   },
   MINES: {
-    color: '#1de59d',
+    color: 'var(--color-success-bright)',
     href: '/games/mines',
     image: '/assets/home/game-mines.svg',
     label: 'Mines',
   },
   KENO: {
-    color: '#8ad8ff',
+    color: 'var(--color-info)',
     href: '/games/keno',
     image: '/assets/home/game-keno.svg',
     label: 'Keno',
   },
   BACCARAT: {
-    color: '#d8a84f',
+    color: 'var(--gold)',
     href: '/games/baccarat',
     image: '/assets/home/game-baccarat.svg',
     label: 'Baccarat',
   },
   WHEEL: {
-    color: '#a58cff',
+    color: 'var(--color-purple)',
     href: '/games/wheel-of-fortune',
     image: '/assets/home/game-wheel.svg',
     label: 'Wheel of Fortune',
   },
   CRASH: {
-    color: '#ff625a',
+    color: 'var(--color-danger)',
     href: '/games/crash',
     image: '/assets/home/game-crash.svg',
     label: 'Crash',
   },
   CASINO: {
-    color: '#c5d0d1',
+    color: 'var(--color-text-muted)',
     href: '/games',
     image: '/assets/logo-the-river.png',
     label: 'Casino',
@@ -592,7 +592,7 @@ function DashboardContent() {
     let cumulativeNet = 0;
     return [
       {
-        color: '#4193ff',
+        color: 'var(--color-info)',
         deltas: chartBucketsForStats.map((bucket) => Number(bucket.net ?? 0)),
         key: 'net',
         label: 'Net',
@@ -602,14 +602,14 @@ function DashboardContent() {
         }),
       },
       {
-        color: '#25df98',
+        color: 'var(--color-success)',
         deltas: chartBucketsForStats.map((bucket) => Number(bucket.gains ?? 0)),
         key: 'gains',
         label: 'Gains',
         values: chartBucketsForStats.map((bucket) => Number(bucket.gains ?? 0)),
       },
       {
-        color: '#ff625a',
+        color: 'var(--color-danger)',
         deltas: chartBucketsForStats.map((bucket) => -Number(bucket.losses ?? 0)),
         key: 'losses',
         label: 'Pertes',
@@ -837,7 +837,7 @@ function DashboardContent() {
               <div className="donut-frame">
                 <svg className="donut-svg" viewBox="0 0 220 220" role="img" aria-label="Repartition">
                   <filter id="sliceGlow" x="-45%" y="-45%" width="190%" height="190%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#f1d28a" floodOpacity="0.95" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="var(--color-gold-highlight)" floodOpacity="0.95" />
                   </filter>
                   {hasPieData ? pieSlices.map((slice) => {
                     const start = (sliceCursor / pieTotal) * 360;
@@ -854,8 +854,8 @@ function DashboardContent() {
                         onMouseLeave={() => setHoveredSlice(null)}
                       />
                     );
-                  }) : <circle cx="110" cy="110" r="94" fill="none" stroke="rgba(150, 174, 190, 0.18)" strokeWidth="38" />}
-                  <circle cx="110" cy="110" r="51" fill="#08151c" />
+                  }) : <circle cx="110" cy="110" r="94" fill="none" stroke="var(--color-border)" strokeWidth="38" />}
+                  <circle cx="110" cy="110" r="51" fill="var(--color-readable-surface)" />
                   <text className="donut-center-label" x="110" y="105" textAnchor="middle">Total</text>
                   <text className="donut-center-value" x="110" y="128" textAnchor="middle">
                     {formatCredits(displayTotals.volume)}

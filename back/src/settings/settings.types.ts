@@ -23,6 +23,7 @@ export type GameplaySettings = {
 };
 
 export type InterfaceSettings = {
+  theme: 'system' | 'light' | 'dark';
   showLeaderboardByDefault: boolean;
   compactStats: boolean;
   highContrast: boolean;

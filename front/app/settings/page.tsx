@@ -7,14 +7,17 @@ import {
   BellOff,
   Check,
   Gamepad2,
+  Laptop,
   LogOut,
   Mail,
   MonitorCog,
+  Moon,
   RotateCcw,
   Save,
   Send,
   Shield,
   SlidersHorizontal,
+  Sun,
   UserRound,
   X,
 } from 'lucide-react';
@@ -30,6 +33,7 @@ import {
   pushSupported,
   sendPushTest,
 } from '@/lib/push-notifications';
+import { applyThemePreference } from '@/lib/theme';
 import type { UserSettings } from '@/types/api';
 
 const defaultSettings: UserSettings = {
@@ -56,6 +60,7 @@ const defaultSettings: UserSettings = {
     autoOpenRules: false,
   },
   interface: {
+    theme: 'system',
     showLeaderboardByDefault: true,
     compactStats: true,
     highContrast: false,
@@ -518,6 +523,31 @@ function SettingsContent() {
           <div className="card-heading">
             <h2>Interface</h2>
             <MonitorCog size={19} />
+          </div>
+          <div className="settings-theme-picker" aria-label="Theme de l'interface">
+            {[
+              { key: 'system', label: 'Systeme', icon: Laptop },
+              { key: 'light', label: 'Light', icon: Sun },
+              { key: 'dark', label: 'Dark', icon: Moon },
+            ].map((theme) => {
+              const Icon = theme.icon;
+              const active = settings.interface.theme === theme.key;
+              return (
+                <button
+                  className={active ? 'selected' : ''}
+                  key={theme.key}
+                  onClick={() => {
+                    const nextTheme = theme.key as UserSettings['interface']['theme'];
+                    applyThemePreference(nextTheme);
+                    updateSection('interface', { theme: nextTheme });
+                  }}
+                  type="button"
+                >
+                  <Icon size={17} />
+                  <span>{theme.label}</span>
+                </button>
+              );
+            })}
           </div>
           <div className="settings-list compact">
             <SettingsToggle checked={settings.interface.showLeaderboardByDefault} description="Affiche le classement directement sur le dashboard." label="Leaderboard par defaut" onChange={(checked) => updateSection('interface', { showLeaderboardByDefault: checked })} />

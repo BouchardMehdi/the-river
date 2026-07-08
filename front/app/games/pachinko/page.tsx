@@ -70,6 +70,11 @@ function formatMultiplier(value: number) {
   return `${Number(value).toLocaleString('fr-FR', { maximumFractionDigits: 2 })}x`;
 }
 
+function themeColor(token: string, fallback: string) {
+  if (typeof window === 'undefined') return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim() || fallback;
+}
+
 function PachinkoContent() {
   const { refreshUser } = useAuth();
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -146,6 +151,12 @@ function PachinkoContent() {
     const slotWidth = (slotAreaWidth - slotGap * (slotCount - 1)) / slotCount;
     const slotPitch = slotWidth + slotGap;
     const slotCenters = Array.from({ length: slotCount }, (_, index) => slotInset + slotWidth / 2 + slotPitch * index);
+    const bumperFill = themeColor('--color-gold-soft', 'goldenrod');
+    const dividerFill = themeColor('--color-gold-soft', 'goldenrod');
+    const pegFill = themeColor('--color-on-dark-muted', 'lightgray');
+    const pegStroke = themeColor('--color-purple', 'mediumpurple');
+    const pegActiveFill = themeColor('--color-gold-highlight', 'gold');
+    const pegActiveStroke = themeColor('--gold', 'goldenrod');
     slotCentersRef.current = slotCenters;
 
     const walls = [
@@ -155,12 +166,12 @@ function PachinkoContent() {
       Matter.Bodies.rectangle(94, 210, 210, 18, {
         angle: -0.5,
         isStatic: true,
-        render: { fillStyle: 'rgba(216, 168, 79, 0.18)' },
+        render: { fillStyle: bumperFill },
       }),
       Matter.Bodies.rectangle(width - 94, 210, 210, 18, {
         angle: 0.5,
         isStatic: true,
-        render: { fillStyle: 'rgba(216, 168, 79, 0.18)' },
+        render: { fillStyle: bumperFill },
       }),
     ];
 
@@ -177,8 +188,8 @@ function PachinkoContent() {
           isStatic: true,
           label: 'peg',
           render: {
-            fillStyle: '#d7e5e3',
-            strokeStyle: 'rgba(165, 140, 255, 0.6)',
+            fillStyle: pegFill,
+            strokeStyle: pegStroke,
             lineWidth: 2,
           },
           restitution: 0.95,
@@ -195,7 +206,7 @@ function PachinkoContent() {
           : slotInset + slotWidth * index + slotGap * (index - 0.5);
       dividers.push(Matter.Bodies.rectangle(x, height - 58, 4, 76, {
         isStatic: true,
-        render: { fillStyle: 'rgba(241, 210, 138, 0.34)' },
+        render: { fillStyle: dividerFill },
       }));
     }
 
@@ -216,11 +227,11 @@ function PachinkoContent() {
         const slot = bodies.find((body) => body.label.startsWith('slot-'));
 
         if (peg && ball) {
-          peg.render.fillStyle = '#f1d28a';
-          peg.render.strokeStyle = 'rgba(216, 168, 79, 0.95)';
+          peg.render.fillStyle = pegActiveFill;
+          peg.render.strokeStyle = pegActiveStroke;
           window.setTimeout(() => {
-            peg.render.fillStyle = '#d7e5e3';
-            peg.render.strokeStyle = 'rgba(165, 140, 255, 0.6)';
+            peg.render.fillStyle = pegFill;
+            peg.render.strokeStyle = pegStroke;
           }, 140);
         }
 
@@ -273,8 +284,8 @@ function PachinkoContent() {
       frictionAir: 0.018,
       label: 'ball',
       render: {
-        fillStyle: '#f1d28a',
-        strokeStyle: '#fff7d1',
+        fillStyle: themeColor('--color-gold-highlight', 'gold'),
+        strokeStyle: themeColor('--cream', 'white'),
         lineWidth: 2,
       },
       restitution: 0.58,

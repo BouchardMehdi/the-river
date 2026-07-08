@@ -38,6 +38,7 @@ export type UserSettings = {
     autoOpenRules: boolean;
   };
   interface: {
+    theme: 'system' | 'light' | 'dark';
     showLeaderboardByDefault: boolean;
     compactStats: boolean;
     highContrast: boolean;

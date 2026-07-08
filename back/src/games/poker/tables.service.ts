@@ -29,7 +29,14 @@ type Street = 'PRE_FLOP' | 'FLOP' | 'TURN' | 'RIVER' | 'SHOWDOWN' | 'WAITING';
 
 @Injectable()
 export class TablesService {
-  private readonly COMP_WIN_POINTS = 20;
+  private readonly COMP_BUY_IN = 100;
+  private readonly COMP_SMALL_BLIND = 5;
+  private readonly COMP_BIG_BLIND = 10;
+  private readonly COMP_MIN_PLAYERS = 4;
+  private readonly COMP_MAX_PLAYERS = 6;
+  private readonly COMP_AUTO_START_MS = 25000;
+  private readonly COMP_POINT_WINDOW = 250;
+  private readonly competitionTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     @InjectRepository(PokerTableEntity)
@@ -61,9 +68,43 @@ export class TablesService {
     return (players ?? []).filter((p) => !this.isBotId(p)).length;
   }
 
+  private isCompetition(internal: any): boolean {
+    return String(internal.mode ?? '').toUpperCase() === 'COMPETITION';
+  }
+
+  private competitionEliminations(internal: any): string[] {
+    const value = internal.bustedPlayers?.__competitionEliminations;
+    return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
+  }
+
+  private setCompetitionEliminations(internal: any, eliminations: string[]): void {
+    internal.bustedPlayers ??= {};
+    internal.bustedPlayers.__competitionEliminations = Array.from(new Set(eliminations));
+  }
+
+  private competitionStartAt(internal: any): number | null {
+    const explicit = Number(internal.competitionAutoStartAt ?? 0);
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    const created = Date.parse(String(internal.createdAt ?? ''));
+    if (!Number.isFinite(created)) return null;
+    return created + this.COMP_AUTO_START_MS;
+  }
+
+  private decorateCompetitionQueue(internal: any): void {
+    if (!this.isCompetition(internal)) return;
+    internal.visibility = 'PRIVATE';
+    internal.fillWithBots = false;
+    internal.maxPlayers = this.COMP_MAX_PLAYERS;
+    internal.competitionAutoStartAt = this.competitionStartAt(internal) ?? (Date.now() + this.COMP_AUTO_START_MS);
+  }
+
   private async deleteTable(tableId: string): Promise<void> {
     await this.repo.delete({ id: tableId });
     this.botService.clearTable(tableId);
+    const timer = this.competitionTimers.get(tableId);
+    if (timer) clearTimeout(timer);
+    this.competitionTimers.delete(tableId);
   }
 
   private getActivePlayers(internal: any): string[] {
@@ -90,6 +131,123 @@ export class TablesService {
     }
 
     return true;
+  }
+
+  private scheduleCompetitionStart(tableId: string): void {
+    if (this.competitionTimers.has(tableId)) return;
+
+    const runAt = Date.now() + this.COMP_AUTO_START_MS + 350;
+    const delay = Math.max(250, runAt - Date.now());
+
+    const timer = setTimeout(async () => {
+      this.competitionTimers.delete(tableId);
+      try {
+        const table = await this.repo.findOneBy({ id: tableId });
+        if (!table) return;
+        const internal = table as any;
+        const started = await this.tryAutoStartCompetition(internal, true);
+        if (started) await this.repo.save(internal);
+      } catch {
+        // prochain poll du front = nouvelle tentative
+      }
+    }, delay);
+
+    this.competitionTimers.set(tableId, timer);
+  }
+
+  private async tryAutoStartCompetition(internal: any, fromTimer = false): Promise<boolean> {
+    if (!this.isCompetition(internal)) return false;
+    if (internal.status !== 'WAITING' && internal.status !== 'OPEN') return false;
+
+    this.decorateCompetitionQueue(internal);
+    const humans = this.humanCount(internal.players ?? []);
+
+    if (humans < this.COMP_MIN_PLAYERS) {
+      this.scheduleCompetitionStart(internal.id);
+      return false;
+    }
+
+    const startAt = this.competitionStartAt(internal) ?? Date.now();
+    if (humans < this.COMP_MAX_PLAYERS && Date.now() < startAt && !fromTimer) {
+      this.scheduleCompetitionStart(internal.id);
+      return false;
+    }
+
+    internal.ownerPlayerId = (internal.players ?? [])[0];
+    if (!internal.ownerPlayerId) return false;
+
+    internal.fillWithBots = false;
+    this.gameService.startGame(internal, internal.ownerPlayerId);
+    if (internal.status !== 'IN_GAME') return false;
+
+    internal.startedAt = new Date().toISOString();
+    internal.competitionAutoStartAt = undefined;
+    this.chatGateway.emitSystemToTable(internal.id, `Match competitif lance automatiquement (${humans} joueurs).`);
+    await this.autoProgressCompletedRounds(internal.id, internal);
+    return true;
+  }
+
+  private async competitionAveragePoints(players: string[]): Promise<number> {
+    const humans = players.filter((player) => !this.isBotId(player));
+    if (humans.length === 0) return 0;
+
+    const points = await Promise.all(
+      humans.map(async (username) => {
+        const user = await this.usersService.findByUsername(username);
+        return Number(user?.points ?? 0);
+      }),
+    );
+
+    return points.reduce((sum, value) => sum + value, 0) / points.length;
+  }
+
+  private async findBestCompetitionQueue(username: string, points: number): Promise<any | null> {
+    const tables = await this.repo.find();
+    let best: { table: any; distance: number; size: number } | null = null;
+
+    for (const table of tables) {
+      const internal = table as any;
+      if (!this.isCompetition(internal)) continue;
+      if (internal.status !== 'WAITING' && internal.status !== 'OPEN') continue;
+      if ((internal.players ?? []).includes(username)) return internal;
+      if ((internal.players ?? []).length >= this.COMP_MAX_PLAYERS) continue;
+
+      const average = await this.competitionAveragePoints(internal.players ?? []);
+      const waitStartedAt = Date.parse(String(internal.createdAt ?? '')) || Date.now();
+      const waitBonus = Math.floor(Math.max(0, Date.now() - waitStartedAt) / 30000) * 100;
+      const allowedDistance = this.COMP_POINT_WINDOW + waitBonus;
+      const distance = Math.abs(average - points);
+      if (distance > allowedDistance) continue;
+
+      const candidate = { table: internal, distance, size: (internal.players ?? []).length };
+      if (!best || candidate.distance < best.distance || (candidate.distance === best.distance && candidate.size > best.size)) {
+        best = candidate;
+      }
+    }
+
+    return best?.table ?? null;
+  }
+
+  private competitionPointDeltas(placements: Array<{ playerId: string; place: number }>): Record<string, number> {
+    const ladder: Record<number, number[]> = {
+      4: [24, 8, -10, -22],
+      5: [28, 14, 0, -14, -28],
+      6: [32, 18, 6, -8, -20, -28],
+    };
+    const points = ladder[Math.max(this.COMP_MIN_PLAYERS, Math.min(this.COMP_MAX_PLAYERS, placements.length))] ?? ladder[6];
+    return Object.fromEntries(placements.map((placement) => [placement.playerId, points[placement.place - 1] ?? -10]));
+  }
+
+  private recordCompetitionEliminations(internal: any): void {
+    if (!this.isCompetition(internal)) return;
+    const eliminations = this.competitionEliminations(internal);
+
+    for (const pid of internal.players ?? []) {
+      if (this.isBotId(pid) || eliminations.includes(pid)) continue;
+      if (Number(internal.stacks?.[pid] ?? 0) <= 0) eliminations.push(pid);
+    }
+
+    this.setCompetitionEliminations(internal, eliminations);
   }
 
   private getOwnerOrFallback(internal: any): string {
@@ -262,7 +420,41 @@ export class TablesService {
     const winnerId = alive[0];
     const winnerStack = Number(internal.stacks?.[winnerId] ?? 0);
 
-    if (winnerStack > 0 && !this.isBotId(winnerId)) {
+    if (this.isCompetition(internal)) {
+      const eliminations = this.competitionEliminations(internal).filter((pid) => pid !== winnerId);
+      const allPlayers = (internal.players ?? []).filter((pid: string) => !this.isBotId(pid));
+      const missing = allPlayers.filter((pid: string) => pid !== winnerId && !eliminations.includes(pid));
+      const ordered = [winnerId, ...missing, ...eliminations.slice().reverse()].slice(0, allPlayers.length);
+      const deltas = this.competitionPointDeltas(ordered.map((playerId, index) => ({ playerId, place: index + 1 })));
+      const placements = ordered.map((playerId, index) => ({
+        playerId,
+        place: index + 1,
+        points: deltas[playerId] ?? 0,
+      }));
+
+      for (const placement of placements) {
+        if (placement.points === 0) continue;
+        try {
+          await this.usersService.addPointsByUsername(placement.playerId, placement.points);
+          await this.statsService.recordEvent(placement.playerId, {
+            game: 'POKER',
+            deltaCredits: 0,
+            deltaPoints: placement.points,
+            meta: { type: 'COMPETITION_PLACEMENT', tableId, place: placement.place },
+          });
+        } catch {}
+      }
+
+      internal.competitionPlacements = placements;
+      internal.competitionPointsDeltas = deltas;
+      internal.bustedPlayers ??= {};
+      internal.bustedPlayers.__competitionPlacements = placements;
+      internal.bustedPlayers.__competitionPointsDeltas = deltas;
+      this.chatGateway.emitSystemToTable(
+        tableId,
+        `Classement competition: ${placements.map((p) => `#${p.place} ${p.playerId} (${p.points > 0 ? '+' : ''}${p.points} pts)`).join(' | ')}`,
+      );
+    } else if (winnerStack > 0 && !this.isBotId(winnerId)) {
       await this.usersService.creditCreditsByUsername(winnerId, winnerStack);
       try {
         await this.statsService.recordEvent(winnerId, {
@@ -302,7 +494,9 @@ export class TablesService {
     ];
     internal.lastWinnerId = winnerId;
     internal.lastWinnerHand = undefined;
-    internal.lastWinnerHandDescription = `Partie terminee avec ${winnerStack} credits`;
+    internal.lastWinnerHandDescription = this.isCompetition(internal)
+      ? `Match competition termine - ${winnerId} #1`
+      : `Partie terminee avec ${winnerStack} credits`;
 
     this.chatGateway.emitSystemToTable(tableId, `🏁 Partie terminée (un seul joueur a encore du stack).`);
     return true;
@@ -314,6 +508,10 @@ export class TablesService {
     const table = await this.repo.findOneBy({ id: this.normalizeCode(id) });
     if (!table) throw new NotFoundException('La table est introuvable');
     const internal = table as any;
+    if (this.isCompetition(internal)) {
+      await this.tryAutoStartCompetition(internal);
+      await this.repo.save(internal);
+    }
     if ((internal.players ?? []).length > 0 && this.humanCount(internal.players ?? []) === 0) {
       await this.deleteTable(internal.id);
       throw new NotFoundException('La table est introuvable');
@@ -328,6 +526,7 @@ export class TablesService {
 
     for (const table of tables) {
       const internal = table as any;
+      if (this.isCompetition(internal)) continue;
       if ((internal.status ?? '') === 'DELETED' || (internal.status ?? '') === 'FINISHED') continue;
 
       if ((internal.players ?? []).length > 0 && this.humanCount(internal.players ?? []) === 0) {
@@ -350,6 +549,11 @@ export class TablesService {
     for (const table of tables) {
       const internal = table as any;
       if ((internal.status ?? '') === 'DELETED' || (internal.status ?? '') === 'FINISHED') continue;
+
+      if (this.isCompetition(internal)) {
+        await this.tryAutoStartCompetition(internal);
+        await this.repo.save(internal);
+      }
 
       const players = internal.players ?? [];
       if (players.length > 0 && this.humanCount(players) === 0) {
@@ -391,7 +595,7 @@ export class TablesService {
     let visibility: TableVisibility = (params.visibility ?? 'PRIVATE') as any;
 
     const fillWithBots = mode === 'COMPETITION' ? false : params.fillWithBots === true;
-    if (mode === 'COMPETITION') visibility = 'PUBLIC';
+    if (mode === 'COMPETITION') visibility = 'PRIVATE';
 
     let tableId = this.generateTableCode6();
     for (let i = 0; i < 40; i++) {
@@ -439,6 +643,10 @@ export class TablesService {
     table.bustedPlayers = {};
     table.lastWinners = undefined;
     table.lastWinnerHandDescription = undefined;
+    if (mode === 'COMPETITION') {
+      (table as any).competitionAutoStartAt = Date.now() + this.COMP_AUTO_START_MS;
+      (table.bustedPlayers as any).__competitionEliminations = [];
+    }
 
     await this.repo.save(table);
 
@@ -446,10 +654,59 @@ export class TablesService {
     return { tableId, table: joined };
   }
 
+  async queueCompetition(username: string): Promise<{ tableId: string; table: PokerTablePublic }> {
+    const normalized = String(username ?? '').trim();
+    if (!normalized) throw new BadRequestException('username requis');
+
+    const user = await this.usersService.findByUsername(normalized);
+    if (!user) throw new NotFoundException('User not found');
+
+    const allTables = await this.repo.find();
+    for (const table of allTables) {
+      const internal = table as any;
+      if (!this.isCompetition(internal)) continue;
+      if ((internal.status ?? '') === 'FINISHED' || (internal.status ?? '') === 'DELETED') continue;
+      if ((internal.players ?? []).includes(user.username)) {
+        await this.tryAutoStartCompetition(internal);
+        await this.repo.save(internal);
+        this.scheduleCompetitionStart(internal.id);
+        return { tableId: internal.id, table: toPublic(internal) };
+      }
+    }
+
+    const queue = await this.findBestCompetitionQueue(user.username, Number(user.points ?? 0));
+    if (queue) {
+      const joined = await this.join(queue.id, user.username);
+      const fresh = await this.repo.findOneBy({ id: queue.id });
+      if (fresh) {
+        const internal = fresh as any;
+        await this.tryAutoStartCompetition(internal);
+        await this.repo.save(internal);
+        this.scheduleCompetitionStart(internal.id);
+        return { tableId: internal.id, table: toPublic(internal) };
+      }
+      return { tableId: queue.id, table: joined };
+    }
+
+    const created = await this.createTable({
+      ownerUsername: user.username,
+      buyInAmount: this.COMP_BUY_IN,
+      smallBlindAmount: this.COMP_SMALL_BLIND,
+      bigBlindAmount: this.COMP_BIG_BLIND,
+      maxPlayers: this.COMP_MAX_PLAYERS,
+      fillWithBots: false,
+      visibility: 'PRIVATE',
+      mode: 'COMPETITION',
+    });
+    this.scheduleCompetitionStart(created.tableId);
+    return created;
+  }
+
   async joinPublic(tableId: string, username: string): Promise<PokerTablePublic> {
     const id = this.normalizeCode(tableId);
     const table = await this.repo.findOneBy({ id });
     if (!table) throw new NotFoundException('La table est introuvable');
+    if (this.isCompetition(table as any)) throw new BadRequestException('Les tables competition ne sont pas publiques');
     if ((table.visibility ?? 'PRIVATE') !== 'PUBLIC') throw new BadRequestException('Cette table est privée (code requis)');
     return this.join(id, username);
   }
@@ -459,6 +716,7 @@ export class TablesService {
     if (!/^[A-Z]{6}$/.test(normalized)) throw new BadRequestException('Code invalide (6 lettres A-Z)');
     const t = await this.repo.findOneBy({ id: normalized });
     if (!t) throw new NotFoundException('La table est introuvable');
+    if (this.isCompetition(t as any)) throw new BadRequestException('Les tables competition ne se rejoignent pas avec un code');
     return this.join(normalized, username);
   }
 
@@ -472,29 +730,38 @@ export class TablesService {
     if (internal.players?.includes(username)) return toPublic(internal);
     if (internal.status === 'IN_GAME') throw new BadRequestException('Partie en cours, impossible de rejoindre');
     if (internal.players.length >= internal.maxPlayers) throw new BadRequestException('la table est pleine');
+    if (this.isCompetition(internal) && this.isBotId(username)) throw new BadRequestException('Pas de bot en competition');
 
     const buyIn = internal.buyInAmount;
 
-    await this.usersService.debitCreditsByUsername(username, buyIn);
+    if (!this.isCompetition(internal)) {
+      await this.usersService.debitCreditsByUsername(username, buyIn);
 
-    try {
-      await this.statsService.recordEvent(username, {
-        game: 'POKER',
-        deltaCredits: -Math.floor(Number(buyIn) || 0),
-        deltaPoints: 0,
-        meta: { type: 'BUY_IN', tableId },
-      });
-    } catch {}
+      try {
+        await this.statsService.recordEvent(username, {
+          game: 'POKER',
+          deltaCredits: -Math.floor(Number(buyIn) || 0),
+          deltaPoints: 0,
+          meta: { type: 'BUY_IN', tableId },
+        });
+      } catch {}
+    }
 
     this.playerService.join(internal, username, buyIn);
 
     internal.status = 'WAITING';
     internal.phase = 'WAITING';
     if (!internal.ownerPlayerId) internal.ownerPlayerId = username;
+    this.decorateCompetitionQueue(internal);
 
     await this.repo.save(internal);
 
     this.chatGateway.emitSystemToTable(tableId, `${username} a rejoint la table`);
+    if (this.isCompetition(internal)) {
+      await this.tryAutoStartCompetition(internal);
+      await this.repo.save(internal);
+      this.scheduleCompetitionStart(tableId);
+    }
     return toPublic(internal);
   }
 
@@ -504,9 +771,7 @@ export class TablesService {
     const internal = table as any;
 
     if (internal.mode === 'COMPETITION') {
-      const humans = this.humanCount(internal.players ?? []);
-      if (humans < 4) throw new BadRequestException('Mode compétition: minimum 4 joueurs humains requis');
-      internal.fillWithBots = false;
+      throw new BadRequestException('Les tables competition se lancent automatiquement');
     }
 
     this.gameService.startGame(internal, username);
@@ -551,6 +816,7 @@ export class TablesService {
     } catch {}
 
     await this.autoProgressCompletedRounds(tableId, internal);
+    await this.finalizeGameIfOver(tableId, internal);
 
     await this.repo.save(internal);
     this.chatGateway.emitSystemToTable(tableId, `${username} ${String(action)}${amount != null ? ` ${amount}` : ''}`);
@@ -649,21 +915,7 @@ export class TablesService {
         this.chatGateway.emitSystemToTable(tableId, `🤝 SPLIT POT: ${winnerIds.join(', ')} — ${desc}`);
       }
 
-      if (String(internal.mode || '').toUpperCase() === 'COMPETITION') {
-        for (const wid of winnerIds) {
-          if (!wid || this.isBotId(wid)) continue;
-
-          try {
-            await this.usersService.addPointsByUsername(wid, this.COMP_WIN_POINTS);
-            await this.statsService.recordEvent(wid, {
-              game: 'POKER',
-              deltaCredits: 0,
-              deltaPoints: this.COMP_WIN_POINTS,
-              meta: { type: 'COMP_WIN', tableId },
-            });
-          } catch {}
-        }
-      }
+      this.recordCompetitionEliminations(internal);
     }
 
     this.chatGateway.emitSystemToTable(tableId, `🟡 SHOWDOWN (3s)…`);
@@ -681,6 +933,7 @@ export class TablesService {
         t.showdownEndsAt = undefined;
 
         // ✅ NEW : fin de partie + cashout si 1 seul stack > 0
+        this.recordCompetitionEliminations(t);
         const ended = await this.finalizeGameIfOver(tableId, t);
         if (ended) {
           await this.repo.save(t);
@@ -702,6 +955,28 @@ export class TablesService {
     if (!table) throw new NotFoundException('La table est introuvable');
 
     const internal = table as any;
+
+    if (this.isCompetition(internal) && internal.status === 'IN_GAME') {
+      internal.stacks ??= {};
+      internal.foldedPlayers ??= {};
+      internal.hasActed ??= {};
+
+      internal.stacks[playerId] = 0;
+      internal.foldedPlayers[playerId] = true;
+      internal.hasActed[playerId] = true;
+      this.recordCompetitionEliminations(internal);
+
+      const ended = await this.finalizeGameIfOver(tableId, internal);
+      await this.repo.save(internal);
+
+      this.chatGateway.emitSystemToTable(
+        tableId,
+        ended ? `${playerId} est elimine de la competition` : `${playerId} a quitte et est elimine de la competition`,
+      );
+
+      return { tableDeleted: false, table: toPublic(internal) };
+    }
+
     this.playerService.leave(internal, playerId);
 
     const humans = (internal.players ?? []).filter((p: string) => !this.isBotId(p));

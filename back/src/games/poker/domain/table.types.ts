@@ -115,4 +115,16 @@ export interface PokerTablePublic {
   lastWinnerHandDescription?: string;
 
   lastWinners?: PotWin[];
+
+  mode?: string;
+  visibility?: string;
+  competition?: {
+    entrants: number;
+    maxPlayers: number;
+    minPlayers: number;
+    startsAutomatically: boolean;
+    estimatedStartAt?: number | null;
+    pointsDeltas?: Record<string, number>;
+    placements?: Array<{ playerId: string; place: number; points: number }>;
+  };
 }

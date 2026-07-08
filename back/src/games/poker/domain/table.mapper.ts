@@ -1,6 +1,7 @@
 import type { PokerTableInternal, PokerTablePublic } from './table.types';
 
 export function toPublic(table: PokerTableInternal): PokerTablePublic {
+  const internal = table as any;
   const handSizes: Record<string, number> = {};
   for (const pid of table.players ?? []) {
     handSizes[pid] = table.hands?.[pid]?.length ?? 0;
@@ -11,8 +12,27 @@ export function toPublic(table: PokerTableInternal): PokerTablePublic {
     .map(([k]) => k);
 
   const bustedPlayers = Object.entries(table.bustedPlayers ?? {})
-    .filter(([, v]) => v)
+    .filter(([key, v]) => !key.startsWith('__') && v)
     .map(([k]) => k);
+
+  const persistedCompetitionPlacements = internal.bustedPlayers?.__competitionPlacements;
+  const persistedCompetitionPointsDeltas = internal.bustedPlayers?.__competitionPointsDeltas;
+  const createdAtMs = Date.parse(String(table.createdAt ?? ''));
+  const estimatedCompetitionStartAt = Number.isFinite(createdAtMs) ? createdAtMs + 25350 : null;
+
+  const competitionMeta = internal.mode === 'COMPETITION'
+    ? {
+        entrants: (table.players ?? []).length,
+        maxPlayers: table.maxPlayers,
+        minPlayers: 4,
+        startsAutomatically: true,
+        estimatedStartAt: internal.status === 'WAITING' || internal.status === 'OPEN'
+          ? internal.competitionAutoStartAt ?? estimatedCompetitionStartAt
+          : null,
+        pointsDeltas: internal.competitionPointsDeltas ?? persistedCompetitionPointsDeltas,
+        placements: internal.competitionPlacements ?? persistedCompetitionPlacements,
+      }
+    : undefined;
 
   return {
     id: table.id,
@@ -59,5 +79,8 @@ export function toPublic(table: PokerTableInternal): PokerTablePublic {
     lastWinnerHandDescription: table.lastWinnerHandDescription,
 
     lastWinners: (table.lastWinners ?? undefined) as any,
+    mode: internal.mode,
+    visibility: internal.visibility,
+    competition: competitionMeta,
   };
 }

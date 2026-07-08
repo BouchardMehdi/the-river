@@ -329,6 +329,7 @@ function PokerContent() {
   const [chipBurst, setChipBurst] = useState<ChipBurst | null>(null);
   const [gameOver, setGameOver] = useState<GameOverSummary | null>(null);
   const [avatarMap, setAvatarMap] = useState<Record<string, string | null>>({});
+  const [competitionLoading, setCompetitionLoading] = useState(false);
   const [form, setForm] = useState<TableForm>({
     buyInAmount: 100,
     smallBlindAmount: 5,
@@ -348,8 +349,9 @@ function PokerContent() {
   const bestHand = useMemo(() => evaluateBestHand(allVisibleCards), [allVisibleCards]);
   const highlightedCards = new Set(bestHand.cardKeys);
   const isShowdown = String(active?.phase ?? '').toUpperCase() === 'SHOWDOWN';
+  const isCompetition = String(active?.mode ?? '').toUpperCase() === 'COMPETITION';
   const canAct = active?.status === 'IN_GAME' && !isShowdown;
-  const canStart = active?.status !== 'IN_GAME';
+  const canStart = active?.status !== 'IN_GAME' && !isCompetition;
   const currentUsername = user?.username ?? '';
   const playerStack = currentUsername ? Number(active?.stacks?.[currentUsername] ?? form.buyInAmount) : form.buyInAmount;
   const playerBet = currentUsername ? Number(active?.bets?.[currentUsername] ?? 0) : 0;
@@ -562,6 +564,23 @@ function PokerContent() {
     }
   }
 
+  async function queueCompetition() {
+    setError('');
+    setCompetitionLoading(true);
+    try {
+      const out = await apiPost<{ tableId: string; table: PokerTable }>('/tables/competition/queue', {});
+      const id = out.tableId || tableIdOf(out.table);
+      setActive(out.table);
+      await loadTable(id);
+      await loadTables();
+      pushSystemMessage(`File competition ${id}. Lancement auto a 4 joueurs minimum.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'File competition indisponible');
+    } finally {
+      setCompetitionLoading(false);
+    }
+  }
+
   async function action(actionName: string, amount?: number) {
     if (!activeId) return;
     setError('');
@@ -714,11 +733,11 @@ function PokerContent() {
               <Sparkles size={15} /> Poker room
             </span>
             <h1>Choisis ta table.</h1>
-            <p>Creer une partie, rejoindre un code prive ou prendre une place sur une table publique.</p>
+            <p>Creer une partie, rejoindre une table ou entrer dans une file competitive par points.</p>
             <div className="poker-lobby-stats">
               <span><Users size={17} /> {tables.length} tables</span>
               <span><CircleDollarSign size={17} /> {user?.credits ?? 0} credits</span>
-              <span><Bot size={17} /> Bots optionnels</span>
+              <span><Trophy size={17} /> {user?.points ?? 0} points</span>
             </div>
           </div>
           <div className="poker-preview-table" aria-hidden="true">
@@ -738,6 +757,24 @@ function PokerContent() {
         {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
 
         <div className="poker-lobby-grid">
+          <section className="poker-lobby-panel poker-competition-panel">
+            <div className="poker-panel-heading">
+              <div>
+                <h2>Competition</h2>
+                <p>Matchmaking par points, 4 a 6 joueurs, aucun bot.</p>
+              </div>
+              <Trophy size={22} />
+            </div>
+            <div className="poker-lobby-stats">
+              <span><Users size={17} /> Min 4</span>
+              <span><Users size={17} /> Max 6</span>
+              <span><Trophy size={17} /> Points proches</span>
+            </div>
+            <button className="button" disabled={competitionLoading} onClick={() => void queueCompetition()} type="button">
+              <Trophy size={18} /> {competitionLoading ? 'Recherche...' : 'Lancer en competition'}
+            </button>
+          </section>
+
           <section className="poker-lobby-panel">
             <div className="poker-panel-heading">
               <div>
@@ -833,7 +870,10 @@ function PokerContent() {
                     <article className="poker-public-table resume" key={id}>
                       <div>
                         <strong>{id}</strong>
-                        <span>{table.status ?? 'En attente'} · {table.phase ?? 'Lobby'} · {table.players?.length ?? 0} joueurs</span>
+                        <span>
+                          {String(table.mode ?? '').toUpperCase() === 'COMPETITION' ? 'Competition' : table.status ?? 'En attente'} · {table.phase ?? 'Lobby'} ·{' '}
+                          {table.players?.length ?? 0} joueurs
+                        </span>
                       </div>
                       <button className="button small" onClick={() => void resumeTable(id)} type="button">
                         Reprendre
@@ -889,7 +929,7 @@ function PokerContent() {
             <Trophy size={15} /> Table active
           </span>
           <h1>{activeId || 'Poker table'}</h1>
-          <p>{active.status ?? 'En attente'} · {active.phase ?? 'Lobby'} · {seats.length} joueurs</p>
+          <p>{isCompetition ? 'Competition' : active.status ?? 'En attente'} · {active.phase ?? 'Lobby'} · {seats.length} joueurs</p>
         </div>
         <div className="poker-game-actions">
           <button className="button secondary" onClick={() => void loadTable(activeId)} type="button">
@@ -940,9 +980,13 @@ function PokerContent() {
             <div className="poker-pot">
               <span>Pot</span>
               <strong>{active.pot ?? 0} credits</strong>
-              <button className="copy-table-code" onClick={copyCode} type="button">
-                <Copy size={14} /> Code
-              </button>
+              {isCompetition ? (
+                <span className="copy-table-code">Competition</span>
+              ) : (
+                <button className="copy-table-code" onClick={copyCode} type="button">
+                  <Copy size={14} /> Code
+                </button>
+              )}
             </div>
 
             <div className="poker-deck">
@@ -1004,10 +1048,17 @@ function PokerContent() {
             </div>
           </section>
 
+          {isCompetition && active.status !== 'IN_GAME' ? (
+            <StatusMessage type="info">
+              File competition: {active.competition?.entrants ?? active.players?.length ?? 0}/{active.competition?.maxPlayers ?? 6} joueurs.
+              Lancement automatique a partir de {active.competition?.minPlayers ?? 4} joueurs.
+            </StatusMessage>
+          ) : null}
+
           <section className="poker-control-panel">
             <div className="poker-action-group">
               <button className="button" disabled={!canStart} onClick={() => void start()} type="button">
-                <Play size={18} /> Start
+                <Play size={18} /> {isCompetition ? 'Auto' : 'Start'}
               </button>
               <button className="button secondary" disabled={!canAct} onClick={() => void action('CHECK')} type="button">
                 Check

@@ -58,18 +58,14 @@ export class TablesController {
 
   @UseGuards(JwtAuthGuard)
   @Post('create-competition')
-  async createCompetition(@Req() req: any, @Body() body: any) {
-    const username = req.user.username;
-    return this.tablesService.createTable({
-      ownerUsername: username,
-      buyInAmount: body.buyInAmount,
-      smallBlindAmount: body.smallBlindAmount,
-      bigBlindAmount: body.bigBlindAmount,
-      maxPlayers: body.maxPlayers,
-      fillWithBots: false,
-      visibility: 'PUBLIC',
-      mode: 'COMPETITION',
-    });
+  async createCompetition(@Req() req: any) {
+    return this.tablesService.queueCompetition(req.user.username);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('competition/queue')
+  async queueCompetition(@Req() req: any) {
+    return this.tablesService.queueCompetition(req.user.username);
   }
 
   @UseGuards(JwtAuthGuard)

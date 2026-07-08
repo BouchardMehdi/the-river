@@ -51,6 +51,15 @@ export class AuthController {
     return this.authService.resendVerification(body.email);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('update-account')
+  async updateAccount(
+    @CurrentUser() user: JwtUser,
+    @Body() body: { username?: string; email?: string; password?: string },
+  ) {
+    return this.authService.updateAccount(user.userId, body);
+  }
+
   // ---------------- ✅ FORGOT / RESET PASSWORD ----------------
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
@@ -66,7 +75,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@CurrentUser() user: JwtUser) {
-    const dbUser = await this.usersService.findByUsername(user.username);
+    const dbUser = await this.usersService.findById(user.userId);
 
     if (!dbUser) {
       throw new UnauthorizedException('User not found');
@@ -77,6 +86,7 @@ export class AuthController {
       username: dbUser.username,
       email: dbUser.email,
       emailVerified: dbUser.emailVerified,
+      avatarUrl: dbUser.avatarUrl ?? null,
       credits: dbUser.credits,
       points: dbUser.points ?? 0,
     };

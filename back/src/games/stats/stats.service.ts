@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { GameEventEntity } from './entities/game-event.entity';
 import { UsersService } from '../../users/users.service';
@@ -374,10 +374,19 @@ export class StatsService {
     qb.groupBy('e.username').orderBy('value', 'DESC').limit(take);
 
     const rows = await qb.getRawMany();
+    const usernames = rows.map((row: any) => String(row.username ?? '')).filter(Boolean);
+    const avatarUsers = usernames.length
+      ? await this.usersRepo.find({
+          select: ['username', 'avatarUrl'],
+          where: { username: In(usernames) } as any,
+        })
+      : [];
+    const avatars = new Map(avatarUsers.map((user) => [user.username, user.avatarUrl ?? null]));
 
     return rows.map((r: any, idx: number) => ({
       rank: idx + 1,
       username: r.username,
+      avatarUrl: avatars.get(r.username) ?? null,
       value: Number(r.value || 0),
     }));
   }
@@ -394,6 +403,7 @@ export class StatsService {
       select: {
         username: true,
         credits: true,
+        avatarUrl: true,
       } as any,
       order: {
         credits: dir as any,
@@ -404,6 +414,7 @@ export class StatsService {
     return rows.map((u, idx) => ({
       rank: idx + 1,
       username: (u as any).username,
+      avatarUrl: (u as any).avatarUrl ?? null,
       value: Number((u as any).credits ?? 0),
     }));
   }

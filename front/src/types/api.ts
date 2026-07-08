@@ -5,12 +5,48 @@ export type User = {
   emailVerified: boolean;
   credits: number;
   points: number;
+  avatarUrl?: string | null;
 };
 
 export type AuthResponse = {
   access_token: string;
   user: User;
   needsEmailVerification?: boolean;
+};
+
+export type UserSettings = {
+  notifications: {
+    enabled: boolean;
+    questReady: boolean;
+    questRecharge: boolean;
+    questClaimed: boolean;
+    dailyBonus: boolean;
+    turnReminder: boolean;
+    weeklySummary: boolean;
+    leaderboard: boolean;
+    easterEgg: boolean;
+    quietHoursEnabled: boolean;
+    quietHoursStart: string;
+    quietHoursEnd: string;
+    frequency: 'instant' | 'digest' | 'minimal';
+  };
+  gameplay: {
+    defaultBet: number;
+    confirmLargeBet: boolean;
+    largeBetThreshold: number;
+    reducedAnimations: boolean;
+    autoOpenRules: boolean;
+  };
+  interface: {
+    showLeaderboardByDefault: boolean;
+    compactStats: boolean;
+    highContrast: boolean;
+    favoriteGames: string[];
+  };
+  privacy: {
+    showInLeaderboard: boolean;
+    publicTableName: boolean;
+  };
 };
 
 export type Quest = {
@@ -69,7 +105,7 @@ export type BlackjackTable = {
   tableMaxBet?: number | null;
   maxPlayers: number;
   visibility?: 'PUBLIC' | 'PRIVATE';
-  players?: Array<{ userId: number; username: string }>;
+  players?: Array<{ userId: number; username: string; avatarUrl?: string | null }>;
 };
 
 export type BlackjackState = {
@@ -86,6 +122,7 @@ export type BlackjackState = {
       {
         userId: number;
         username: string;
+        avatarUrl?: string | null;
         bet: number;
         cards: Card[];
         status: string;

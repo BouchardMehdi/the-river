@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/auth-context';
 import { BALANCE_FEEDBACK_EVENT, type BalanceDeltaDetail } from '@/lib/balance-events';
+import { UserAvatar } from './user-avatar';
 
 const nav = [
   { href: '/', label: 'Accueil', icon: Home },
@@ -67,6 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="account-zone">
           {user ? (
             <>
+              <UserAvatar avatarUrl={user.avatarUrl} className="topbar-avatar" label={user.username} />
               <Link className={balancePulse ? `balance-pill ${balancePulse}` : 'balance-pill'} href="/dashboard">
                 <Coins size={17} />
                 <span>{user.credits} credits</span>

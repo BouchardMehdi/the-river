@@ -6,6 +6,7 @@ import * as webPush from 'web-push';
 
 import { NotificationDeliveryEntity } from './entities/notification-delivery.entity';
 import { PushSubscriptionEntity } from './entities/push-subscription.entity';
+import { SettingsService } from '../settings/settings.service';
 
 type BrowserPushSubscription = {
   endpoint?: string;
@@ -50,6 +51,8 @@ export class NotificationsService implements OnModuleInit {
 
     @InjectRepository(NotificationDeliveryEntity)
     private readonly deliveriesRepo: Repository<NotificationDeliveryEntity>,
+
+    private readonly settings: SettingsService,
   ) {
     this.subject = this.config.get<string>('VAPID_SUBJECT') || 'mailto:admin@the-river.local';
     const configuredPublicKey = this.config.get<string>('VAPID_PUBLIC_KEY');
@@ -168,7 +171,7 @@ export class NotificationsService implements OnModuleInit {
       body: 'THE RIVER pourra te prevenir pour les quetes et bonus importants.',
       tag: 'the-river-test',
       url: '/dashboard',
-    });
+    }, undefined, 'test');
   }
 
   async notifyQuestSnapshot(userId: number, quests: QuestNotificationView[]) {
@@ -244,6 +247,8 @@ export class NotificationsService implements OnModuleInit {
     dedupeKey?: string,
     type = 'generic',
   ) {
+    if (!(await this.allowedBySettings(userId, type))) return { sent: 0, skipped: true };
+
     if (dedupeKey) {
       const existing = await this.deliveriesRepo.findOne({ where: { userId, dedupeKey } as any });
       if (existing) return { sent: 0, skipped: true };
@@ -294,8 +299,39 @@ export class NotificationsService implements OnModuleInit {
 
     return { sent };
   }
+
+  private async allowedBySettings(userId: number, type: string) {
+    if (type === 'test') return true;
+
+    const categoryByType: Record<string, keyof ReturnType<typeof notificationDefaults>> = {
+      'quest-ready': 'questReady',
+      'quest-claimed': 'questClaimed',
+      'quest-recharge': 'questRecharge',
+      'daily-bonus': 'dailyBonus',
+      'turn-reminder': 'turnReminder',
+      'weekly-summary': 'weeklySummary',
+      leaderboard: 'leaderboard',
+      'easter-egg': 'easterEgg',
+    };
+    const category = categoryByType[type] ?? 'enabled';
+    return this.settings.notificationAllowed(userId, category as any);
+  }
 }
 
 function windowlessSetTimeout(callback: () => void, delay: number) {
   return setTimeout(callback, delay);
+}
+
+function notificationDefaults() {
+  return {
+    dailyBonus: true,
+    easterEgg: true,
+    enabled: true,
+    leaderboard: false,
+    questClaimed: true,
+    questReady: true,
+    questRecharge: true,
+    turnReminder: true,
+    weeklySummary: true,
+  };
 }

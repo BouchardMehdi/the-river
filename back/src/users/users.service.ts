@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -25,11 +26,26 @@ function looksLikeBcryptHash(s: string): boolean {
 }
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepo: Repository<UserEntity>,
   ) {}
+
+  async onModuleInit() {
+    await this.ensureAvatarColumn();
+  }
+
+  private async ensureAvatarColumn() {
+    try {
+      const rows = await this.usersRepo.query("SHOW COLUMNS FROM `users` LIKE 'avatarUrl'");
+      if (!Array.isArray(rows) || rows.length === 0) {
+        await this.usersRepo.query("ALTER TABLE `users` ADD COLUMN `avatarUrl` varchar(500) NULL");
+      }
+    } catch {
+      // The app can still run if the database user cannot alter schema.
+    }
+  }
 
   // ---------------- CREATE ----------------
   async create(body: {
@@ -71,6 +87,7 @@ export class UsersService {
       credits: 1000,
       points: 0,
       emailVerified: false,
+      avatarUrl: null,
 
       // 🥚 defaults (robuste même si DB ancienne)
     });
@@ -91,6 +108,41 @@ export class UsersService {
 
   async findById(userId: number): Promise<UserEntity | null> {
     return this.usersRepo.findOne({ where: { userId } });
+  }
+
+  async updateAccount(
+    userId: number,
+    patch: { username?: string; email?: string; emailVerified?: boolean },
+  ): Promise<UserEntity> {
+    const id = Number(userId);
+    if (!Number.isFinite(id) || id <= 0) throw new BadRequestException('userId invalide');
+
+    const current = await this.findById(id);
+    if (!current) throw new NotFoundException('User not found');
+
+    const nextUsername = patch.username?.trim();
+    if (nextUsername && nextUsername !== current.username) {
+      if (nextUsername.length < 3) throw new BadRequestException('Pseudo trop court (min 3)');
+      if (nextUsername.length > 30) throw new BadRequestException('Pseudo trop long (max 30)');
+
+      const existsU = await this.usersRepo.findOne({ where: { username: nextUsername } });
+      if (existsU && existsU.userId !== id) throw new BadRequestException('Pseudo deja utilise');
+      current.username = nextUsername;
+    }
+
+    const nextEmail = patch.email?.trim().toLowerCase();
+    if (nextEmail && nextEmail !== current.email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) throw new BadRequestException('Email invalide');
+
+      const existsE = await this.usersRepo.findOne({ where: { email: nextEmail } });
+      if (existsE && existsE.userId !== id) throw new BadRequestException('Email deja utilise');
+      current.email = nextEmail;
+      current.emailVerified = patch.emailVerified ?? false;
+    } else if (typeof patch.emailVerified === 'boolean') {
+      current.emailVerified = patch.emailVerified;
+    }
+
+    return this.usersRepo.save(current);
   }
 
   // ---------------- EMAIL VERIFIED ----------------
@@ -206,12 +258,12 @@ export class UsersService {
    * Utilisé par src/games/poker/leaderboard/leaderboard.controller.ts
    */
   async getLeaderboard(limit = 50): Promise<
-    { userId: number; username: string; points: number }[]
+    { userId: number; username: string; points: number; avatarUrl: string | null }[]
   > {
     const take = Math.max(1, Math.min(200, Number(limit) || 50));
 
     const users = await this.usersRepo.find({
-      select: ['userId', 'username', 'points'],
+      select: ['userId', 'username', 'points', 'avatarUrl'],
       order: { points: 'DESC' },
       take,
     });
@@ -220,7 +272,28 @@ export class UsersService {
       userId: u.userId,
       username: u.username,
       points: u.points ?? 0,
+      avatarUrl: u.avatarUrl ?? null,
     }));
+  }
+
+  async setAvatarUrl(userId: number, avatarUrl: string | null): Promise<UserEntity> {
+    await this.usersRepo.update({ userId }, { avatarUrl });
+    const user = await this.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  async getAvatarsByUsernames(usernames: string[]) {
+    const clean = Array.from(new Set(usernames.map((name) => String(name ?? '').trim()).filter(Boolean))).slice(0, 80);
+    if (clean.length <= 0) return {};
+
+    const users = await this.usersRepo
+      .createQueryBuilder('u')
+      .select(['u.username', 'u.avatarUrl'])
+      .where('u.username IN (:...usernames)', { usernames: clean })
+      .getMany();
+
+    return Object.fromEntries(users.map((user) => [user.username, user.avatarUrl ?? null]));
   }
 
   async addPointsByUsername(username: string, deltaPoints: number) {

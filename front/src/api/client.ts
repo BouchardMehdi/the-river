@@ -30,7 +30,8 @@ export async function apiFetch<T>(
   options: RequestInit & { auth?: boolean } = {},
 ): Promise<T> {
   const headers = new Headers(options.headers);
-  headers.set('Content-Type', 'application/json');
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  if (!isFormData) headers.set('Content-Type', 'application/json');
 
   if (options.auth !== false) {
     const token = getToken();
@@ -60,6 +61,22 @@ export function apiPost<T>(path: string, body?: unknown, auth = true) {
   return apiFetch<T>(path, {
     method: 'POST',
     body: body === undefined ? undefined : JSON.stringify(body),
+    auth,
+  });
+}
+
+export function apiPatch<T>(path: string, body?: unknown, auth = true) {
+  return apiFetch<T>(path, {
+    method: 'PATCH',
+    body: body === undefined ? undefined : JSON.stringify(body),
+    auth,
+  });
+}
+
+export function apiPostForm<T>(path: string, body: FormData, auth = true) {
+  return apiFetch<T>(path, {
+    method: 'POST',
+    body,
     auth,
   });
 }

@@ -1323,6 +1323,482 @@ main {
   pointer-events: none;
 }
 
+.user-avatar,
+.leader-avatar,
+.seat-avatar,
+.blackjack-avatar {
+  overflow: hidden;
+}
+
+.user-avatar img,
+.leader-avatar img,
+.seat-avatar img,
+.blackjack-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-profile-photo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.settings-avatar-preview {
+  width: 82px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 2px solid rgba(216, 168, 79, 0.45);
+  border-radius: 50%;
+  color: #17110a;
+  background: linear-gradient(135deg, #f1d28a, #b98832);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.topbar-avatar {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(216, 168, 79, 0.45);
+  border-radius: 50%;
+  color: #17110a;
+  background: linear-gradient(135deg, #f1d28a, #b98832);
+  font-weight: 900;
+}
+
+.settings-page {
+  width: min(1560px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 34px 0 70px;
+}
+
+.settings-hero,
+.settings-panel {
+  border: 1px solid rgba(143, 191, 204, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(17, 34, 45, 0.94), rgba(4, 14, 20, 0.96));
+}
+
+.settings-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  min-height: 210px;
+  padding: 34px;
+}
+
+.settings-hero h1 {
+  margin: 18px 0 10px;
+  color: #fff8e9;
+  font-size: clamp(38px, 6vw, 72px);
+  line-height: 0.95;
+}
+
+.settings-hero p {
+  max-width: 620px;
+  margin: 0;
+  color: #c5d0d1;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.settings-hero-status {
+  display: grid;
+  min-width: 210px;
+  padding: 20px;
+  border: 1px solid rgba(216, 168, 79, 0.35);
+  border-radius: 8px;
+  background: rgba(216, 168, 79, 0.1);
+}
+
+.settings-hero-status span {
+  color: #c5d0d1;
+  font-size: 13px;
+}
+
+.settings-hero-status strong {
+  margin-top: 8px;
+  color: #1de59d;
+  font-size: 28px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.settings-panel {
+  min-width: 0;
+  padding: 22px;
+}
+
+.settings-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.settings-account,
+.settings-account-form,
+.settings-shortcuts,
+.settings-list,
+.settings-form-grid,
+.settings-inline-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-account span,
+.settings-account-form label,
+.settings-push-card,
+.settings-toggle,
+.settings-form-grid label,
+.settings-inline-controls label {
+  border: 1px solid rgba(143, 191, 204, 0.16);
+  border-radius: 8px;
+  background: rgba(9, 23, 32, 0.86);
+}
+
+.settings-account span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 14px;
+  color: #c5d0d1;
+}
+
+.settings-account strong {
+  color: #fff8e9;
+}
+
+.settings-account-panel {
+  width: 100%;
+}
+
+.settings-account-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.settings-account-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+.settings-account-form label {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  color: #c5d0d1;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.settings-account-form input {
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(216, 168, 79, 0.45);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: #070707;
+  font: inherit;
+}
+
+.settings-account-form .button {
+  min-height: 70px;
+}
+
+.settings-account-actions {
+  margin-top: 14px;
+}
+
+.settings-verification-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.54);
+  backdrop-filter: blur(6px);
+}
+
+.settings-verification-modal {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(216, 168, 79, 0.38);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 29, 40, 0.98), rgba(6, 14, 21, 0.98));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
+}
+
+.settings-verification-modal .card-heading {
+  align-items: flex-start;
+}
+
+.settings-verification-modal h2 {
+  margin: 0 0 6px;
+}
+
+.settings-verification-modal p {
+  margin: 0;
+  color: #c5d0d1;
+  line-height: 1.45;
+}
+
+.settings-verification-modal label {
+  display: grid;
+  gap: 8px;
+  color: #c5d0d1;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.settings-verification-modal input {
+  height: 50px;
+  padding: 0 14px;
+  border: 1px solid rgba(216, 168, 79, 0.5);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: #070707;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.settings-push-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+  padding: 16px;
+}
+
+.settings-push-card strong,
+.settings-toggle strong,
+.settings-subtitle {
+  color: #fff8e9;
+}
+
+.settings-push-card span,
+.settings-toggle em {
+  display: block;
+  margin-top: 5px;
+  color: #c5d0d1;
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.settings-push-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 72px;
+  padding: 13px 14px;
+}
+
+.settings-toggle.disabled {
+  opacity: 0.48;
+}
+
+.settings-toggle input[type='checkbox'] {
+  width: 46px;
+  height: 26px;
+  flex: 0 0 auto;
+  accent-color: #1de59d;
+}
+
+.settings-list.compact .settings-toggle {
+  min-height: 64px;
+}
+
+.settings-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.settings-form-grid label,
+.settings-inline-controls label {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  color: #c5d0d1;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.settings-form-grid input,
+.settings-account-form input,
+.settings-inline-controls input,
+.settings-inline-controls select {
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(216, 168, 79, 0.45);
+  border-radius: 8px;
+  color: #fff8e9;
+  background: #070707;
+  font: inherit;
+}
+
+.settings-inline-controls {
+  grid-template-columns: 2fr repeat(3, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.settings-subtitle {
+  margin: 18px 0 10px;
+  font-size: 16px;
+}
+
+.settings-game-picker {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.settings-game-picker button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(216, 168, 79, 0.35);
+  border-radius: 8px;
+  color: #c5d0d1;
+  background: rgba(9, 23, 32, 0.86);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.settings-game-picker button.selected {
+  color: #fff8e9;
+  border-color: rgba(29, 229, 157, 0.55);
+  background: rgba(29, 229, 157, 0.12);
+}
+
+.settings-shortcuts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .settings-page {
+    width: min(100% - 16px, 760px);
+    padding: 16px 0 104px;
+  }
+
+  .settings-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: auto;
+    padding: 22px;
+  }
+
+  .settings-hero h1 {
+    font-size: 42px;
+  }
+
+  .settings-hero-status {
+    width: 100%;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .settings-panel {
+    padding: 16px;
+  }
+
+  .settings-push-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-push-actions,
+  .settings-push-actions .button,
+  .settings-shortcuts,
+  .settings-shortcuts .button {
+    width: 100%;
+  }
+
+  .settings-push-actions .button {
+    flex: 1 1 0;
+  }
+
+  .settings-inline-controls,
+  .settings-form-grid,
+  .settings-account-layout,
+  .settings-account-form,
+  .settings-shortcuts {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-account-form .button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .settings-account-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .settings-account-actions .button {
+    width: 100%;
+  }
+
+  .settings-verification-modal {
+    padding: 16px;
+  }
+
+  .settings-verification-modal .button-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-verification-modal .button {
+    width: 100%;
+  }
+
+  .settings-game-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .button {
   min-width: 124px;
   padding: 0 16px;
@@ -3444,6 +3920,24 @@ main {
   border: 1px solid rgba(150, 174, 190, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.leader-avatar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #17110a;
+  background: linear-gradient(135deg, #f1d28a, #b98832);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.leader-row strong {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .leader-row span {
@@ -7644,6 +8138,19 @@ main {
   font-weight: 900;
 }
 
+.blackjack-avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #17110a;
+  background: linear-gradient(135deg, #f1d28a, #b98832);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .poker-seat strong,
 .poker-seat span {
   display: block;
@@ -10017,13 +10524,28 @@ main {
   .dashboard-action-button.button.small {
     flex: 1 1 calc(50% - 6px);
     min-width: 0;
+    min-height: 34px;
     padding: 0 8px;
+    gap: 5px;
+    font-size: 12px;
+  }
+
+  .dashboard-action-button.button.small svg {
+    width: 14px;
+    height: 14px;
   }
 
   .dashboard-action-button.button.small span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .dashboard-action-button.button.small strong {
+    min-width: 24px;
+    height: 17px;
+    padding: 0 5px;
+    font-size: 10px;
   }
 
   .dashboard-modern .dashboard-actions .icon-button {
@@ -11231,7 +11753,12 @@ body:has(.crash-rules-drawer.open) {
 
 @media (max-width: 560px) {
   .dashboard-action-button.button.small {
-    flex: 1 1 auto;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    min-height: 34px;
+    padding: 0 8px;
+    gap: 5px;
+    font-size: 12px;
   }
 
   .dashboard-modern .performance-chart {

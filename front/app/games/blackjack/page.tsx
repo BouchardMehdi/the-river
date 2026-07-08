@@ -26,6 +26,7 @@ import {
 import { apiBaseUrl, apiGet, apiPost, getToken } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { UserAvatar } from '@/components/user-avatar';
 import { EmptyState, StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
 import type { BlackjackState, BlackjackTable, Card } from '@/types/api';
@@ -109,6 +110,7 @@ function BlackjackContent() {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatDraft, setChatDraft] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [avatarMap, setAvatarMap] = useState<Record<string, string | null>>({});
   const [form, setForm] = useState<TableForm>({
     name: 'River Blackjack',
     maxPlayers: 5,
@@ -155,6 +157,27 @@ function BlackjackContent() {
   useEffect(() => {
     void loadTables();
   }, []);
+
+  useEffect(() => {
+    const names = Array.from(new Set(players.map((player) => player.username).filter(Boolean)));
+    if (names.length <= 0) {
+      setAvatarMap({});
+      return;
+    }
+
+    let cancelled = false;
+    apiGet<Record<string, string | null>>(`/profile/avatars?usernames=${encodeURIComponent(names.join(','))}`)
+      .then((out) => {
+        if (!cancelled) setAvatarMap(out ?? {});
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarMap({});
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [players]);
 
   useEffect(() => {
     if (!tableCode) return;
@@ -529,7 +552,11 @@ function BlackjackContent() {
             {players.map((player, index) => (
               <article className={`blackjack-player-seat seat-${index + 1} ${player.userId === user?.userId ? 'hero' : ''} ${currentTurnId === player.userId ? 'active' : ''}`} key={player.userId}>
                 <div className="blackjack-seat-label">
-                  <Users size={16} />
+                  <UserAvatar
+                    avatarUrl={avatarMap[player.username] ?? (player.userId === user?.userId ? user?.avatarUrl ?? null : null)}
+                    className="blackjack-avatar"
+                    label={player.username}
+                  />
                   <span>{player.username}{player.userId === user?.userId ? ' (toi)' : ''}</span>
                   <strong>{player.hands && player.hands.length > 1 ? `${player.activeHandIndex! + 1}/${player.hands.length}` : player.value}</strong>
                 </div>

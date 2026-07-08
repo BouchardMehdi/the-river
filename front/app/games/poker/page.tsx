@@ -9,7 +9,6 @@ import {
   ChevronRight,
   CircleDollarSign,
   Copy,
-  Crown,
   MessageCircle,
   PanelRightOpen,
   Play,
@@ -24,6 +23,7 @@ import {
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { UserAvatar } from '@/components/user-avatar';
 import { EmptyState, StatusMessage } from '@/components/ui';
 import type { Card, PokerTable } from '@/types/api';
 
@@ -327,6 +327,7 @@ function PokerContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chipBurst, setChipBurst] = useState<ChipBurst | null>(null);
   const [gameOver, setGameOver] = useState<GameOverSummary | null>(null);
+  const [avatarMap, setAvatarMap] = useState<Record<string, string | null>>({});
   const [form, setForm] = useState<TableForm>({
     buyInAmount: 100,
     smallBlindAmount: 5,
@@ -385,6 +386,27 @@ function PokerContent() {
   useEffect(() => {
     void loadTables();
   }, []);
+
+  useEffect(() => {
+    const names = Array.from(new Set(active?.players?.filter(Boolean) ?? []));
+    if (names.length <= 0) {
+      setAvatarMap({});
+      return;
+    }
+
+    let cancelled = false;
+    apiGet<Record<string, string | null>>(`/profile/avatars?usernames=${encodeURIComponent(names.join(','))}`)
+      .then((out) => {
+        if (!cancelled) setAvatarMap(out ?? {});
+      })
+      .catch(() => {
+        if (!cancelled) setAvatarMap({});
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active?.players]);
 
   useEffect(() => {
     if (!user?.username || activeId || typeof window === 'undefined') return;
@@ -673,8 +695,9 @@ function PokerContent() {
       bet: active?.bets?.[name] ?? (index % 2 === 0 ? 0 : form.bigBlindAmount),
       isHero: name === user?.username || index === 0,
       isDealer: active?.dealerPlayerId ? name === active.dealerPlayerId : index === (active?.dealerIndex ?? 1),
+      avatarUrl: avatarMap[name] ?? (name === user?.username ? user?.avatarUrl ?? null : null),
     }));
-  }, [active, form.bigBlindAmount, form.maxPlayers, user?.credits, user?.username]);
+  }, [active, avatarMap, form.bigBlindAmount, form.maxPlayers, user?.avatarUrl, user?.credits, user?.username]);
 
   if (!active) {
     return (
@@ -945,7 +968,7 @@ function PokerContent() {
 
             {seats.map((seat, index) => (
               <article className={`poker-seat seat-${index + 1} ${seat.isHero ? 'hero-seat' : ''}`} key={`${seat.name}-${index}`}>
-                <div className="seat-avatar">{seat.isDealer ? <Crown size={16} /> : seat.name.slice(0, 1).toUpperCase()}</div>
+                <UserAvatar avatarUrl={seat.avatarUrl} className="seat-avatar" label={seat.name} />
                 <div>
                   <strong>{seat.name}</strong>
                   <span>{seat.stack} credits</span>

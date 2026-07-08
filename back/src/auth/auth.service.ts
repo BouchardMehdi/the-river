@@ -95,6 +95,7 @@ export class AuthService {
         points: user.points ?? 0,
         email: user.email,
         emailVerified: user.emailVerified,
+        avatarUrl: user.avatarUrl ?? null,
       },
     };
   }
@@ -124,6 +125,7 @@ export class AuthService {
         points: user.points ?? 0,
         email: user.email,
         emailVerified: user.emailVerified,
+        avatarUrl: user.avatarUrl ?? null,
       },
       needsEmailVerification: true,
     };
@@ -158,6 +160,92 @@ export class AuthService {
         `<p>Il expire dans <b>${ttlMin} minutes</b>.</p>` +
         `<p>Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message.</p>`,
     });
+  }
+
+  private async sendEmailChangedNotice(oldEmail: string, newEmail: string, username: string) {
+    await this.mail.sendMail({
+      to: oldEmail,
+      subject: 'THE RIVER - Adresse email modifiee',
+      text:
+        `Bonjour ${username},\n\n` +
+        `L'adresse email de votre compte THE RIVER vient d'etre modifiee.\n` +
+        `Nouvelle adresse: ${newEmail}\n\n` +
+        `Si vous etes a l'origine de ce changement, vous pouvez ignorer ce message.\n` +
+        `Sinon, connectez-vous rapidement et changez votre mot de passe.`,
+      html:
+        `<p>Bonjour <b>${username}</b>,</p>` +
+        `<p>L'adresse email de votre compte <b>THE RIVER</b> vient d'etre modifiee.</p>` +
+        `<p>Nouvelle adresse: <b>${newEmail}</b></p>` +
+        `<p>Si vous etes a l'origine de ce changement, vous pouvez ignorer ce message.</p>` +
+        `<p>Sinon, connectez-vous rapidement et changez votre mot de passe.</p>`,
+    });
+  }
+
+  private userPayload(user: {
+    userId: number;
+    username: string;
+    credits?: number;
+    points?: number;
+    email: string;
+    emailVerified: boolean;
+    avatarUrl?: string | null;
+  }) {
+    return {
+      userId: user.userId,
+      username: user.username,
+      credits: user.credits ?? 0,
+      points: user.points ?? 0,
+      email: user.email,
+      emailVerified: user.emailVerified,
+      avatarUrl: user.avatarUrl ?? null,
+    };
+  }
+
+  async updateAccount(
+    userId: number,
+    body: { username?: string; email?: string; password?: string },
+  ) {
+    const password = body.password ?? '';
+    if (!password) throw new BadRequestException('Mot de passe requis');
+
+    const current = await this.usersService.findById(userId);
+    if (!current) throw new UnauthorizedException('User not found');
+    const previousEmail = current.email;
+
+    const ok = await this.passwordMatches(current.password, password);
+    if (!ok) throw new UnauthorizedException('Mot de passe invalide');
+
+    const username = (body.username ?? '').trim();
+    const email = (body.email ?? '').trim().toLowerCase();
+    const wantsUsername = username && username !== current.username;
+    const wantsEmail = email && email !== current.email;
+
+    if (!wantsUsername && !wantsEmail) {
+      const payload = { sub: current.userId, username: current.username };
+      return {
+        access_token: await this.jwtService.signAsync(payload),
+        user: this.userPayload(current),
+        emailVerificationSent: false,
+      };
+    }
+
+    const updated = await this.usersService.updateAccount(userId, {
+      username: wantsUsername ? username : undefined,
+      email: wantsEmail ? email : undefined,
+      emailVerified: wantsEmail ? false : undefined,
+    });
+
+    if (wantsEmail) {
+      await this.sendEmailVerification(updated.userId, updated.email, updated.username);
+      await this.sendEmailChangedNotice(previousEmail, updated.email, updated.username);
+    }
+
+    const payload = { sub: updated.userId, username: updated.username };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+      user: this.userPayload(updated),
+      emailVerificationSent: wantsEmail,
+    };
   }
 
   async resendVerification(email: string) {

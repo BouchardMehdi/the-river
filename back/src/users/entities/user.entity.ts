@@ -32,6 +32,9 @@ export class UserEntity {
   @Column({ type: 'tinyint', default: 0 })
   emailVerified: boolean;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  avatarUrl: string | null;
+
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 

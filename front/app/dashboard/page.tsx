@@ -9,6 +9,7 @@ import {
   Check,
   ChevronRight,
   ListChecks,
+  Settings,
   SlidersHorizontal,
   Sparkles,
   Target,
@@ -18,9 +19,9 @@ import {
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
-import { NotificationButton } from '@/components/notification-button';
+import { UserAvatar } from '@/components/user-avatar';
 import { StatusMessage } from '@/components/ui';
-import type { Quest } from '@/types/api';
+import type { Quest, UserSettings } from '@/types/api';
 
 type PerfEvent = {
   id?: number;
@@ -66,6 +67,7 @@ type DashboardSummary = {
 
 type Leader = {
   username?: string;
+  avatarUrl?: string | null;
   value?: number;
   credits?: number;
   points?: number;
@@ -357,13 +359,14 @@ function DashboardContent() {
   async function load() {
     setError('');
     try {
-      const [summaryOut, questsOut, creditsLeadersOut, pointsLeadersOut, scoreLeadersOut, eggOut] = await Promise.all([
+      const [summaryOut, questsOut, creditsLeadersOut, pointsLeadersOut, scoreLeadersOut, eggOut, settingsOut] = await Promise.all([
         apiGet<DashboardSummary>(`/dashboard/summary?period=${chartPeriod}&limit=12`).catch(() => null),
         apiGet<Quest[]>('/quests').catch(() => []),
         apiGet<Leader[]>('/dashboard/balance-leaderboard?limit=8', false).catch(() => []),
         apiGet<Leader[]>('/dashboard/leaderboard?metric=points&period=week&limit=8', false).catch(() => []),
         apiGet<Leader[]>('/dashboard/leaderboard?metric=credits&period=week&limit=8', false).catch(() => []),
         apiGet<EggStatus>('/easter-egg/status').catch(() => null),
+        apiGet<UserSettings>('/settings').catch(() => null),
       ]);
       setSummary(summaryOut);
       setQuests(Array.isArray(questsOut) ? questsOut : []);
@@ -373,6 +376,9 @@ function DashboardContent() {
         score: Array.isArray(scoreLeadersOut) ? scoreLeadersOut : [],
       });
       setEgg(eggOut);
+      if (typeof settingsOut?.interface?.showLeaderboardByDefault === 'boolean') {
+        setShowLeaderboard(settingsOut.interface.showLeaderboardByDefault);
+      }
       await refreshUser();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Dashboard indisponible');
@@ -643,6 +649,7 @@ function DashboardContent() {
   const leaderRows = useMemo(() => {
     return [...leaders[leaderFilter]]
       .map((leader) => ({
+        avatarUrl: leader.avatarUrl ?? null,
         label: leader.username ?? 'Joueur',
         value:
           leaderFilter === 'credits'
@@ -702,7 +709,10 @@ function DashboardContent() {
               <Trophy size={17} />
               <span>Classement</span>
             </button>
-            <NotificationButton className="icon-button" />
+            <Link className="button secondary small dashboard-action-button" href="/settings">
+              <Settings size={17} />
+              <span>Parametres</span>
+            </Link>
           </div>
         </header>
 
@@ -934,6 +944,7 @@ function DashboardContent() {
               leaderRows.map((leader, index) => (
                 <div className="leader-row" key={`${leader.label}-${index}`}>
                   <span>#{index + 1}</span>
+                  <UserAvatar avatarUrl={leader.avatarUrl} className="leader-avatar" label={leader.label} />
                   <strong>{leader.label}</strong>
                   <em>{formatLeaderValue(leader.value, leaderFilter)}</em>
                 </div>

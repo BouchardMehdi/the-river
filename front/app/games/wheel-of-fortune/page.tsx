@@ -17,6 +17,7 @@ import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type WheelSegment = {
   color: string;
@@ -100,6 +101,7 @@ function WheelContent() {
 
     try {
       emitBalanceDelta(-nextBet, 'wheel-bet');
+      emitGameSound('roulette');
       const out = await apiPost<WheelResult>('/wheel/spin', { bet: nextBet });
       if (out.segments?.length) setSegments(out.segments);
 
@@ -114,6 +116,7 @@ function WheelContent() {
         setResult(out);
         setHistory((current) => [out, ...current].slice(0, 8));
         setSpinning(false);
+        emitGameSound(Number(out.payout ?? 0) > 0 ? (Number(out.segment.multiplier ?? 0) >= 20 ? 'jackpot' : 'win') : 'loss');
         if (Number(out.payout ?? 0) > 0) emitBalanceDelta(Number(out.payout), 'wheel-payout');
       }, 4300);
     } catch (err) {

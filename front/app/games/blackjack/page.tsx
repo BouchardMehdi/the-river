@@ -29,6 +29,7 @@ import { useAuth } from '@/auth/auth-context';
 import { UserAvatar } from '@/components/user-avatar';
 import { EmptyState, StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 import type { BlackjackState, BlackjackTable, Card } from '@/types/api';
 
 type TableForm = {
@@ -258,6 +259,7 @@ function BlackjackContent() {
     }
 
     if (roundOverTimer.current) clearTimeout(roundOverTimer.current);
+    emitGameSound(result.winners?.includes(user?.username ?? '') ? 'win' : 'loss');
     roundOverTimer.current = setTimeout(async () => {
       setRoundOver(null);
       await refreshUser();
@@ -319,6 +321,12 @@ function BlackjackContent() {
       if (optimisticDelta !== 0) {
         emitBalanceDelta(optimisticDelta, `blackjack-${path}`);
       }
+      if (path === 'start') emitGameSound('deal');
+      if (path === 'bet') emitGameSound('chip');
+      if (path === 'action') {
+        const action = typeof body === 'object' && body && 'action' in body ? String((body as { action?: unknown }).action) : '';
+        emitGameSound(action === 'hit' ? 'card' : action === 'stand' ? 'toggle' : 'chip');
+      }
       const out = await apiPost<BlackjackState>(`/blackjack/tables/${tableCode}/${path}`, body);
       setState(out);
       await refreshUser();
@@ -353,6 +361,7 @@ function BlackjackContent() {
   function copyCode() {
     if (!tableCode || typeof navigator === 'undefined') return;
     void navigator.clipboard?.writeText(tableCode);
+    emitGameSound('notification');
   }
 
   if (!state) {

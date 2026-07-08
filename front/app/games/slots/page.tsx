@@ -17,6 +17,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type SlotMachineType = 'SLOT_3X3' | 'SLOT_3X5' | 'SLOT_5X5';
 type SymbolId = 'CHERRY' | 'LEMON' | 'BELL' | 'CLUB' | 'DIAMOND' | 'CHEST' | 'SEVEN';
@@ -264,6 +265,7 @@ function SlotsContent() {
         window.setTimeout(resolve, ms);
       });
       const animateOneResult = async (spinResult: SpinResult, spinIndex: number, duration: number) => {
+        emitGameSound('spin');
         setReelsMoving(true);
         setStoppingCols([]);
         setActiveWinIndex(-1);
@@ -284,6 +286,7 @@ function SlotsContent() {
         await wait(Math.max(0, duration - totalCols * columnStopDelay));
 
         for (let col = 0; col < totalCols; col += 1) {
+          emitGameSound('reel-stop');
           stopped.add(col);
           setStoppingCols((previous) => [...previous, col]);
           setDisplayGrid((current) =>
@@ -303,7 +306,10 @@ function SlotsContent() {
         setStoppingCols([]);
 
         if (spinResult.payout > 0) {
+          emitGameSound(spinResult.wins.some((win) => win.name === 'JACKPOT') ? 'jackpot' : 'win');
           emitBalanceDelta(spinResult.payout, 'slots-payout');
+        } else {
+          emitGameSound('loss');
         }
         await wait(spinResult.wins.length ? Math.min(1200, 360 + spinResult.wins.length * 260) : 280);
       };

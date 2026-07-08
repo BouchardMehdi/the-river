@@ -17,6 +17,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type PachinkoRisk = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -309,6 +310,7 @@ function PachinkoContent() {
         setResult(out);
         setActiveMultipliers(out.multipliers);
         setHistory((current) => [out, ...current].slice(0, 6));
+        emitGameSound(out.payout > 0 ? 'win' : 'loss');
         if (out.payout > 0) {
           emitBalanceDelta(out.payout, 'pachinko-payout');
         }
@@ -343,6 +345,7 @@ function PachinkoContent() {
 
     try {
       emitBalanceDelta(-Number(bet), 'pachinko-bet');
+      emitGameSound('drop');
       const out = await apiPost<PachinkoStartResult>('/pachinko/start', { bet: Number(bet), risk, rows });
       ticketRef.current = out.ticketId;
       setActiveMultipliers(out.multipliers);

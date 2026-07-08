@@ -18,6 +18,7 @@ import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type HiLoGuess = 'HIGHER' | 'LOWER';
 
@@ -133,6 +134,7 @@ function HiLoContent() {
     try {
       const nextBet = Number(bet);
       emitBalanceDelta(-nextBet, 'hilo-bet');
+      emitGameSound('deal');
       const out = await apiPost<HiLoSession>('/hilo/start', { bet: Number(bet) });
       if (out.resumed) emitBalanceDelta(nextBet, 'hilo-resume-refund');
       setSession(out);
@@ -152,6 +154,7 @@ function HiLoContent() {
 
     try {
       const out = await apiPost<HiLoActionResult>('/hilo/guess', { guess: nextGuess });
+      emitGameSound(out.outcome === 'LOSE' ? 'loss' : out.outcome === 'PUSH' ? 'toggle' : 'card');
       setPreviousCard(out.previousCard);
       setSession(out);
       setLastOutcome(out.outcome);
@@ -169,6 +172,7 @@ function HiLoContent() {
 
     try {
       const out = await apiPost<HiLoActionResult>('/hilo/cashout');
+      emitGameSound('cashout');
       if (Number(out.payout ?? 0) > 0) emitBalanceDelta(Number(out.payout), 'hilo-payout');
       setSession(out);
       setLastOutcome('CASHOUT');

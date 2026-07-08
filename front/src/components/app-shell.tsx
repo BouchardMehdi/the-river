@@ -8,6 +8,8 @@ import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-re
 import { apiGet, getToken } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
 import { BALANCE_FEEDBACK_EVENT, type BalanceDeltaDetail } from '@/lib/balance-events';
+import { playGameSound, unlockAudio } from '@/lib/sound-engine';
+import { GAME_SOUND_EVENT, type GameSound } from '@/lib/sound-events';
 import { applyThemePreference, isThemePreference, readCachedTheme, THEME_EVENT, type ThemePreference } from '@/lib/theme';
 import type { UserSettings } from '@/types/api';
 import { UserAvatar } from './user-avatar';
@@ -75,6 +77,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
     window.addEventListener(BALANCE_FEEDBACK_EVENT, handleBalanceDelta);
     return () => window.removeEventListener(BALANCE_FEEDBACK_EVENT, handleBalanceDelta);
+  }, []);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const control = target.closest('button, a, input, select, textarea, [role="button"]');
+      if (!control || control.hasAttribute('disabled') || control.getAttribute('aria-disabled') === 'true') return;
+      void unlockAudio();
+      if (control.matches('input, textarea')) return;
+      if (control.matches('select')) {
+        playGameSound('toggle');
+        return;
+      }
+      playGameSound(control.classList.contains('icon-button') ? 'toggle' : 'button');
+    }
+
+    function handleGameSound(event: Event) {
+      const sound = (event as CustomEvent<{ sound?: GameSound }>).detail?.sound;
+      if (sound) playGameSound(sound);
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown, { capture: true });
+    window.addEventListener(GAME_SOUND_EVENT, handleGameSound);
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown, { capture: true });
+      window.removeEventListener(GAME_SOUND_EVENT, handleGameSound);
+    };
   }, []);
 
   function renderNavLinks() {

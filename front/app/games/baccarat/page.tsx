@@ -19,6 +19,7 @@ import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type BaccaratBet = 'PLAYER' | 'BANKER' | 'TIE';
 type BaccaratSide = 'PLAYER' | 'BANKER';
@@ -122,11 +123,13 @@ function BaccaratContent() {
 
     try {
       emitBalanceDelta(-nextBet, 'baccarat-bet');
+      emitGameSound('deal');
       const out = await apiPost<BaccaratResult>('/baccarat/play', { bet: nextBet, betOn });
       setPendingResult(out);
 
       out.dealOrder.forEach((step, index) => {
         const timer = window.setTimeout(() => {
+          emitGameSound('card');
           if (step.side === 'PLAYER') setPlayerCards((cards) => [...cards, step.card]);
           else setBankerCards((cards) => [...cards, step.card]);
         }, 430 * index);
@@ -137,6 +140,7 @@ function BaccaratContent() {
         setResult(out);
         setPendingResult(null);
         setDealing(false);
+        emitGameSound(Number(out.payout ?? 0) > 0 ? 'win' : 'loss');
         if (Number(out.payout ?? 0) > 0) emitBalanceDelta(Number(out.payout), 'baccarat-payout');
       }, 430 * out.dealOrder.length + 560);
       timersRef.current.push(finishTimer);

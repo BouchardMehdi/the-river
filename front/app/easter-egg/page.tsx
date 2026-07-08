@@ -9,6 +9,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type EggStatus = {
   unlocked?: boolean;
@@ -85,9 +86,11 @@ function EasterEggContent() {
 
     try {
       emitBalanceDelta(-Math.trunc(bet), 'dragon-tiger-bet');
+      emitGameSound('deal');
       const result = await apiPost<DragonTigerRound>('/dragon-tiger/play', { bet, betOn });
       window.setTimeout(() => {
         setRound(result);
+        emitGameSound(Number(result.payout ?? 0) > 0 ? 'win' : 'loss');
         if (Number(result.payout ?? 0) > 0) emitBalanceDelta(result.payout, 'dragon-tiger-payout');
         void refreshUser();
         setDealing(false);

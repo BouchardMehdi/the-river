@@ -17,6 +17,7 @@ import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type KenoResult = {
   bet: number;
@@ -126,6 +127,7 @@ function KenoContent() {
 
     try {
       emitBalanceDelta(-nextBet, 'keno-bet');
+      emitGameSound('spin');
       const out = await apiPost<KenoResult>('/keno/play', { bet: nextBet, picks: selected });
       setPendingResult(out);
 
@@ -144,6 +146,7 @@ function KenoContent() {
         setResult(out);
         setPendingResult(null);
         setDrawing(false);
+        emitGameSound(Number(out.payout ?? 0) > 0 ? 'win' : 'loss');
         if (Number(out.payout ?? 0) > 0) emitBalanceDelta(Number(out.payout), 'keno-payout');
       }, 110 * order.length + 420);
       timersRef.current.push(finishTimer);

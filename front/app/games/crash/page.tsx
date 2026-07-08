@@ -18,6 +18,7 @@ import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type CrashSession = {
   active: boolean;
@@ -107,6 +108,7 @@ function CrashContent() {
         };
         setResult(crashResult);
         setHistory((current) => [crashResult, ...current].slice(0, 8));
+        emitGameSound('crash');
       }
 
       setRunning(false);
@@ -146,6 +148,7 @@ function CrashContent() {
 
     try {
       emitBalanceDelta(-nextBet, 'crash-bet');
+      emitGameSound('spin');
       const out = await apiPost<CrashSession>('/crash/start', { bet: nextBet });
       if (out.resumed) emitBalanceDelta(nextBet, 'crash-resume-refund');
       setSession(out);
@@ -171,6 +174,7 @@ function CrashContent() {
       setResult(out);
       setHistory((current) => [out, ...current].slice(0, 8));
       if (out.outcome === 'CASHOUT' && Number(out.payout ?? 0) > 0) {
+        emitGameSound('cashout');
         emitBalanceDelta(Number(out.payout), 'crash-payout');
       }
     } catch (err) {

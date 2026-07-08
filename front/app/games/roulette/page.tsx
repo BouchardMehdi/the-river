@@ -7,6 +7,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type RouletteColor = 'RED' | 'BLACK' | 'GREEN';
 
@@ -296,6 +297,7 @@ function RouletteContent() {
   }
 
   function addBet() {
+    emitGameSound('chip');
     const next = createBetDraft(`bet-${nextBetId}`);
     setNextBetId((value) => value + 1);
     setBets((current) => [...current, next]);
@@ -303,6 +305,7 @@ function RouletteContent() {
   }
 
   function removeBet(id: string) {
+    emitGameSound('close');
     setBets((current) => {
       if (current.length === 1) return current;
       const next = current.filter((bet) => bet.id !== id);
@@ -338,6 +341,7 @@ function RouletteContent() {
   }
 
   function selectTableBet(type: BetType, value?: number | string) {
+    emitGameSound('chip');
     const wasSameType = activeBet.type === type;
 
     if (numberBetDefaults[type]) {
@@ -383,6 +387,7 @@ function RouletteContent() {
 
     try {
       emitBalanceDelta(-totalStake, 'roulette-bet');
+      emitGameSound('roulette');
       const out = await apiPost<RouletteResponse>('/roulette/solo/spin', { bets: bets.map(buildBetFromDraft) });
       const targetWheel = -resultAngle(out.result.number);
       const spinDelay = Math.max(90 - (Date.now() - startedAt), 0);
@@ -395,8 +400,12 @@ function RouletteContent() {
       window.setTimeout(async () => {
         setResult(out);
         setSpinning(false);
+        const nextNet = out.settlement.totalReturn - out.settlement.totalStaked;
         if (out.settlement.totalReturn > 0) {
+          emitGameSound(nextNet >= 0 ? 'win' : 'loss');
           emitBalanceDelta(out.settlement.totalReturn, 'roulette-payout');
+        } else {
+          emitGameSound('loss');
         }
         await refreshUser();
         await loadStats();

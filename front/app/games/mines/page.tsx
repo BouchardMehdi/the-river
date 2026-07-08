@@ -17,6 +17,7 @@ import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type MinesSession = {
   active: boolean;
@@ -84,6 +85,7 @@ function MinesContent() {
     try {
       const nextBet = Number(bet);
       emitBalanceDelta(-nextBet, 'mines-bet');
+      emitGameSound('chip');
       const out = await apiPost<MinesSession>('/mines/start', { bet: nextBet, mines: Number(mines) });
       if (out.resumed) emitBalanceDelta(nextBet, 'mines-resume-refund');
       setSession(out);
@@ -103,6 +105,7 @@ function MinesContent() {
 
     try {
       const out = await apiPost<MinesSession>('/mines/reveal', { cell });
+      emitGameSound(out.outcome === 'MINE' ? 'loss' : 'card');
       setSession(out);
       if (out.outcome === 'CASHOUT' && Number(out.payout ?? 0) > 0) {
         emitBalanceDelta(Number(out.payout), 'mines-complete-payout');
@@ -121,6 +124,7 @@ function MinesContent() {
 
     try {
       const out = await apiPost<MinesSession>('/mines/cashout');
+      emitGameSound('cashout');
       if (Number(out.payout ?? 0) > 0) emitBalanceDelta(Number(out.payout), 'mines-payout');
       setSession(out);
       setLastCell(null);

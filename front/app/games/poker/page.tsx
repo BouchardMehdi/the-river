@@ -25,6 +25,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { UserAvatar } from '@/components/user-avatar';
 import { EmptyState, StatusMessage } from '@/components/ui';
+import { emitGameSound } from '@/lib/sound-events';
 import type { Card, PokerTable } from '@/types/api';
 
 type TableForm = {
@@ -571,8 +572,10 @@ function PokerContent() {
       await loadTable(activeId);
       await refreshUser();
       pushSystemMessage(`${user?.username ?? 'Joueur'} ${actionName.toLowerCase()}${amount != null ? ` ${amount} credits` : ''}`);
+      emitGameSound(actionName === 'FOLD' ? 'loss' : actionName === 'CHECK' ? 'toggle' : 'chip');
       triggerChipBurst(visualAmount);
       if (table.lastWinnerId) {
+        emitGameSound(table.lastWinnerId === user?.username ? 'win' : 'loss');
         pushSystemMessage(`${table.lastWinnerId} remporte la main avec ${table.lastWinnerHandDescription ?? 'la meilleure main'}.`);
       }
     } catch (err) {
@@ -592,6 +595,7 @@ function PokerContent() {
       const table = await apiPost<PokerTable>(`/tables/${activeId}/start`, {});
       setActive(table);
       await loadTable(activeId);
+      emitGameSound('deal');
       pushSystemMessage(`Nouvelle main sur ${activeId}. Blinds ${table.smallBlindAmount}/${table.bigBlindAmount}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Demarrage impossible');
@@ -668,6 +672,7 @@ function PokerContent() {
 
     try {
       await navigator.clipboard?.writeText(activeId);
+      emitGameSound('notification');
       pushSystemMessage(`Code ${activeId} copie.`);
       return;
     } catch {
@@ -683,6 +688,7 @@ function PokerContent() {
     textarea.select();
     document.execCommand('copy');
     document.body.removeChild(textarea);
+    emitGameSound('notification');
     pushSystemMessage(`Code ${activeId} copie.`);
   }
 

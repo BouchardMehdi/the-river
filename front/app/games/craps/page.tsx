@@ -15,6 +15,7 @@ import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
+import { emitGameSound } from '@/lib/sound-events';
 
 type CrapsBetType =
   | 'PASS_LINE'
@@ -96,6 +97,7 @@ function CrapsContent() {
   const totalBet = useMemo(() => bets.reduce((sum, bet) => sum + Number(bet.amount || 0), 0), [bets]);
 
   function addBet(type: CrapsBetType = 'PASS_LINE', target = defaultTarget(type)) {
+    emitGameSound('chip');
     setBets((current) => [...current, makeBet(type, target)]);
   }
 
@@ -113,6 +115,7 @@ function CrapsContent() {
   }
 
   function removeBet(id: string) {
+    emitGameSound('close');
     setBets((current) => (current.length > 1 ? current.filter((bet) => bet.id !== id) : current));
   }
 
@@ -121,6 +124,7 @@ function CrapsContent() {
     setError('');
     setResult(null);
     setLoading(true);
+    emitGameSound('dice');
 
     const rollTimer = window.setInterval(() => {
       setDice([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
@@ -141,6 +145,7 @@ function CrapsContent() {
       ]);
       setDice(out.dice);
       setResult(out);
+      emitGameSound(out.payout > 0 ? 'win' : 'loss');
       if (out.payout > 0) {
         emitBalanceDelta(out.payout, 'craps-payout');
       }

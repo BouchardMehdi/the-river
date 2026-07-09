@@ -71,7 +71,7 @@ function EasterEggContent() {
     try {
       setStatus(await apiGet<EggStatus>('/easter-egg/status'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Statut indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de vérifier l’accès au Salon du Dragon.');
     }
   }
 
@@ -97,7 +97,7 @@ function EasterEggContent() {
       }, 650);
     } catch (err) {
       setDealing(false);
-      setError(err instanceof Error ? err.message : 'Partie impossible');
+      setError(err instanceof Error ? err.message : 'Impossible de lancer la partie. Vérifie ta mise et ton accès au salon.');
       emitBalanceDelta(Math.trunc(bet), 'dragon-tiger-refund');
     }
   }
@@ -130,7 +130,7 @@ function EasterEggContent() {
           <p>Deux cartes, une decision. Mise sur Dragon, Tiger ou l egalite.</p>
         </div>
         <div className="dragon-rules">
-          <strong>Regles rapides</strong>
+          <strong>Règles rapides</strong>
           <span>Dragon/Tiger paient 1:1</span>
           <span>Tie paie 8:1</span>
           <span>En egalite, Dragon/Tiger sont rembourses</span>
@@ -155,7 +155,7 @@ function EasterEggContent() {
             <div className="dragon-vs">
               <Swords size={26} />
               <strong>{winnerLabel(round?.winner)}</strong>
-              <span>{round ? `${round.payout} credits retournes` : selectedBet?.text}</span>
+              <span>{round ? `${round.payout} crédits retournés` : selectedBet?.text}</span>
             </div>
           </div>
 

@@ -153,7 +153,7 @@ function CrapsContent() {
       await refreshUser();
     } catch (err) {
       emitBalanceDelta(totalBet, 'craps-refund');
-      setError(err instanceof Error ? err.message : 'Craps indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de lancer les dés. Vérifie tes mises et ton solde.');
     } finally {
       window.clearInterval(rollTimer);
       setLoading(false);
@@ -172,7 +172,7 @@ function CrapsContent() {
               <Dices size={18} /> {loading ? 'Lancer...' : 'Lancer les des'}
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -220,7 +220,7 @@ function CrapsContent() {
                       </label>
                     ) : null}
                     <label>
-                      <span>Credits</span>
+                      <span>Crédits</span>
                       <input min={1} type="number" value={bet.amount} onChange={(event) => updateBet(bet.id, { amount: Number(event.target.value) })} />
                     </label>
                     <button className="icon-button danger" onClick={() => removeBet(bet.id)} type="button" title="Supprimer">
@@ -239,7 +239,7 @@ function CrapsContent() {
 
           <section className="craps-result-panel interactive-card">
             <div className="card-heading">
-              <h2>Resultat</h2>
+              <h2>Résultat</h2>
               {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}><CurrencyAmount prefix={result.net >= 0 ? '+' : ''} value={result.net} /></strong> : null}
             </div>
             {result ? (
@@ -269,7 +269,7 @@ function CrapsContent() {
       <aside className={rulesOpen ? 'craps-rules-drawer open' : 'craps-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du craps</h2>
+            <h2>Règles du craps</h2>
             <p>Version rapide sur un lancer.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">

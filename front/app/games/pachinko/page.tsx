@@ -356,7 +356,7 @@ function PachinkoContent() {
       await refreshUser();
     } catch (err) {
       emitBalanceDelta(Number(bet), 'pachinko-refund');
-      setError(err instanceof Error ? err.message : 'Pachinko indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de lancer la bille. Vérifie ta mise, le risque et ton solde.');
       setLandedSlot(-1);
       ticketRef.current = null;
       setDropping(false);
@@ -383,7 +383,7 @@ function PachinkoContent() {
               <Play size={18} /> {dropping ? 'Chute...' : 'Lancer'}
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -415,7 +415,7 @@ function PachinkoContent() {
         <aside className="pachinko-side">
           <form className="pachinko-controls interactive-card" id="pachinko-controls" onSubmit={drop}>
             <div className="card-heading">
-              <h2>Parametres</h2>
+              <h2>Paramètres</h2>
               <button className="icon-button" onClick={resetBoard} type="button" title="Reinitialiser">
                 <RefreshCcw size={17} />
               </button>
@@ -467,7 +467,7 @@ function PachinkoContent() {
 
           <section className="pachinko-result interactive-card">
             <div className="card-heading">
-              <h2>Resultat</h2>
+              <h2>Résultat</h2>
               {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}><CurrencyAmount prefix={result.net >= 0 ? '+' : ''} value={result.net} /></strong> : null}
             </div>
             {result ? (
@@ -496,7 +496,7 @@ function PachinkoContent() {
       <aside className={rulesOpen ? 'pachinko-rules-drawer open' : 'pachinko-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du Pachinko</h2>
+            <h2>Règles du Pachinko</h2>
             <p>La bille descend de peg en peg jusqu'a un multiplicateur.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">

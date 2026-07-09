@@ -54,7 +54,7 @@ const defaultSegments: WheelSegment[] = [
 ];
 
 function formatCredits(value?: number) {
-  return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+  return `${Number(value ?? 0).toLocaleString('fr-FR')} crédits`;
 }
 
 function wheelGradient(segments: WheelSegment[]) {
@@ -90,7 +90,7 @@ function WheelContent() {
 
     const nextBet = Math.trunc(Number(bet));
     if (!Number.isFinite(nextBet) || nextBet <= 0) {
-      setError('Mise invalide.');
+      setError('Mise invalide. Entre un montant positif et disponible sur ton solde.');
       return;
     }
 
@@ -122,7 +122,7 @@ function WheelContent() {
     } catch (err) {
       emitBalanceDelta(nextBet, 'wheel-refund');
       setSpinning(false);
-      setError(err instanceof Error ? err.message : 'Roue indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de lancer la roue. Vérifie ta mise et ton solde.');
     }
   }
 
@@ -146,7 +146,7 @@ function WheelContent() {
               <Play size={18} /> Spin
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -196,7 +196,7 @@ function WheelContent() {
             </label>
             <div className="wheel-kpis">
               <span>Meilleur segment <strong>{bestSegment?.label ?? '-'}</strong></span>
-              <span>Resultat <strong>{result?.segment.label ?? '-'}</strong></span>
+              <span>Résultat <strong>{result?.segment.label ?? '-'}</strong></span>
               <span>Gain <strong className={Number(result?.payout ?? 0) > 0 ? 'positive' : ''}>{formatCredits(result?.payout)}</strong></span>
               <span>Net <strong className={Number(result?.net ?? 0) >= 0 ? 'positive' : 'negative'}>{formatCredits(result?.net)}</strong></span>
             </div>
@@ -227,7 +227,7 @@ function WheelContent() {
       <aside className={rulesOpen ? 'wheel-rules-drawer open' : 'wheel-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles Wheel of Fortune</h2>
+            <h2>Règles Wheel of Fortune</h2>
             <p>La roue est composee de segments ponderes.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">

@@ -329,13 +329,13 @@ function SlotsContent() {
       setSpinning(false);
       setReelsMoving(false);
       setStoppingCols([]);
-      setError(err instanceof Error ? err.message : 'Spin impossible');
+      setError(err instanceof Error ? err.message : 'Spin impossible. Vérifie ta mise et ton solde.');
     }
   }
 
   const activeSummary = latest
     ? latest.payout > 0
-      ? `${latest.wins.length} combo${latest.wins.length > 1 ? 's' : ''} pour ${latest.payout} credits`
+      ? `${latest.wins.length} combo${latest.wins.length > 1 ? 's' : ''} pour ${latest.payout} crédits`
       : 'Aucun combo sur ce spin'
     : 'Pret a lancer';
 
@@ -366,7 +366,7 @@ function SlotsContent() {
               <p>{cfg.description}</p>
             </div>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
 
@@ -437,7 +437,7 @@ function SlotsContent() {
           <section className="slots-card">
             <div className="slots-result-head">
               <div>
-                <h2>Resultat</h2>
+                <h2>Résultat</h2>
                 <p>{activeSummary}</p>
               </div>
               <Trophy size={22} />

@@ -47,7 +47,7 @@ const paytable: Record<number, Record<number, number>> = {
 };
 
 function formatCredits(value?: number) {
-  return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+  return `${Number(value ?? 0).toLocaleString('fr-FR')} crédits`;
 }
 
 function quickPick(count: number) {
@@ -109,13 +109,13 @@ function KenoContent() {
   async function play() {
     if (drawing) return;
     if (selected.length <= 0) {
-      setError('Selectionne au moins un numero.');
+      setError('Sélectionne au moins un numéro avant de lancer le tirage.');
       return;
     }
 
     const nextBet = Math.trunc(Number(bet));
     if (!Number.isFinite(nextBet) || nextBet <= 0) {
-      setError('Mise invalide.');
+      setError('Mise invalide. Entre un montant positif et disponible sur ton solde.');
       return;
     }
 
@@ -153,13 +153,13 @@ function KenoContent() {
     } catch (err) {
       emitBalanceDelta(nextBet, 'keno-refund');
       setDrawing(false);
-      setError(err instanceof Error ? err.message : 'Tirage Keno impossible');
+      setError(err instanceof Error ? err.message : 'Tirage Keno impossible. Vérifie ta mise et ta sélection.');
     }
   }
 
   const statusText = useMemo(() => {
-    if (drawing) return `Tirage en cours: ${drawCount}/20 numeros.`;
-    if (!result) return 'Choisis de 1 a 10 numeros, puis lance le tirage.';
+    if (drawing) return `Tirage en cours: ${drawCount}/20 numéros.`;
+    if (!result) return 'Choisis de 1 à 10 numéros, puis lance le tirage.';
     if (result.payout > 0) {
       return `${result.hits.length} hit(s), multiplicateur ${result.multiplier}x.`;
     }
@@ -171,14 +171,14 @@ function KenoContent() {
       <header className="keno-hero interactive-card">
         <div>
           <span className="welcome-pill"><Sparkles size={15} /> Keno</span>
-          <h1>Tire les bons numeros.</h1>
-          <p>Selectionne jusqu'a 10 numeros. Le casino en tire 20, et chaque hit rapproche du multiplicateur.</p>
+          <h1>Tire les bons numéros.</h1>
+          <p>Sélectionne jusqu’à 10 numéros. Le casino en tire 20, et chaque hit rapproche du multiplicateur.</p>
           <div className="button-row">
             <button className="button" disabled={drawing || selected.length <= 0 || bet <= 0} onClick={() => void play()} type="button">
               <Play size={18} /> Lancer
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -194,7 +194,7 @@ function KenoContent() {
           <div className="keno-board-toolbar">
             <div>
               <h2>Grille Keno</h2>
-              <p>{selected.length}/{maxPicks} numeros selectionnes</p>
+              <p>{selected.length}/{maxPicks} numéros sélectionnés</p>
             </div>
             <div className="keno-toolbar-actions">
               <button className="button secondary small" disabled={drawing} onClick={() => setSelected(quickPick(6))} type="button">
@@ -253,7 +253,7 @@ function KenoContent() {
 
           <section className="keno-panel interactive-card">
             <div className="card-heading">
-              <h2>Resultat</h2>
+              <h2>Résultat</h2>
               <BadgeDollarSign size={19} />
             </div>
             <div className="keno-result-card">
@@ -274,8 +274,8 @@ function KenoContent() {
       <aside className={rulesOpen ? 'keno-rules-drawer open' : 'keno-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du Keno</h2>
-            <p>Selection, tirage et multiplicateurs.</p>
+            <h2>Règles du Keno</h2>
+            <p>Sélection, tirage et multiplicateurs.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">
             <X size={18} />
@@ -285,15 +285,15 @@ function KenoContent() {
           <article>
             <CircleDot size={18} />
             <div>
-              <h3>Selection</h3>
-              <p>Choisis entre 1 et 10 numeros sur une grille de 80. Le tirage sort 20 numeros.</p>
+              <h3>Sélection</h3>
+              <p>Choisis entre 1 et 10 numéros sur une grille de 80. Le tirage sort 20 numéros.</p>
             </div>
           </article>
           <article>
             <BadgeDollarSign size={18} />
             <div>
               <h3>Gain</h3>
-              <p>Le payout depend du nombre de numeros choisis et du nombre de hits obtenus.</p>
+              <p>Le payout dépend du nombre de numéros choisis et du nombre de hits obtenus.</p>
             </div>
           </article>
           <div className="keno-paytable">

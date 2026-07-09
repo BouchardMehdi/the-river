@@ -84,7 +84,7 @@ function formatPhase(phase?: string) {
     case 'dealer_turn':
       return 'Croupier';
     case 'finished':
-      return 'Round termine';
+      return 'Round terminé';
     default:
       return 'Lobby';
   }
@@ -147,7 +147,7 @@ function BlackjackContent() {
       setTables(await apiGet<BlackjackTable[]>('/blackjack/tables'));
       if (tableCode) await loadState(tableCode);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Blackjack indisponible');
+      setError(err instanceof Error ? err.message : 'Blackjack indisponible. Vérifie la table ou réessaie dans quelques secondes.');
     }
   }
 
@@ -220,15 +220,15 @@ function BlackjackContent() {
     socket.on('connect', () => {
       socket.emit('joinTableChat', { tableCode });
     });
-    socket.on('joinedChat', () => push('Systeme', `Chat connecte a la table ${tableCode}.`));
+    socket.on('joinedChat', () => push('Système', `Chat connecté à la table ${tableCode}.`));
     socket.on('chatSystem', (payload: { message?: string; ts?: number }) => {
-      if (payload?.message) push('Systeme', payload.message, payload.ts);
+      if (payload?.message) push('Système', payload.message, payload.ts);
     });
     socket.on('chatMessage', (payload: { username?: string; message?: string; ts?: number }) => {
       if (payload?.message) push(payload.username ?? 'Joueur', payload.message, payload.ts);
     });
     socket.on('chatError', (payload: { error?: string }) => {
-      push('Systeme', payload?.error ?? 'Chat indisponible');
+      push('Système', payload?.error ?? 'Chat indisponible.');
     });
 
     return () => {
@@ -251,7 +251,7 @@ function BlackjackContent() {
         ...previous.slice(-80),
         {
           id: Date.now() + previous.length,
-          author: 'Systeme',
+          author: 'Système',
           text: result.winners?.length ? `${winners} remporte le round. ${result.message}` : `Le croupier remporte le round. ${result.message}`,
           time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
         },
@@ -281,7 +281,7 @@ function BlackjackContent() {
       await loadState(out.code);
       await loadTables();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Creation impossible');
+      setError(err instanceof Error ? err.message : 'Impossible de créer la table. Vérifie les paramètres de départ.');
     }
   }
 
@@ -334,7 +334,7 @@ function BlackjackContent() {
       if (optimisticDelta !== 0) {
         emitBalanceDelta(-optimisticDelta, `blackjack-${path}-refund`);
       }
-      setError(err instanceof Error ? err.message : 'Action impossible');
+      setError(err instanceof Error ? err.message : 'Action impossible. Ce n’est peut-être pas ton tour ou la mise est invalide.');
     }
   }
 
@@ -387,7 +387,7 @@ function BlackjackContent() {
             <div className="poker-panel-heading">
               <div>
                 <h2>Nouvelle table</h2>
-                <p>Parametres de depart</p>
+                <p>Paramètres de départ</p>
               </div>
               <Shield size={20} />
             </div>
@@ -409,18 +409,18 @@ function BlackjackContent() {
                 <input min={1} type="number" value={form.tableMaxBet} onChange={(event) => setForm((previous) => ({ ...previous, tableMaxBet: Number(event.target.value) }))} />
               </label>
               <div className="poker-visibility-control">
-                <span>Visibilite</span>
+                <span>Visibilité</span>
                 <div className="segmented-control full">
                   <button className={form.visibility === 'PUBLIC' ? 'active' : ''} onClick={() => setForm((previous) => ({ ...previous, visibility: 'PUBLIC' }))} type="button">
                     Publique
                   </button>
                   <button className={form.visibility === 'PRIVATE' ? 'active' : ''} onClick={() => setForm((previous) => ({ ...previous, visibility: 'PRIVATE' }))} type="button">
-                    Privee
+                    Privée
                   </button>
                 </div>
               </div>
               <button className="button" type="submit">
-                <Plus size={18} /> Creer la table
+                <Plus size={18} /> Créer la table
               </button>
             </form>
           </section>
@@ -582,13 +582,13 @@ function BlackjackContent() {
                           />
                         ))}
                       </div>
-                      <span>{player.hands && player.hands.length > 1 ? `Main ${handIndex + 1} - ` : ''}{hand.value} - {hand.bet} credits</span>
+                      <span>{player.hands && player.hands.length > 1 ? `Main ${handIndex + 1} - ` : ''}{hand.value} - {hand.bet} crédits</span>
                     </div>
                   ))}
                 </div>
                 <div className="blackjack-seat-meta">
                   <span>{player.status}</span>
-                  <span>{player.bet} credits</span>
+                  <span>{player.bet} crédits</span>
                 </div>
               </article>
             ))}

@@ -26,10 +26,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ email, username, password });
-      setMessage('Code envoye par email.');
+      setMessage('Code envoyé par email.');
       setStep('verify');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Inscription impossible');
+      setError(err instanceof Error ? err.message : 'Inscription impossible. Vérifie les champs puis réessaie.');
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function RegisterPage() {
       await login(username, password);
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification impossible');
+      setError(err instanceof Error ? err.message : 'Vérification impossible. Le code est peut-être invalide ou expiré.');
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function RegisterPage() {
         <form className="auth-panel" onSubmit={onRegister}>
           <div>
             <h1>Inscription</h1>
-            <p>Demarre avec 1000 crédits et debloque les quetes.</p>
+            <p>Démarre avec 1000 crédits et débloque les quêtes.</p>
           </div>
           {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
           <label className="field">
@@ -80,7 +80,7 @@ export default function RegisterPage() {
           </label>
           <button className="button" disabled={loading} type="submit">
             <UserPlus size={18} />
-            {loading ? 'Creation...' : 'Creer le compte'}
+            {loading ? 'Création...' : 'Créer le compte'}
           </button>
           <p>
             Deja inscrit ? <Link href="/login">Connexion</Link>

@@ -35,7 +35,7 @@ type CrashSession = {
 };
 
 function formatCredits(value?: number) {
-  return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+  return `${Number(value ?? 0).toLocaleString('fr-FR')} crédits`;
 }
 
 function formatMultiplier(value?: number) {
@@ -136,7 +136,7 @@ function CrashContent() {
     if (running) return;
     const nextBet = Math.trunc(Number(bet));
     if (!Number.isFinite(nextBet) || nextBet <= 0) {
-      setError('Mise invalide.');
+      setError('Mise invalide. Entre un montant positif et disponible sur ton solde.');
       return;
     }
 
@@ -157,7 +157,7 @@ function CrashContent() {
       emitBalanceDelta(nextBet, 'crash-refund');
       setRunning(false);
       wasRunningRef.current = false;
-      setError(err instanceof Error ? err.message : 'Crash indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de lancer Crash. Vérifie ta mise et ton solde.');
     }
   }
 
@@ -178,7 +178,7 @@ function CrashContent() {
         emitBalanceDelta(Number(out.payout), 'crash-payout');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Cashout impossible');
+      setError(err instanceof Error ? err.message : 'Cashout impossible. La manche est peut-être déjà terminée.');
       void pollSession();
     }
   }
@@ -209,7 +209,7 @@ function CrashContent() {
               <Play size={18} /> Lancer
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -287,7 +287,7 @@ function CrashContent() {
       <aside className={rulesOpen ? 'crash-rules-drawer open' : 'crash-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du Crash</h2>
+            <h2>Règles du Crash</h2>
             <p>Un jeu de cashout en temps reel.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">
@@ -306,7 +306,7 @@ function CrashContent() {
             <BadgeDollarSign size={18} />
             <div>
               <h3>Cashout</h3>
-              <p>Si tu cashout avant le crash, tu recuperes mise x multiplicateur actuel.</p>
+              <p>Si tu cashout avant le crash, tu récupères mise x multiplicateur actuel.</p>
             </div>
           </article>
           <article>

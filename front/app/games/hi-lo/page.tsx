@@ -103,10 +103,10 @@ function HiLoContent() {
   const multiplier = Number(session?.multiplier ?? 1);
 
   const statusText = useMemo(() => {
-    if (!session) return 'Demarre une manche et lis la carte.';
+    if (!session) return 'Démarre une manche et lis la carte.';
     if (lastOutcome === 'LOSE') return 'Mauvaise lecture. La mise est perdue.';
-    if (lastOutcome === 'CASHOUT') return `Cashout reussi pour ${Number(session.payout ?? 0).toLocaleString('fr-FR')} credits.`;
-    if (lastOutcome === 'PUSH') return 'Egalite: la carte change, la serie reste intacte.';
+    if (lastOutcome === 'CASHOUT') return `Cashout réussi pour ${Number(session.payout ?? 0).toLocaleString('fr-FR')} crédits.`;
+    if (lastOutcome === 'PUSH') return 'Égalité: la carte change, la série reste intacte.';
     if (lastOutcome === 'WIN') return 'Bien vu. Le multiplicateur monte.';
     return 'Choisis si la prochaine carte sera plus haute ou plus basse.';
   }, [lastOutcome, session]);
@@ -116,7 +116,7 @@ function HiLoContent() {
       const out = await apiGet<HiLoSession>('/hilo/session');
       if (out.active) setSession(out);
     } catch {
-      // Le jeu reste jouable meme si aucune session n'est chargee.
+      // Le jeu reste jouable même si aucune session n'est chargée.
     }
   }
 
@@ -140,7 +140,7 @@ function HiLoContent() {
       setSession(out);
     } catch (err) {
       emitBalanceDelta(Number(bet), 'hilo-refund');
-      setError(err instanceof Error ? err.message : 'Impossible de demarrer Hi-Lo');
+      setError(err instanceof Error ? err.message : 'Impossible de démarrer Hi-Lo. Vérifie ta mise et ton solde.');
     } finally {
       setLoading(false);
     }
@@ -159,7 +159,7 @@ function HiLoContent() {
       setSession(out);
       setLastOutcome(out.outcome);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action impossible');
+      setError(err instanceof Error ? err.message : 'Action impossible. Démarre une manche puis choisis plus haut ou plus bas.');
     } finally {
       setLoading(false);
     }
@@ -178,7 +178,7 @@ function HiLoContent() {
       setLastOutcome('CASHOUT');
       setPreviousCard(undefined);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Cashout impossible');
+      setError(err instanceof Error ? err.message : 'Cashout impossible. Il faut au moins une bonne réponse avant d’encaisser.');
     } finally {
       setLoading(false);
     }
@@ -197,13 +197,13 @@ function HiLoContent() {
         <div>
           <span className="welcome-pill"><Sparkles size={15} /> Hi-Lo</span>
           <h1>Lis la prochaine carte.</h1>
-          <p>Devine si elle sera plus haute ou plus basse. Plus ta serie dure, plus ton cashout grimpe.</p>
+          <p>Devine si elle sera plus haute ou plus basse. Plus ta série dure, plus ton cashout grimpe.</p>
           <div className="button-row">
             <button className="button" disabled={loading || isActive || bet <= 0} onClick={() => void start()} type="button">
-              <Play size={18} /> Demarrer
+              <Play size={18} /> Démarrer
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -288,7 +288,7 @@ function HiLoContent() {
       <aside className={rulesOpen ? 'hilo-rules-drawer open' : 'hilo-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du Hi-Lo</h2>
+            <h2>Règles du Hi-Lo</h2>
             <p>Un jeu rapide base sur la valeur des cartes.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">

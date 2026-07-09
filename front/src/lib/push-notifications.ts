@@ -48,13 +48,13 @@ export async function getPushStatus() {
 }
 
 export async function enablePushNotifications() {
-  if (!pushSupported()) throw new Error('Notifications non supportees sur ce navigateur.');
+  if (!pushSupported()) throw new Error('Notifications non supportées sur ce navigateur.');
 
   const config = await apiGet<PushConfig>('/notifications/config', false);
-  if (!config.enabled || !config.publicKey) throw new Error('Notifications indisponibles cote serveur.');
+  if (!config.enabled || !config.publicKey) throw new Error('Notifications indisponibles côté serveur. Vérifie la configuration Web Push.');
 
   const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Permission notifications refusee.');
+  if (permission !== 'granted') throw new Error('Permission de notifications refusée.');
 
   const registration = await getPushRegistration();
   const previous = await registration.pushManager.getSubscription();

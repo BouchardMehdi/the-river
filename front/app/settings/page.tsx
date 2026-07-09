@@ -158,7 +158,7 @@ function SettingsContent() {
         const out = await apiGet<UserSettings>('/settings');
         if (alive) setSettings(out);
       } catch (err) {
-        if (alive) setError(err instanceof Error ? err.message : 'Parametres indisponibles.');
+        if (alive) setError(err instanceof Error ? err.message : 'Impossible de charger les paramètres. Vérifie ta connexion puis réessaie.');
       } finally {
         if (alive) setLoading(false);
       }
@@ -198,9 +198,9 @@ function SettingsContent() {
     try {
       const out = await apiPatch<UserSettings>('/settings', patch);
       setSettings(out);
-      setMessage('Parametres sauvegardes.');
+      setMessage('Paramètres sauvegardés.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sauvegarde impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible de sauvegarder les paramètres. Réessaie dans quelques secondes.');
     } finally {
       setSaving(false);
     }
@@ -225,18 +225,18 @@ function SettingsContent() {
       if (pushState === 'subscribed') {
         await disablePushNotifications();
         setPushState('idle');
-        setMessage('Notifications navigateur desactivees.');
+        setMessage('Notifications navigateur désactivées.');
       } else {
         await enablePushNotifications();
         setPushState('subscribed');
-        setMessage('Notifications navigateur activees.');
+        setMessage('Notifications navigateur activées.');
         if (!settings.notifications.enabled) {
           updateSection('notifications', { enabled: true });
         }
       }
     } catch (err) {
       setPushState(pushState === 'subscribed' ? 'subscribed' : 'idle');
-      setError(err instanceof Error ? err.message : 'Action notification impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible de modifier les notifications pour le moment.');
     }
   }
 
@@ -247,10 +247,10 @@ function SettingsContent() {
     try {
       await sendPushTest();
       setPushState('subscribed');
-      setMessage('Notification test envoyee.');
+      setMessage('Notification de test envoyée.');
     } catch (err) {
       setPushState('subscribed');
-      setError(err instanceof Error ? err.message : 'Notification test impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible d’envoyer la notification de test.');
     }
   }
 
@@ -263,9 +263,9 @@ function SettingsContent() {
     try {
       await apiPostForm('/profile/avatar', form);
       await refreshUser();
-      setMessage('Photo de profil mise a jour.');
+      setMessage('Photo de profil mise à jour.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible d’envoyer la photo. Vérifie le format et la taille du fichier.');
     }
   }
 
@@ -292,12 +292,12 @@ function SettingsContent() {
       if (out.emailVerificationSent) {
         setVerificationEmail(out.user.email);
         setVerificationCode('');
-        setMessage('Compte mis a jour. Un code de verification a ete envoye au nouveau mail.');
+        setMessage('Compte mis à jour. Un code de vérification a été envoyé au nouveau mail.');
       } else {
-        setMessage('Compte mis a jour.');
+        setMessage('Compte mis à jour.');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Modification du compte impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible de modifier le compte. Vérifie le mot de passe et les champs saisis.');
     } finally {
       setAccountSaving(false);
     }
@@ -313,9 +313,9 @@ function SettingsContent() {
         setVerificationEmail(user.email);
         setVerificationCode('');
       }
-      setMessage('Code de verification envoye.');
+      setMessage('Code de vérification envoyé.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Envoi de verification impossible.');
+      setError(err instanceof Error ? err.message : 'Impossible d’envoyer le code de vérification.');
     }
   }
 
@@ -323,7 +323,7 @@ function SettingsContent() {
     event.preventDefault();
     const code = verificationCode.trim();
     if (!verificationEmail || !code) {
-      setError('Code de verification requis.');
+      setError('Code de vérification requis.');
       return;
     }
 
@@ -335,17 +335,17 @@ function SettingsContent() {
       await refreshUser();
       setVerificationEmail('');
       setVerificationCode('');
-      setMessage('Nouvelle adresse email verifiee.');
+      setMessage('Nouvelle adresse email vérifiée.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Code de verification invalide.');
+      setError(err instanceof Error ? err.message : 'Code de vérification invalide ou expiré.');
     } finally {
       setVerificationSaving(false);
     }
   }
 
   const pushLabel = useMemo(() => {
-    if (pushState === 'unsupported') return 'Non supporte';
-    if (pushState === 'denied') return 'Bloque navigateur';
+    if (pushState === 'unsupported') return 'Non supporté';
+    if (pushState === 'denied') return 'Bloqué navigateur';
     if (pushState === 'subscribed') return 'Actives';
     if (pushState === 'busy') return 'Action...';
     return 'Inactives';
@@ -357,9 +357,9 @@ function SettingsContent() {
     <section className="settings-page">
       <header className="settings-hero interactive-card">
         <div>
-          <span className="welcome-pill"><SlidersHorizontal size={15} /> Parametres</span>
-          <h1>Controle ton espace.</h1>
-          <p>Notifications, preferences de jeu, interface et confidentialite au meme endroit.</p>
+          <span className="welcome-pill"><SlidersHorizontal size={15} /> Paramètres</span>
+          <h1>Contrôle ton espace.</h1>
+          <p>Notifications, préférences de jeu, interface et confidentialité au même endroit.</p>
         </div>
         <div className="settings-hero-status">
           <span>Notifications</span>
@@ -369,7 +369,7 @@ function SettingsContent() {
 
       {message ? <StatusMessage type="success">{message}</StatusMessage> : null}
       {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
-      {saving ? <StatusMessage>Synchronisation des parametres...</StatusMessage> : null}
+      {saving ? <StatusMessage>Synchronisation des paramètres...</StatusMessage> : null}
 
       <div className="settings-grid">
         <section className="settings-panel settings-panel-wide settings-account-panel interactive-card">
@@ -387,7 +387,7 @@ function SettingsContent() {
                 </label>
               </div>
               <div className="settings-account">
-                <span>Verification <strong>{user?.emailVerified ? 'Email verifie' : 'Email non verifie'}</strong></span>
+                <span>Vérification <strong>{user?.emailVerified ? 'Email vérifié' : 'Email non vérifié'}</strong></span>
               </div>
             </div>
 
@@ -430,10 +430,10 @@ function SettingsContent() {
 
           <div className="button-row settings-account-actions">
             <button className="button secondary" onClick={() => void resendVerification()} type="button">
-              <Mail size={18} /> Renvoyer verification
+              <Mail size={18} /> Renvoyer la vérification
             </button>
             <button className="button danger" onClick={logout} type="button">
-              <LogOut size={18} /> Deconnexion
+              <LogOut size={18} /> Déconnexion
             </button>
           </div>
         </section>
@@ -446,12 +446,12 @@ function SettingsContent() {
           <div className="settings-push-card">
             <div>
               <strong>Notifications Web Push</strong>
-              <span>Autorise le navigateur puis choisis les categories utiles.</span>
+              <span>Autorise le navigateur puis choisis les catégories utiles.</span>
             </div>
             <div className="settings-push-actions">
               <button className="button" disabled={pushState === 'busy' || pushState === 'unsupported'} onClick={() => void togglePushSubscription()} type="button">
                 {pushState === 'subscribed' ? <BellOff size={18} /> : <Bell size={18} />}
-                {pushState === 'subscribed' ? 'Desactiver' : 'Activer'}
+                {pushState === 'subscribed' ? 'Désactiver' : 'Activer'}
               </button>
               <button className="button secondary" disabled={pushState !== 'subscribed'} onClick={() => void testPush()} type="button">
                 <Send size={18} /> Test
@@ -466,20 +466,20 @@ function SettingsContent() {
               label="Notifications applicatives"
               onChange={(checked) => updateSection('notifications', { enabled: checked })}
             />
-            <SettingsToggle checked={settings.notifications.questReady} description="Quand une recompense peut etre recuperee." disabled={!notificationsEnabled} label="Quetes pretes" onChange={(checked) => updateSection('notifications', { questReady: checked })} />
-            <SettingsToggle checked={settings.notifications.questRecharge} description="Quand une quete deja recuperee redevient disponible." disabled={!notificationsEnabled} label="Recharge des quetes" onChange={(checked) => updateSection('notifications', { questRecharge: checked })} />
-            <SettingsToggle checked={settings.notifications.questClaimed} description="Confirmation apres recuperation d'une recompense." disabled={!notificationsEnabled} label="Quete recuperee" onChange={(checked) => updateSection('notifications', { questClaimed: checked })} />
-            <SettingsToggle checked={settings.notifications.dailyBonus} description="Bonus quotidien et rappels legers." disabled={!notificationsEnabled} label="Bonus quotidien" onChange={(checked) => updateSection('notifications', { dailyBonus: checked })} />
+            <SettingsToggle checked={settings.notifications.questReady} description="Quand une récompense peut être récupérée." disabled={!notificationsEnabled} label="Quêtes prêtes" onChange={(checked) => updateSection('notifications', { questReady: checked })} />
+            <SettingsToggle checked={settings.notifications.questRecharge} description="Quand une quête déjà récupérée redevient disponible." disabled={!notificationsEnabled} label="Recharge des quêtes" onChange={(checked) => updateSection('notifications', { questRecharge: checked })} />
+            <SettingsToggle checked={settings.notifications.questClaimed} description="Confirmation après récupération d'une récompense." disabled={!notificationsEnabled} label="Quête récupérée" onChange={(checked) => updateSection('notifications', { questClaimed: checked })} />
+            <SettingsToggle checked={settings.notifications.dailyBonus} description="Bonus quotidien et rappels légers." disabled={!notificationsEnabled} label="Bonus quotidien" onChange={(checked) => updateSection('notifications', { dailyBonus: checked })} />
             <SettingsToggle checked={settings.notifications.turnReminder} description="Poker et blackjack quand une action t'attend." disabled={!notificationsEnabled} label="Tour de jeu" onChange={(checked) => updateSection('notifications', { turnReminder: checked })} />
-            <SettingsToggle checked={settings.notifications.weeklySummary} description="Resume des performances de la semaine." disabled={!notificationsEnabled} label="Resume hebdo" onChange={(checked) => updateSection('notifications', { weeklySummary: checked })} />
+            <SettingsToggle checked={settings.notifications.weeklySummary} description="Résumé des performances de la semaine." disabled={!notificationsEnabled} label="Résumé hebdo" onChange={(checked) => updateSection('notifications', { weeklySummary: checked })} />
             <SettingsToggle checked={settings.notifications.leaderboard} description="Mouvements importants au classement." disabled={!notificationsEnabled} label="Leaderboard" onChange={(checked) => updateSection('notifications', { leaderboard: checked })} />
-            <SettingsToggle checked={settings.notifications.easterEgg} description="Indices secrets et evenements rares." disabled={!notificationsEnabled} label="Easter egg" onChange={(checked) => updateSection('notifications', { easterEgg: checked })} />
+            <SettingsToggle checked={settings.notifications.easterEgg} description="Indices secrets et événements rares." disabled={!notificationsEnabled} label="Easter egg" onChange={(checked) => updateSection('notifications', { easterEgg: checked })} />
           </div>
 
           <div className="settings-inline-controls">
             <SettingsToggle checked={settings.notifications.quietHoursEnabled} description="Suspend les notifications pendant une plage horaire." disabled={!notificationsEnabled} label="Mode silencieux" onChange={(checked) => updateSection('notifications', { quietHoursEnabled: checked })} />
             <label>
-              <span>Debut</span>
+              <span>Début</span>
               <input disabled={!settings.notifications.quietHoursEnabled || !notificationsEnabled} type="time" value={settings.notifications.quietHoursStart} onChange={(event) => updateSection('notifications', { quietHoursStart: event.target.value })} />
             </label>
             <label>
@@ -487,10 +487,10 @@ function SettingsContent() {
               <input disabled={!settings.notifications.quietHoursEnabled || !notificationsEnabled} type="time" value={settings.notifications.quietHoursEnd} onChange={(event) => updateSection('notifications', { quietHoursEnd: event.target.value })} />
             </label>
             <label>
-              <span>Frequence</span>
+              <span>Fréquence</span>
               <select disabled={!notificationsEnabled} value={settings.notifications.frequency} onChange={(event) => updateSection('notifications', { frequency: event.target.value as UserSettings['notifications']['frequency'] })}>
-                <option value="instant">Immediat</option>
-                <option value="digest">Resume groupe</option>
+                <option value="instant">Immédiat</option>
+                <option value="digest">Résumé groupé</option>
                 <option value="minimal">Minimal</option>
               </select>
             </label>
@@ -504,7 +504,7 @@ function SettingsContent() {
           </div>
           <div className="settings-form-grid">
             <label>
-              <span>Mise par defaut</span>
+              <span>Mise par défaut</span>
               <input min={1} type="number" value={settings.gameplay.defaultBet} onChange={(event) => updateSection('gameplay', { defaultBet: Number(event.target.value) })} />
             </label>
             <label>
@@ -514,8 +514,8 @@ function SettingsContent() {
           </div>
           <div className="settings-list compact">
             <SettingsToggle checked={settings.gameplay.confirmLargeBet} description="Demande confirmation au-dessus du seuil choisi." label="Confirmer les grosses mises" onChange={(checked) => updateSection('gameplay', { confirmLargeBet: checked })} />
-            <SettingsToggle checked={settings.gameplay.reducedAnimations} description="Reduit les animations longues et les effets visuels." label="Animations reduites" onChange={(checked) => updateSection('gameplay', { reducedAnimations: checked })} />
-            <SettingsToggle checked={settings.gameplay.autoOpenRules} description="Ouvre les regles au premier lancement d'un jeu." label="Regles au demarrage" onChange={(checked) => updateSection('gameplay', { autoOpenRules: checked })} />
+            <SettingsToggle checked={settings.gameplay.reducedAnimations} description="Réduit les animations longues et les effets visuels." label="Animations réduites" onChange={(checked) => updateSection('gameplay', { reducedAnimations: checked })} />
+            <SettingsToggle checked={settings.gameplay.autoOpenRules} description="Ouvre les règles au premier lancement d'un jeu." label="Règles au démarrage" onChange={(checked) => updateSection('gameplay', { autoOpenRules: checked })} />
           </div>
         </section>
 
@@ -524,9 +524,9 @@ function SettingsContent() {
             <h2>Interface</h2>
             <MonitorCog size={19} />
           </div>
-          <div className="settings-theme-picker" aria-label="Theme de l'interface">
+          <div className="settings-theme-picker" aria-label="Thème de l'interface">
             {[
-              { key: 'system', label: 'Systeme', icon: Laptop },
+              { key: 'system', label: 'Système', icon: Laptop },
               { key: 'light', label: 'Light', icon: Sun },
               { key: 'dark', label: 'Dark', icon: Moon },
             ].map((theme) => {
@@ -550,9 +550,9 @@ function SettingsContent() {
             })}
           </div>
           <div className="settings-list compact">
-            <SettingsToggle checked={settings.interface.showLeaderboardByDefault} description="Affiche le classement directement sur le dashboard." label="Leaderboard par defaut" onChange={(checked) => updateSection('interface', { showLeaderboardByDefault: checked })} />
+            <SettingsToggle checked={settings.interface.showLeaderboardByDefault} description="Affiche le classement directement sur le dashboard." label="Leaderboard par défaut" onChange={(checked) => updateSection('interface', { showLeaderboardByDefault: checked })} />
             <SettingsToggle checked={settings.interface.compactStats} description="Garde les blocs stats dans un format plus dense." label="Stats compactes" onChange={(checked) => updateSection('interface', { compactStats: checked })} />
-            <SettingsToggle checked={settings.interface.highContrast} description="Renforce les contrastes pour la lisibilite." label="Contraste eleve" onChange={(checked) => updateSection('interface', { highContrast: checked })} />
+            <SettingsToggle checked={settings.interface.highContrast} description="Renforce les contrastes pour la lisibilité." label="Contraste élevé" onChange={(checked) => updateSection('interface', { highContrast: checked })} />
           </div>
           <h3 className="settings-subtitle">Jeux favoris</h3>
           <div className="settings-game-picker">
@@ -607,14 +607,14 @@ function SettingsContent() {
             <div className="card-heading">
               <div>
                 <h2>Verifier le nouveau mail</h2>
-                <p>Entre le code envoye a {verificationEmail}.</p>
+                <p>Entre le code envoyé à {verificationEmail}.</p>
               </div>
               <button className="icon-button" onClick={() => setVerificationEmail('')} type="button" aria-label="Fermer">
                 <X size={18} />
               </button>
             </div>
             <label>
-              <span>Code de verification</span>
+              <span>Code de vérification</span>
               <input
                 autoComplete="one-time-code"
                 inputMode="numeric"
@@ -626,7 +626,7 @@ function SettingsContent() {
             </label>
             <div className="button-row">
               <button className="button" disabled={verificationSaving || verificationCode.trim().length < 6} type="submit">
-                <Check size={18} /> {verificationSaving ? 'Verification...' : 'Valider'}
+                <Check size={18} /> {verificationSaving ? 'Vérification...' : 'Valider'}
               </button>
               <button className="button secondary" onClick={() => void resendVerification()} type="button">
                 <Mail size={18} /> Renvoyer

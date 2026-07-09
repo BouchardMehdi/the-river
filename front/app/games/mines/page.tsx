@@ -58,7 +58,7 @@ function MinesContent() {
   const statusText = useMemo(() => {
     if (!session) return 'Choisis ta mise, le nombre de mines, puis ouvre une case.';
     if (session.outcome === 'MINE') return 'Bombe trouvee. La mise est perdue.';
-    if (session.outcome === 'CASHOUT') return `Cashout pour ${Number(session.payout ?? 0).toLocaleString('fr-FR')} credits.`;
+    if (session.outcome === 'CASHOUT') return `Cashout pour ${Number(session.payout ?? 0).toLocaleString('fr-FR')} crédits.`;
     if (session.outcome === 'SAFE') return 'Case sure. Le multiplicateur monte.';
     return 'Ouvre une case ou cashout avant de tomber sur une mine.';
   }, [session]);
@@ -91,7 +91,7 @@ function MinesContent() {
       setSession(out);
     } catch (err) {
       emitBalanceDelta(Number(bet), 'mines-refund');
-      setError(err instanceof Error ? err.message : 'Impossible de demarrer Mines');
+      setError(err instanceof Error ? err.message : 'Impossible de démarrer Mines. Vérifie ta mise, le nombre de mines et ton solde.');
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ function MinesContent() {
         emitBalanceDelta(Number(out.payout), 'mines-complete-payout');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Case impossible');
+      setError(err instanceof Error ? err.message : 'Case impossible à ouvrir. Elle est peut-être déjà révélée ou la manche est terminée.');
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ function MinesContent() {
       setSession(out);
       setLastCell(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Cashout impossible');
+      setError(err instanceof Error ? err.message : 'Cashout impossible. Ouvre au moins une case gagnante avant d’encaisser.');
     } finally {
       setLoading(false);
     }
@@ -150,10 +150,10 @@ function MinesContent() {
           <p>Chaque gemme augmente ton multiplicateur. Cashout avant qu'une bombe coupe la serie.</p>
           <div className="button-row">
             <button className="button" disabled={loading || isActive || bet <= 0} onClick={() => void start()} type="button">
-              <Play size={18} /> Demarrer
+              <Play size={18} /> Démarrer
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -203,7 +203,7 @@ function MinesContent() {
         <aside className="mines-side">
           <section className="mines-panel interactive-card">
             <div className="card-heading">
-              <h2>Parametres</h2>
+              <h2>Paramètres</h2>
               <ShieldCheck size={19} />
             </div>
             <label>
@@ -236,7 +236,7 @@ function MinesContent() {
       <aside className={rulesOpen ? 'mines-rules-drawer open' : 'mines-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles de Mines</h2>
+            <h2>Règles de Mines</h2>
             <p>Un jeu de cashout rapide sur une grille 5x5.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">
@@ -255,7 +255,7 @@ function MinesContent() {
             <Bomb size={18} />
             <div>
               <h3>Mines</h3>
-              <p>Si tu ouvres une bombe, la manche se termine immediatement et la mise est perdue.</p>
+              <p>Si tu ouvres une bombe, la manche se termine immédiatement et la mise est perdue.</p>
             </div>
           </article>
           <article>

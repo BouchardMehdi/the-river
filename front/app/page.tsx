@@ -18,7 +18,7 @@ const benefits = [
   {
     icon: ShieldCheck,
     title: 'Securise et prive',
-    text: 'Ton compte, tes credits et ta progression restent proteges.',
+    text: 'Ton compte, tes crédits et ta progression restent protégés.',
   },
   {
     icon: Zap,
@@ -116,12 +116,12 @@ export default function HomePage() {
             Vos victoires.
           </h1>
           <p>
-            Analyse tes statistiques, suis tes credits, progresse dans les quetes et
+            Analyse tes statistiques, suis tes crédits, progresse dans les quêtes et
             prends le controle de tes sessions casino.
           </p>
           <div className="button-row">
             <Link className="button" href="/register">
-              Creer un compte
+              Créer un compte
             </Link>
             <Link className="button secondary" href="/login">
               Se connecter
@@ -177,10 +177,10 @@ export default function HomePage() {
         <div className="gift-box" aria-hidden="true" />
         <div>
           <h2>Pret a ameliorer votre experience ?</h2>
-          <p>Rejoins les joueurs de THE RIVER et pilote tes performances en credits.</p>
+          <p>Rejoins les joueurs de THE RIVER et pilote tes performances en crédits.</p>
         </div>
         <Link className="button" href="/register">
-          Creer un compte maintenant
+          Créer un compte maintenant
         </Link>
       </section>
 
@@ -202,7 +202,7 @@ export default function HomePage() {
         </div>
         <div>
           <strong>Casino</strong>
-          <span>Credits</span>
+          <span>Crédits</span>
           <span>Quetes</span>
           <span>Classements</span>
         </div>

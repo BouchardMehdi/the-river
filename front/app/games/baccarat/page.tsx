@@ -60,7 +60,7 @@ function cardAsset(card: BaccaratCard) {
 }
 
 function formatCredits(value?: number) {
-  return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+  return `${Number(value ?? 0).toLocaleString('fr-FR')} crédits`;
 }
 
 function BaccaratCardView({ card, index }: { card: BaccaratCard; index: number }) {
@@ -109,7 +109,7 @@ function BaccaratContent() {
     if (dealing) return;
     const nextBet = Math.trunc(Number(bet));
     if (!Number.isFinite(nextBet) || nextBet <= 0) {
-      setError('Mise invalide.');
+      setError('Mise invalide. Entre un montant positif et disponible sur ton solde.');
       return;
     }
 
@@ -147,7 +147,7 @@ function BaccaratContent() {
     } catch (err) {
       emitBalanceDelta(nextBet, 'baccarat-refund');
       setDealing(false);
-      setError(err instanceof Error ? err.message : 'Baccarat indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de distribuer au Baccarat. Vérifie ta mise et ton solde.');
     }
   }
 
@@ -170,7 +170,7 @@ function BaccaratContent() {
               <Play size={18} /> Distribuer
             </button>
             <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-              <BookOpen size={18} /> Regles
+              <BookOpen size={18} /> Règles
             </button>
           </div>
         </div>
@@ -241,7 +241,7 @@ function BaccaratContent() {
 
           <section className="baccarat-panel interactive-card">
             <div className="card-heading">
-              <h2>Resultat</h2>
+              <h2>Résultat</h2>
               <Trophy size={19} />
             </div>
             <div className="baccarat-kpis">
@@ -260,7 +260,7 @@ function BaccaratContent() {
       <aside className={rulesOpen ? 'baccarat-rules-drawer open' : 'baccarat-rules-drawer'} aria-hidden={!rulesOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Regles du Baccarat</h2>
+            <h2>Règles du Baccarat</h2>
             <p>Le total est toujours calcule modulo 10.</p>
           </div>
           <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" title="Fermer">

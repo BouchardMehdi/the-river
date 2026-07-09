@@ -373,7 +373,7 @@ function PokerContent() {
       setMyTables(nextMyTables);
       if (activeId) await loadTable(activeId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Tables poker indisponibles');
+      setError(err instanceof Error ? err.message : 'Impossible de charger les tables de poker. Vérifie ta connexion puis réessaie.');
     }
   }
 
@@ -482,11 +482,11 @@ function PokerContent() {
     const finishedTableId = tableIdOf(active);
     if (gameOver?.tableId === finishedTableId) return;
 
-    setGameOver({
-      tableId: finishedTableId,
-      winnerId: active.lastWinnerId,
-      detail: active.lastWinnerHandDescription ?? 'Partie terminee',
-    });
+      setGameOver({
+        tableId: finishedTableId,
+        winnerId: active.lastWinnerId,
+        detail: active.lastWinnerHandDescription ?? 'Partie terminée',
+      });
 
     if (gameOverTimer.current) clearTimeout(gameOverTimer.current);
     gameOverTimer.current = setTimeout(async () => {
@@ -526,7 +526,7 @@ function PokerContent() {
       await loadTable(out.tableId || tableIdOf(out.table));
       await loadTables();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Creation impossible');
+      setError(err instanceof Error ? err.message : 'Impossible de créer la table. Vérifie tes crédits et les paramètres de départ.');
     }
   }
 
@@ -538,7 +538,7 @@ function PokerContent() {
       setActive(table);
       await loadTable(id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de rejoindre');
+      setError(err instanceof Error ? err.message : 'Impossible de rejoindre cette table. Elle est peut-être pleine, privée ou déjà en cours.');
     }
   }
 
@@ -548,7 +548,7 @@ function PokerContent() {
       await loadTable(id);
       pushSystemMessage(`Retour sur la table ${id}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de reprendre la table');
+      setError(err instanceof Error ? err.message : 'Impossible de reprendre cette table. Elle a peut-être été terminée ou supprimée.');
     }
   }
 
@@ -561,7 +561,7 @@ function PokerContent() {
       setActive(table);
       await loadTable(id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Code invalide');
+      setError(err instanceof Error ? err.message : 'Code invalide. Vérifie les 6 lettres du code de table.');
     }
   }
 
@@ -574,9 +574,9 @@ function PokerContent() {
       setActive(out.table);
       await loadTable(id);
       await loadTables();
-      pushSystemMessage(`File competition ${id}. Lancement auto a 4 joueurs minimum.`);
+      pushSystemMessage(`File compétition ${id}. Lancement automatique à 4 joueurs minimum.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'File competition indisponible');
+      setError(err instanceof Error ? err.message : 'File de compétition indisponible. Réessaie dans quelques secondes.');
     } finally {
       setCompetitionLoading(false);
     }
@@ -591,7 +591,7 @@ function PokerContent() {
       setActive(table);
       await loadTable(activeId);
       await refreshUser();
-      pushSystemMessage(`${user?.username ?? 'Joueur'} ${actionName.toLowerCase()}${amount != null ? ` ${amount} credits` : ''}`);
+      pushSystemMessage(`${user?.username ?? 'Joueur'} ${actionName.toLowerCase()}${amount != null ? ` ${amount} crédits` : ''}`);
       emitGameSound(actionName === 'FOLD' ? 'loss' : actionName === 'CHECK' ? 'toggle' : 'chip');
       triggerChipBurst(visualAmount);
       if (table.lastWinnerId) {
@@ -599,7 +599,7 @@ function PokerContent() {
         pushSystemMessage(`${table.lastWinnerId} remporte la main avec ${table.lastWinnerHandDescription ?? 'la meilleure main'}.`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Action impossible');
+      setError(err instanceof Error ? err.message : 'Action impossible. Ce n’est peut-être pas ton tour ou la mise est invalide.');
     }
   }
 
@@ -618,7 +618,7 @@ function PokerContent() {
       emitGameSound('deal');
       pushSystemMessage(`Nouvelle main sur ${activeId}. Blinds ${table.smallBlindAmount}/${table.bigBlindAmount}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Demarrage impossible');
+      setError(err instanceof Error ? err.message : 'Impossible de démarrer la partie. Vérifie qu’il y a assez de joueurs.');
     }
   }
 
@@ -640,7 +640,7 @@ function PokerContent() {
       setTables(await apiGet<PokerTable[]>('/tables/public', false));
       setMyTables(await apiGet<PokerTable[]>('/tables/mine'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de quitter la table');
+      setError(err instanceof Error ? err.message : 'Impossible de quitter la table pour le moment. Réessaie dans quelques secondes.');
     }
   }
 
@@ -649,7 +649,7 @@ function PokerContent() {
       ...previous,
       {
         id: Date.now() + previous.length,
-        author: 'Systeme',
+        author: 'Système',
         text,
         time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
       },
@@ -693,7 +693,7 @@ function PokerContent() {
     try {
       await navigator.clipboard?.writeText(activeId);
       emitGameSound('notification');
-      pushSystemMessage(`Code ${activeId} copie.`);
+      pushSystemMessage(`Code ${activeId} copié.`);
       return;
     } catch {
       if (typeof document === 'undefined') return;
@@ -734,7 +734,7 @@ function PokerContent() {
               <Sparkles size={15} /> Poker room
             </span>
             <h1>Choisis ta table.</h1>
-            <p>Creer une partie, rejoindre une table ou entrer dans une file competitive par points.</p>
+            <p>Créer une partie, rejoindre une table ou entrer dans une file compétitive par points.</p>
             <div className="poker-lobby-stats">
               <span><Users size={17} /> {tables.length} tables</span>
               <span><CircleDollarSign size={17} /> <CurrencyAmount value={user?.credits ?? 0} /></span>
@@ -761,8 +761,8 @@ function PokerContent() {
           <section className="poker-lobby-panel poker-competition-panel">
             <div className="poker-panel-heading">
               <div>
-                <h2>Competition</h2>
-                <p>Matchmaking par points, 4 a 6 joueurs, aucun bot.</p>
+                <h2>Compétition</h2>
+                <p>Matchmaking par points, 4 à 6 joueurs, aucun bot.</p>
               </div>
               <Trophy size={22} />
             </div>
@@ -772,7 +772,7 @@ function PokerContent() {
               <span><Trophy size={17} /> Points proches</span>
             </div>
             <button className="button" disabled={competitionLoading} onClick={() => void queueCompetition()} type="button">
-              <Trophy size={18} /> {competitionLoading ? 'Recherche...' : 'Lancer en competition'}
+              <Trophy size={18} /> {competitionLoading ? 'Recherche...' : 'Lancer en compétition'}
             </button>
           </section>
 
@@ -780,7 +780,7 @@ function PokerContent() {
             <div className="poker-panel-heading">
               <div>
                 <h2>Nouvelle table</h2>
-                <p>Parametres de depart</p>
+                <p>Paramètres de départ</p>
               </div>
             </div>
             <form className="poker-create-form" onSubmit={create}>
@@ -807,10 +807,10 @@ function PokerContent() {
                   checked={form.fillWithBots}
                   onChange={(event) => setForm((previous) => ({ ...previous, fillWithBots: event.target.checked }))}
                 />
-                <span><Bot size={18} /> Completer avec des bots</span>
+                <span><Bot size={18} /> Compléter avec des bots</span>
               </label>
               <div className="poker-visibility-control">
-                <span>Visibilite</span>
+                <span>Visibilité</span>
                 <div className="segmented-control full">
                   <button
                     className={form.visibility === 'PUBLIC' ? 'active' : ''}
@@ -824,12 +824,12 @@ function PokerContent() {
                     onClick={() => setForm((previous) => ({ ...previous, visibility: 'PRIVATE' }))}
                     type="button"
                   >
-                    Privee
+                    Privée
                   </button>
                 </div>
               </div>
               <button className="button" type="submit">
-                <Plus size={18} /> Creer la table
+                <Plus size={18} /> Créer la table
               </button>
             </form>
           </section>
@@ -837,7 +837,7 @@ function PokerContent() {
           <section className="poker-lobby-panel">
             <div className="poker-panel-heading">
               <div>
-                <h2>Code prive</h2>
+                <h2>Code privé</h2>
                 <p>Rejoins directement une table</p>
               </div>
               <ChevronRight size={20} />
@@ -858,7 +858,7 @@ function PokerContent() {
               <div className="poker-panel-heading">
                 <div>
                   <h2>Reprendre une table</h2>
-                  <p>Tu es encore assis a ces parties</p>
+                  <p>Tu es encore assis à ces parties</p>
                 </div>
                 <button className="icon-button" onClick={() => void loadTables()} type="button" aria-label="Actualiser mes tables">
                   <RefreshCcw size={18} />
@@ -872,7 +872,7 @@ function PokerContent() {
                       <div>
                         <strong>{id}</strong>
                         <span>
-                          {String(table.mode ?? '').toUpperCase() === 'COMPETITION' ? 'Competition' : table.status ?? 'En attente'} · {table.phase ?? 'Lobby'} ·{' '}
+                          {String(table.mode ?? '').toUpperCase() === 'COMPETITION' ? 'Compétition' : table.status ?? 'En attente'} · {table.phase ?? 'Lobby'} ·{' '}
                           {table.players?.length ?? 0} joueurs
                         </span>
                       </div>
@@ -913,7 +913,7 @@ function PokerContent() {
                   );
                 })
               ) : (
-                <EmptyState title="Aucune table publique" text="Cree la premiere table ouverte." />
+                <EmptyState title="Aucune table publique" text="Crée la première table ouverte." />
               )}
             </div>
           </section>
@@ -930,14 +930,14 @@ function PokerContent() {
             <Trophy size={15} /> Table active
           </span>
           <h1>{activeId || 'Poker table'}</h1>
-          <p>{isCompetition ? 'Competition' : active.status ?? 'En attente'} · {active.phase ?? 'Lobby'} · {seats.length} joueurs</p>
+          <p>{isCompetition ? 'Compétition' : active.status ?? 'En attente'} · {active.phase ?? 'Lobby'} · {seats.length} joueurs</p>
         </div>
         <div className="poker-game-actions">
           <button className="button secondary" onClick={() => void loadTable(activeId)} type="button">
             <RefreshCcw size={17} /> Sync
           </button>
           <button className="button secondary" onClick={() => setRulesOpen(true)} type="button">
-            <BookOpen size={17} /> Regles
+            <BookOpen size={17} /> Règles
           </button>
           <button className="button secondary" onClick={() => setChatOpen((open) => !open)} type="button">
             {chatOpen ? <X size={17} /> : <MessageCircle size={17} />} Chat
@@ -982,7 +982,7 @@ function PokerContent() {
               <span>Pot</span>
               <strong><CurrencyAmount value={active.pot ?? 0} /></strong>
               {isCompetition ? (
-                <span className="copy-table-code">Competition</span>
+                <span className="copy-table-code">Compétition</span>
               ) : (
                 <button className="copy-table-code" onClick={copyCode} type="button">
                   <Copy size={14} /> Code
@@ -1027,7 +1027,7 @@ function PokerContent() {
                 {seat.isDealer ? <span className="dealer-seat-tag">Dealer</span> : null}
               </article>
             ))}
-            {isShowdown ? <div className="showdown-shield">Nouvelle main en preparation...</div> : null}
+            {isShowdown ? <div className="showdown-shield">Nouvelle main en préparation...</div> : null}
           </section>
 
           <section className="hero-hand-panel">
@@ -1051,8 +1051,8 @@ function PokerContent() {
 
           {isCompetition && active.status !== 'IN_GAME' ? (
             <StatusMessage type="info">
-              File competition: {active.competition?.entrants ?? active.players?.length ?? 0}/{active.competition?.maxPlayers ?? 6} joueurs.
-              Lancement automatique a partir de {active.competition?.minPlayers ?? 4} joueurs.
+              File compétition: {active.competition?.entrants ?? active.players?.length ?? 0}/{active.competition?.maxPlayers ?? 6} joueurs.
+              Lancement automatique à partir de {active.competition?.minPlayers ?? 4} joueurs.
             </StatusMessage>
           ) : null}
 
@@ -1130,7 +1130,7 @@ function PokerContent() {
 
       {rulesOpen ? (
         <>
-          <button className="drawer-backdrop poker-rules-backdrop" onClick={() => setRulesOpen(false)} type="button" aria-label="Fermer les regles" />
+          <button className="drawer-backdrop poker-rules-backdrop" onClick={() => setRulesOpen(false)} type="button" aria-label="Fermer les règles" />
           <aside className="poker-rules-drawer open">
             <div className="poker-panel-heading">
               <div>
@@ -1160,7 +1160,7 @@ function PokerContent() {
         <div className="poker-game-over-layer" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
           <div className="poker-game-over-card">
             <span className="welcome-pill">
-              <Trophy size={15} /> Partie terminee
+              <Trophy size={15} /> Partie terminée
             </span>
             <h2 id="game-over-title">{gameOver.winnerId} remporte la partie</h2>
             <p>{gameOver.detail}</p>

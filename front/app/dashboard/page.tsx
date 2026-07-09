@@ -215,7 +215,7 @@ function formatLeaderValue(value: number, filter: LeaderFilter) {
 }
 
 function formatDate(value?: string) {
-  if (!value) return 'Session recente';
+  if (!value) return 'Session récente';
   return new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     month: 'short',
@@ -225,7 +225,7 @@ function formatDate(value?: string) {
 }
 
 function formatChartRange(start?: string, end?: string) {
-  if (!start || !end) return 'Periode selectionnee';
+  if (!start || !end) return 'Période sélectionnée';
   const format = new Intl.DateTimeFormat('fr-FR', {
     day: '2-digit',
     hour: '2-digit',
@@ -296,11 +296,11 @@ function questStatus(quest: Quest, nowMs: number) {
   const cooldown = questCooldownInfo(quest, nowMs);
   const readyFromCooldown = Boolean(cooldown?.ready && questProgress(quest) >= questGoal(quest));
 
-  if (quest.canClaim || readyFromCooldown) return { className: 'ready', label: 'Pret' };
+  if (quest.canClaim || readyFromCooldown) return { className: 'ready', label: 'Prêt' };
   if (cooldown && !cooldown.ready) return { className: 'cooldown', label: 'Recharge' };
-  if (quest.canClaim) return { className: 'ready', label: 'Pret' };
+  if (quest.canClaim) return { className: 'ready', label: 'Prêt' };
   if (quest.lastClaimedAt && quest.nextAvailableAt) return { className: 'cooldown', label: 'Recharge' };
-  if (quest.lastClaimedAt && !quest.nextAvailableAt) return { className: 'claimed', label: 'Recupere' };
+  if (quest.lastClaimedAt && !quest.nextAvailableAt) return { className: 'claimed', label: 'Récupéré' };
   return { className: 'progress', label: 'En cours' };
 }
 
@@ -386,7 +386,7 @@ function DashboardContent() {
       }
       await refreshUser();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Dashboard indisponible');
+      setError(err instanceof Error ? err.message : 'Impossible de charger le dashboard. Vérifie ta connexion puis réessaie.');
     }
   }
 
@@ -444,7 +444,7 @@ function DashboardContent() {
       await apiPost(`/quests/${key}/claim`, {});
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Recompense impossible');
+      setError(err instanceof Error ? err.message : 'Récompense impossible à récupérer pour le moment.');
     } finally {
       setClaimingKey(null);
     }
@@ -692,12 +692,12 @@ function DashboardContent() {
         <header className="dashboard-header">
           <div>
             <h1>Bonjour, {user?.username ?? 'joueur'} !</h1>
-            <p>Vue claire de tes credits, resultats et objectifs actifs.</p>
+            <p>Vue claire de tes crédits, résultats et objectifs actifs.</p>
           </div>
           <div className="dashboard-actions">
             <button className="button secondary small dashboard-action-button quest-open-button" onClick={() => setQuestPanelOpen(true)} type="button">
               <ListChecks size={17} />
-              <span>Quetes</span>
+              <span>Quêtes</span>
               {claimableQuests.length > 0 ? <strong>{claimableQuests.length}</strong> : null}
             </button>
             <button className="button secondary small dashboard-action-button stats-filter-button" onClick={() => setStatsPanelOpen(true)} type="button">
@@ -717,7 +717,7 @@ function DashboardContent() {
             </button>
             <Link className="button secondary small dashboard-action-button" href="/settings">
               <Settings size={17} />
-              <span>Parametres</span>
+              <span>Paramètres</span>
             </Link>
           </div>
         </header>
@@ -726,19 +726,19 @@ function DashboardContent() {
 
         <div className="dashboard-kpis">
           <article className="metric-card accent">
-            <span>Volume joue</span>
+            <span>Volume joué</span>
             <strong><CurrencyAmount value={displayTotals.volume} /></strong>
-            <em>Periode selectionnee</em>
+            <em>Période sélectionnée</em>
           </article>
           <article className="metric-card">
             <span>Gains</span>
             <strong><CurrencyAmount value={displayTotals.gains} /></strong>
-            <em className="positive">Credits positifs</em>
+            <em className="positive">Crédits positifs</em>
           </article>
           <article className="metric-card">
             <span>Pertes</span>
             <strong><CurrencyAmount value={displayTotals.losses} /></strong>
-            <em className="negative">Credits negatifs</em>
+            <em className="negative">Crédits négatifs</em>
           </article>
           <article className="metric-card">
             <span>Performance nette</span>
@@ -749,7 +749,7 @@ function DashboardContent() {
 
         <section className="analytics-card chart-card interactive-card">
           <div className="card-heading">
-            <h2>Evolution des performances</h2>
+            <h2>Évolution des performances</h2>
             <div className="chart-controls">
               <div className="segmented-control">
                 {(Object.keys(chartPeriodLabels) as ChartPeriod[]).map((period) => (
@@ -769,7 +769,7 @@ function DashboardContent() {
             </div>
           </div>
           <div className="chart-wrap">
-            <svg className="performance-chart" viewBox="0 0 760 340" role="img" aria-label="Evolution des performances">
+            <svg className="performance-chart" viewBox="0 0 760 340" role="img" aria-label="Évolution des performances">
               {[60, 120, 180, 240, 300].map((y) => (
                 <line className="chart-grid-line" x1="20" x2="740" y1={y} y2={y} key={y} />
               ))}
@@ -835,13 +835,13 @@ function DashboardContent() {
           <section className="analytics-card distribution-card interactive-card">
             <div className="card-heading">
               <div>
-                <h2>Repartition par jeu</h2>
-                <span className="card-subtitle">Basee sur les jeux selectionnes</span>
+                <h2>Répartition par jeu</h2>
+                <span className="card-subtitle">Basée sur les jeux sélectionnés</span>
               </div>
             </div>
             <div className="distribution-layout">
               <div className="donut-frame">
-                <svg className="donut-svg" viewBox="0 0 220 220" role="img" aria-label="Repartition">
+                <svg className="donut-svg" viewBox="0 0 220 220" role="img" aria-label="Répartition">
                   <filter id="sliceGlow" x="-45%" y="-45%" width="190%" height="190%">
                     <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="var(--color-gold-highlight)" floodOpacity="0.95" />
                   </filter>
@@ -886,7 +886,7 @@ function DashboardContent() {
                       </span>
                     </div>
                   );
-                }) : <div className="activity-empty">Aucune donnee sur cette selection.</div>}
+                }) : <div className="activity-empty">Aucune donnée sur cette sélection.</div>}
               </div>
             </div>
           </section>
@@ -894,8 +894,8 @@ function DashboardContent() {
           <section className="analytics-card activity-card-panel interactive-card">
             <div className="card-heading">
               <div>
-                <h2>Activite recente</h2>
-                <span className="card-subtitle">Dernieres actions des jeux selectionnes</span>
+                <h2>Activité récente</h2>
+                <span className="card-subtitle">Dernières actions des jeux sélectionnés</span>
               </div>
               <Link href="/games">Voir tous les jeux</Link>
             </div>
@@ -916,7 +916,7 @@ function DashboardContent() {
                     </em>
                   </article>
                 );
-              }) : <div className="activity-empty">Aucune activite recente pour le moment.</div>}
+              }) : <div className="activity-empty">Aucune activité récente pour le moment.</div>}
             </div>
           </section>
         </div>
@@ -936,7 +936,7 @@ function DashboardContent() {
           </div>
           <div className="segmented-control full">
             <button className={leaderFilter === 'credits' ? 'active' : ''} onClick={() => setLeaderFilter('credits')} type="button">
-              Credits
+              Crédits
             </button>
             <button className={leaderFilter === 'points' ? 'active' : ''} onClick={() => setLeaderFilter('points')} type="button">
               Points
@@ -965,13 +965,13 @@ function DashboardContent() {
             <Link href="/games">Jouer maintenant <ChevronRight size={14} /></Link>
           </div>
           <button className="button secondary small" onClick={logout} type="button">
-            Deconnexion
+            Déconnexion
           </button>
         </aside>
       ) : null}
 
       {statsPanelOpen ? <button className="drawer-backdrop" onClick={() => setStatsPanelOpen(false)} type="button" aria-label="Fermer les filtres" /> : null}
-      {questPanelOpen ? <button className="drawer-backdrop" onClick={() => setQuestPanelOpen(false)} type="button" aria-label="Fermer les quetes" /> : null}
+      {questPanelOpen ? <button className="drawer-backdrop" onClick={() => setQuestPanelOpen(false)} type="button" aria-label="Fermer les quêtes" /> : null}
       <aside className={statsPanelOpen ? 'stats-filter-card stats-filter-drawer open' : 'stats-filter-card stats-filter-drawer'} aria-hidden={!statsPanelOpen}>
         <div className="stats-filter-heading">
           <div>
@@ -1007,8 +1007,8 @@ function DashboardContent() {
       <aside className={questPanelOpen ? 'quest-drawer open' : 'quest-drawer'} aria-hidden={!questPanelOpen}>
         <div className="panel-heading">
           <div>
-            <h2>Quetes</h2>
-            <p>{claimableQuests.length} recompense(s) a recuperer.</p>
+            <h2>Quêtes</h2>
+            <p>{claimableQuests.length} récompense(s) à récupérer.</p>
           </div>
           <button className="icon-button" onClick={() => setQuestPanelOpen(false)} type="button" title="Fermer">
             <X size={18} />
@@ -1037,7 +1037,7 @@ function DashboardContent() {
                   {cooldown && !quest.canClaim ? (
                     <div className={cooldown.ready ? 'quest-cooldown ready' : 'quest-cooldown'}>
                       <div className="quest-cooldown-meta">
-                        <span>{cooldown.ready ? 'Recharge terminee' : 'Recharge dans'}</span>
+                        <span>{cooldown.ready ? 'Recharge terminée' : 'Recharge dans'}</span>
                         <strong>{cooldown.label}</strong>
                       </div>
                       <div className="quest-cooldown-bar" aria-label={`Recharge ${cooldown.percent}%`}>
@@ -1051,7 +1051,7 @@ function DashboardContent() {
                   </div>
                   {canClaimNow ? (
                     <button className="button small" disabled={claimingKey === quest.key} onClick={() => void claim(quest.key)} type="button">
-                      {claimingKey === quest.key ? 'Recuperation...' : 'Recuperer'}
+                      {claimingKey === quest.key ? 'Récupération...' : 'Récupérer'}
                     </button>
                   ) : null}
                 </article>
@@ -1060,8 +1060,8 @@ function DashboardContent() {
           ) : (
             <article className="quest-mini-card">
               <Target size={18} />
-              <h3>Aucun objectif charge</h3>
-              <p>Les quetes apparaitront ici des que le backend repondra.</p>
+              <h3>Aucun objectif chargé</h3>
+              <p>Les quêtes apparaîtront ici dès que le backend répondra.</p>
             </article>
           )}
         </div>

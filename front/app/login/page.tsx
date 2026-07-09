@@ -23,7 +23,7 @@ export default function LoginPage() {
       await login(username, password);
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Connexion impossible');
+      setError(err instanceof Error ? err.message : 'Connexion impossible. Vérifie ton email, ton pseudo ou ton mot de passe.');
     } finally {
       setLoading(false);
     }

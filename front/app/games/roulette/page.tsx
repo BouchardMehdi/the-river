@@ -285,7 +285,7 @@ function RouletteContent() {
       const nextStats = await apiGet<RouletteStats>('/roulette/stats');
       setStats(nextStats);
     } catch (err) {
-      setStatsError(err instanceof Error ? err.message : 'Stats roulette indisponibles');
+      setStatsError(err instanceof Error ? err.message : 'Impossible de charger les stats roulette pour le moment.');
     }
   }
 
@@ -414,7 +414,7 @@ function RouletteContent() {
     } catch (err) {
       emitBalanceDelta(totalStake, 'roulette-refund');
       setSpinning(false);
-      setError(err instanceof Error ? err.message : 'Spin impossible');
+      setError(err instanceof Error ? err.message : 'Spin impossible. Vérifie tes mises et ton solde.');
     }
   }
 
@@ -427,7 +427,7 @@ function RouletteContent() {
           <p>Choisis une mise, lance la bille et attends que le numero tombe pour voir le resultat.</p>
         </div>
         <div className="roulette-balance-card">
-          <span>Credits</span>
+          <span>Crédits</span>
           <strong><CurrencyAmount value={user?.credits ?? 0} /></strong>
         </div>
       </div>
@@ -468,7 +468,7 @@ function RouletteContent() {
               <>
                 <div className={`roulette-result-number ${result.result.color.toLowerCase()}`}>{result.result.number}</div>
                 <div>
-                  <span>Resultat</span>
+                  <span>Résultat</span>
                   <strong>{result.result.color === 'GREEN' ? 'Vert' : result.result.color === 'RED' ? 'Rouge' : 'Noir'}</strong>
                 </div>
                 <div>
@@ -531,7 +531,7 @@ function RouletteContent() {
                     <button onClick={() => setActiveBetId(bet.id)} type="button">
                       <span>Mise {index + 1}</span>
                       <strong>{config.label}</strong>
-                      <em>{bet.amount} credits{draftNumbers.length ? ` - ${draftNumbers.slice(0, 4).join(' / ')}${draftNumbers.length > 4 ? '...' : ''}` : ''}</em>
+                      <em>{bet.amount} crédits{draftNumbers.length ? ` - ${draftNumbers.slice(0, 4).join(' / ')}${draftNumbers.length > 4 ? '...' : ''}` : ''}</em>
                     </button>
                     <button
                       aria-label="Supprimer la mise"
@@ -579,7 +579,7 @@ function RouletteContent() {
               </div>
             ) : activeConfig.presets && activeConfig.presets.length > 1 ? (
               <label className="field">
-                <span>Selection</span>
+                <span>Sélection</span>
                 <select value={activeBet.selectionKey} onChange={(event) => changeSelectionKey(event.target.value)} disabled={spinning}>
                   {activeConfig.presets.map((preset) => (
                     <option key={preset.key} value={preset.key}>
@@ -614,7 +614,7 @@ function RouletteContent() {
             </div>
 
             <button className="button" disabled={spinning} type="submit">
-              <CircleDot size={18} /> {spinning ? 'Rotation...' : `Miser ${totalStake} credits`}
+              <CircleDot size={18} /> {spinning ? 'Rotation...' : `Miser ${totalStake} crédits`}
             </button>
             <button className="button secondary" onClick={() => setResult(null)} disabled={spinning || !result} type="button">
               <RotateCcw size={18} /> Nouveau resultat
@@ -662,10 +662,10 @@ function RouletteContent() {
       {rulesOpen ? (
         <>
           <div className="drawer-backdrop poker-rules-backdrop" onClick={() => setRulesOpen(false)} />
-          <aside className="roulette-rules-drawer poker-rules-drawer open" aria-label="Regles roulette">
+          <aside className="roulette-rules-drawer poker-rules-drawer open" aria-label="Règles roulette">
             <div className="roulette-panel-head">
               <div>
-                <span>Regles</span>
+                <span>Règles</span>
                 <h2>Roulette europeenne</h2>
               </div>
               <button className="icon-button" onClick={() => setRulesOpen(false)} type="button" aria-label="Fermer les regles">

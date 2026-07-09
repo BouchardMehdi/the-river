@@ -1280,6 +1280,28 @@ main {
   background: var(--color-gold-soft);
 }
 
+.currency-amount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: inherit;
+  gap: 6px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.currency-amount img {
+  width: 1.35em;
+  height: 1.35em;
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px var(--raw-rgba-0-0-0-0p28));
+}
+
+.currency-prefix,
+.currency-suffix {
+  font: inherit;
+}
+
 .button,
 .icon-button {
   cursor: pointer;

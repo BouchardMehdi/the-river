@@ -19,6 +19,7 @@ import {
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount, formatCreditValue } from '@/components/currency-amount';
 import { UserAvatar } from '@/components/user-avatar';
 import { StatusMessage } from '@/components/ui';
 import type { Quest, UserSettings } from '@/types/api';
@@ -204,13 +205,13 @@ const chartPeriodLabels: Record<ChartPeriod, string> = {
 const chartGameKeys: ChartGameKey[] = ['SLOTS', 'ROULETTE', 'POKER', 'BLACKJACK', 'CRAPS', 'PACHINKO', 'HILO', 'MINES', 'KENO', 'BACCARAT', 'WHEEL', 'CRASH'];
 
 function formatCredits(value: number | undefined | null) {
-  return `${Number(value ?? 0).toLocaleString('fr-FR')} credits`;
+  return formatCreditValue(value);
 }
 
 function formatLeaderValue(value: number, filter: LeaderFilter) {
   if (filter === 'points') return `${Number(value ?? 0).toLocaleString('fr-FR')} points`;
   if (filter === 'score') return `${Number(value ?? 0).toLocaleString('fr-FR')} score`;
-  return formatCredits(value);
+  return formatCreditValue(value);
 }
 
 function formatDate(value?: string) {
@@ -726,23 +727,23 @@ function DashboardContent() {
         <div className="dashboard-kpis">
           <article className="metric-card accent">
             <span>Volume joue</span>
-            <strong>{formatCredits(displayTotals.volume)}</strong>
+            <strong><CurrencyAmount value={displayTotals.volume} /></strong>
             <em>Periode selectionnee</em>
           </article>
           <article className="metric-card">
             <span>Gains</span>
-            <strong>{formatCredits(displayTotals.gains)}</strong>
+            <strong><CurrencyAmount value={displayTotals.gains} /></strong>
             <em className="positive">Credits positifs</em>
           </article>
           <article className="metric-card">
             <span>Pertes</span>
-            <strong>{formatCredits(displayTotals.losses)}</strong>
+            <strong><CurrencyAmount value={displayTotals.losses} /></strong>
             <em className="negative">Credits negatifs</em>
           </article>
           <article className="metric-card">
             <span>Performance nette</span>
             <strong>{displayTotals.performance.toFixed(1)}%</strong>
-            <em className={displayTotals.net >= 0 ? 'positive' : 'negative'}>{formatCredits(displayTotals.net)} net</em>
+            <em className={displayTotals.net >= 0 ? 'positive' : 'negative'}><CurrencyAmount value={displayTotals.net} suffix="net" /></em>
           </article>
         </div>
 
@@ -814,10 +815,10 @@ function DashboardContent() {
                 <span style={{ color: selectedPoint.color }}>{selectedPoint.label}</span>
                 <strong className={selectedPoint.value >= 0 && selectedPoint.label !== 'Pertes' ? 'positive' : 'negative'}>
                   {selectedPoint.value >= 0 && selectedPoint.label !== 'Pertes' ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-                  {formatCredits(selectedPoint.value)}
+                  <CurrencyAmount value={selectedPoint.value} />
                 </strong>
                 <em className={selectedPoint.delta >= 0 ? 'positive' : 'negative'}>
-                  Variation: {selectedPoint.delta >= 0 ? '+' : ''}{formatCredits(selectedPoint.delta)}
+                  <span>Variation:</span> <CurrencyAmount prefix={selectedPoint.delta >= 0 ? '+' : ''} value={selectedPoint.delta} />
                 </em>
                 <small>{selectedPoint.period ?? formatDate(selectedPoint.date)}</small>
               </div>
@@ -911,7 +912,7 @@ function DashboardContent() {
                     </div>
                     <em className={delta >= 0 ? 'positive' : 'negative'}>
                       {delta >= 0 ? <ArrowUpRight size={15} /> : <ArrowDownRight size={15} />}
-                      {delta >= 0 ? '+' : ''}{formatCredits(delta)}
+                      <CurrencyAmount prefix={delta >= 0 ? '+' : ''} value={delta} />
                     </em>
                   </article>
                 );
@@ -951,7 +952,7 @@ function DashboardContent() {
                   <span>#{leader.rank || index + 1}</span>
                   <UserAvatar avatarUrl={leader.avatarUrl} className="leader-avatar" label={leader.label} />
                   <strong>{leader.label}</strong>
-                  <em>{formatLeaderValue(leader.value, leaderFilter)}</em>
+                  <em>{leaderFilter === 'credits' ? <CurrencyAmount value={leader.value} /> : formatLeaderValue(leader.value, leaderFilter)}</em>
                 </div>
               ))
             ) : (
@@ -960,7 +961,7 @@ function DashboardContent() {
           </div>
           <div className="sidebar-balance">
             <span>Solde total</span>
-            <strong>{formatCredits(summary?.balance ?? user?.credits)}</strong>
+            <strong><CurrencyAmount value={summary?.balance ?? user?.credits} /></strong>
             <Link href="/games">Jouer maintenant <ChevronRight size={14} /></Link>
           </div>
           <button className="button secondary small" onClick={logout} type="button">
@@ -1046,7 +1047,7 @@ function DashboardContent() {
                   ) : null}
                   <div className="quest-footer">
                     <span>{progress}/{goal}</span>
-                    <strong>+{formatCredits(quest.rewardCredits ?? 0)}</strong>
+                    <strong><CurrencyAmount prefix="+" value={quest.rewardCredits ?? 0} /></strong>
                   </div>
                   {canClaimNow ? (
                     <button className="button small" disabled={claimingKey === quest.key} onClick={() => void claim(quest.key)} type="button">

@@ -5,6 +5,7 @@ import { BarChart3, BookOpen, CircleDot, Plus, RotateCcw, Sparkles, Trash2, X } 
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount } from '@/components/currency-amount';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
 import { emitGameSound } from '@/lib/sound-events';
@@ -427,7 +428,7 @@ function RouletteContent() {
         </div>
         <div className="roulette-balance-card">
           <span>Credits</span>
-          <strong>{user?.credits ?? 0}</strong>
+          <strong><CurrencyAmount value={user?.credits ?? 0} /></strong>
         </div>
       </div>
 
@@ -472,24 +473,24 @@ function RouletteContent() {
                 </div>
                 <div>
                   <span>Gain total</span>
-                  <strong>{result.settlement.totalReturn} credits</strong>
+                  <strong><CurrencyAmount value={result.settlement.totalReturn} /></strong>
                 </div>
                 <div>
                   <span>Net</span>
-                  <strong className={net >= 0 ? 'positive' : 'negative'}>{net >= 0 ? '+' : ''}{net} credits</strong>
+                  <strong className={net >= 0 ? 'positive' : 'negative'}><CurrencyAmount prefix={net >= 0 ? '+' : ''} value={net} /></strong>
                 </div>
                 <div className="roulette-payout-lines">
                   {result.settlement.winningBets.length > 0 ? (
                     result.settlement.winningBets.map((line, index) => (
                       <span key={`${line.profit}-${index}`}>
                         <em>{describeBet(line.bet)}</em>
-                        <strong>+{line.profit} credits</strong>
+                        <strong><CurrencyAmount prefix="+" value={line.profit} /></strong>
                       </span>
                     ))
                   ) : (
                     <span>
                       <em>Aucune mise gagnante</em>
-                      <strong>0 credit</strong>
+                      <strong><CurrencyAmount value={0} /></strong>
                     </span>
                   )}
                 </div>

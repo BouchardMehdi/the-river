@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Coins, Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
+import { Gamepad2, Home, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { apiGet, getToken } from '@/api/client';
 import { useAuth } from '@/auth/auth-context';
 import { BALANCE_FEEDBACK_EVENT, type BalanceDeltaDetail } from '@/lib/balance-events';
@@ -12,6 +12,7 @@ import { playGameSound, unlockAudio } from '@/lib/sound-engine';
 import { GAME_SOUND_EVENT, type GameSound } from '@/lib/sound-events';
 import { applyThemePreference, isThemePreference, readCachedTheme, THEME_EVENT, type ThemePreference } from '@/lib/theme';
 import type { UserSettings } from '@/types/api';
+import { CurrencyAmount } from './currency-amount';
 import { UserAvatar } from './user-avatar';
 
 const nav = [
@@ -137,8 +138,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <>
               <UserAvatar avatarUrl={user.avatarUrl} className="topbar-avatar" label={user.username} />
               <Link className={balancePulse ? `balance-pill ${balancePulse}` : 'balance-pill'} href="/dashboard">
-                <Coins size={17} />
-                <span>{user.credits} credits</span>
+                <CurrencyAmount value={user.credits} />
                 <span className="balance-flash-stack" aria-hidden="true">
                   {balanceFlashes.map((item) => (
                     <span className={item.delta > 0 ? 'balance-flash gain' : 'balance-flash loss'} key={item.id}>

@@ -15,6 +15,7 @@ import {
 import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount } from '@/components/currency-amount';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
 import { emitGameSound } from '@/lib/sound-events';
@@ -350,7 +351,7 @@ function SlotsContent() {
         </div>
         <div className="slots-balance-card">
           <span>Solde</span>
-          <strong>{user?.credits ?? 0} credits</strong>
+          <strong><CurrencyAmount value={user?.credits ?? 0} /></strong>
         </div>
       </header>
 
@@ -401,7 +402,7 @@ function SlotsContent() {
               <Coins size={19} />
               <div>
                 <span>1 lancer</span>
-                <strong>{cfg.prices[1]} credits</strong>
+                <strong><CurrencyAmount value={cfg.prices[1]} /></strong>
               </div>
             </div>
             <button className="button" disabled={spinning} onClick={() => void spin(1)} type="button">
@@ -411,7 +412,7 @@ function SlotsContent() {
               <Gauge size={19} />
               <div>
                 <span>10 lancers</span>
-                <strong>{cfg.prices[10]} credits</strong>
+                <strong><CurrencyAmount value={cfg.prices[10]} /></strong>
               </div>
             </div>
             <button className="button secondary" disabled={spinning} onClick={() => void spin(10)} type="button">
@@ -442,16 +443,16 @@ function SlotsContent() {
               <Trophy size={22} />
             </div>
             <div className="slots-kpis">
-              <span>Gain spin <strong>{latest?.payout ?? 0}</strong></span>
-              <span>Total <strong>{visibleTotalPayout}</strong></span>
-              <span>Net <strong className={visibleNet >= 0 ? 'positive' : 'negative'}>{visibleNet}</strong></span>
+              <span>Gain spin <strong><CurrencyAmount value={latest?.payout ?? 0} /></strong></span>
+              <span>Total <strong><CurrencyAmount value={visibleTotalPayout} /></strong></span>
+              <span>Net <strong className={visibleNet >= 0 ? 'positive' : 'negative'}><CurrencyAmount value={visibleNet} /></strong></span>
             </div>
             {visibleResults.length ? (
               <div className="slots-spin-history">
                 {visibleResults.map((spinResult, index) => (
                   <button className={activeSpinIndex === index ? 'active' : ''} disabled={spinning} onClick={() => { setActiveSpinIndex(index); setDisplayGrid(spinResult.grid); }} type="button" key={index}>
                     <span>Spin {index + 1}</span>
-                    <strong>{spinResult.payout} credits</strong>
+                    <strong><CurrencyAmount value={spinResult.payout} /></strong>
                   </button>
                 ))}
               </div>

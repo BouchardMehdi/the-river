@@ -15,6 +15,7 @@ import {
 import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount } from '@/components/currency-amount';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
 import { emitGameSound } from '@/lib/sound-events';
@@ -460,20 +461,20 @@ function PachinkoContent() {
               </select>
             </label>
             <button className="button" disabled={dropping || bet <= 0} type="submit">
-              <CircleDollarSign size={18} /> Lancer pour {Number(bet || 0).toLocaleString('fr-FR')} credits
+              <CircleDollarSign size={18} /> Lancer pour <CurrencyAmount value={bet || 0} />
             </button>
           </form>
 
           <section className="pachinko-result interactive-card">
             <div className="card-heading">
               <h2>Resultat</h2>
-              {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}>{result.net >= 0 ? '+' : ''}{result.net} credits</strong> : null}
+              {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}><CurrencyAmount prefix={result.net >= 0 ? '+' : ''} value={result.net} /></strong> : null}
             </div>
             {result ? (
               <div className="pachinko-result-main">
                 <span>Slot #{result.finalSlot + 1}</span>
                 <strong>{formatMultiplier(result.multiplier)}</strong>
-                <em>Payout {result.payout.toLocaleString('fr-FR')} credits</em>
+                <em>Payout <CurrencyAmount value={result.payout} /></em>
               </div>
             ) : (
               <p>Le resultat apparaitra quand la bille atteint un multiplicateur.</p>

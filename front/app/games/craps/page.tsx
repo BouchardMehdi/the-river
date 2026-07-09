@@ -13,6 +13,7 @@ import {
 import { apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount } from '@/components/currency-amount';
 import { StatusMessage } from '@/components/ui';
 import { emitBalanceDelta } from '@/lib/balance-events';
 import { emitGameSound } from '@/lib/sound-events';
@@ -232,21 +233,21 @@ function CrapsContent() {
 
             <div className="craps-ticket-footer">
               <span><CircleDollarSign size={17} /> Total</span>
-              <strong>{totalBet.toLocaleString('fr-FR')} credits</strong>
+              <strong><CurrencyAmount value={totalBet} /></strong>
             </div>
           </form>
 
           <section className="craps-result-panel interactive-card">
             <div className="card-heading">
               <h2>Resultat</h2>
-              {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}>{result.net >= 0 ? '+' : ''}{result.net} credits</strong> : null}
+              {result ? <strong className={result.net >= 0 ? 'positive' : 'negative'}><CurrencyAmount prefix={result.net >= 0 ? '+' : ''} value={result.net} /></strong> : null}
             </div>
             {result ? (
               <>
                 <div className="craps-result-strip">
                   <span>Total lance</span>
                   <strong>{result.total}</strong>
-                  <em>Retour {result.payout} credits</em>
+                  <em>Retour <CurrencyAmount value={result.payout} /></em>
                 </div>
                 <div className="craps-result-list">
                   {result.results.map((bet, index) => (

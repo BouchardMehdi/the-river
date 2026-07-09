@@ -23,6 +23,7 @@ import {
 import { apiGet, apiPost } from '@/api/client';
 import { RequireAuth } from '@/auth/require-auth';
 import { useAuth } from '@/auth/auth-context';
+import { CurrencyAmount } from '@/components/currency-amount';
 import { UserAvatar } from '@/components/user-avatar';
 import { EmptyState, StatusMessage } from '@/components/ui';
 import { emitGameSound } from '@/lib/sound-events';
@@ -736,7 +737,7 @@ function PokerContent() {
             <p>Creer une partie, rejoindre une table ou entrer dans une file competitive par points.</p>
             <div className="poker-lobby-stats">
               <span><Users size={17} /> {tables.length} tables</span>
-              <span><CircleDollarSign size={17} /> {user?.credits ?? 0} credits</span>
+              <span><CircleDollarSign size={17} /> <CurrencyAmount value={user?.credits ?? 0} /></span>
               <span><Trophy size={17} /> {user?.points ?? 0} points</span>
             </div>
           </div>
@@ -979,7 +980,7 @@ function PokerContent() {
             <div className="table-glow" />
             <div className="poker-pot">
               <span>Pot</span>
-              <strong>{active.pot ?? 0} credits</strong>
+              <strong><CurrencyAmount value={active.pot ?? 0} /></strong>
               {isCompetition ? (
                 <span className="copy-table-code">Competition</span>
               ) : (
@@ -1021,7 +1022,7 @@ function PokerContent() {
                 <UserAvatar avatarUrl={seat.avatarUrl} className="seat-avatar" label={seat.name} />
                 <div>
                   <strong>{seat.name}</strong>
-                  <span>{seat.stack} credits</span>
+                  <span><CurrencyAmount value={seat.stack} /></span>
                 </div>
                 {seat.isDealer ? <span className="dealer-seat-tag">Dealer</span> : null}
               </article>
@@ -1076,7 +1077,7 @@ function PokerContent() {
             <div className="bet-control">
               <label>
                 <span>Mise</span>
-                <strong>{clampedBetAmount} credits</strong>
+                <strong><CurrencyAmount value={clampedBetAmount} /></strong>
               </label>
               <input
                 aria-label="Montant exact de la mise"

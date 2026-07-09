@@ -68,9 +68,12 @@ type DashboardSummary = {
 type Leader = {
   username?: string;
   avatarUrl?: string | null;
-  value?: number;
   credits?: number;
+  isCurrentUser?: boolean;
   points?: number;
+  rank?: number;
+  score?: number;
+  value?: number;
 };
 
 type EggStatus = {
@@ -206,6 +209,7 @@ function formatCredits(value: number | undefined | null) {
 
 function formatLeaderValue(value: number, filter: LeaderFilter) {
   if (filter === 'points') return `${Number(value ?? 0).toLocaleString('fr-FR')} points`;
+  if (filter === 'score') return `${Number(value ?? 0).toLocaleString('fr-FR')} score`;
   return formatCredits(value);
 }
 
@@ -362,9 +366,9 @@ function DashboardContent() {
       const [summaryOut, questsOut, creditsLeadersOut, pointsLeadersOut, scoreLeadersOut, eggOut, settingsOut] = await Promise.all([
         apiGet<DashboardSummary>(`/dashboard/summary?period=${chartPeriod}&limit=12`).catch(() => null),
         apiGet<Quest[]>('/quests').catch(() => []),
-        apiGet<Leader[]>('/dashboard/balance-leaderboard?limit=8', false).catch(() => []),
-        apiGet<Leader[]>('/dashboard/leaderboard?metric=points&period=week&limit=8', false).catch(() => []),
-        apiGet<Leader[]>('/dashboard/leaderboard?metric=credits&period=week&limit=8', false).catch(() => []),
+        apiGet<Leader[]>('/dashboard/global-leaderboard?metric=credits&limit=10').catch(() => []),
+        apiGet<Leader[]>('/dashboard/global-leaderboard?metric=points&limit=10').catch(() => []),
+        apiGet<Leader[]>('/dashboard/global-leaderboard?metric=score&limit=10').catch(() => []),
         apiGet<EggStatus>('/easter-egg/status').catch(() => null),
         apiGet<UserSettings>('/settings').catch(() => null),
       ]);
@@ -650,16 +654,17 @@ function DashboardContent() {
     return [...leaders[leaderFilter]]
       .map((leader) => ({
         avatarUrl: leader.avatarUrl ?? null,
+        isCurrentUser: !!leader.isCurrentUser || leader.username === user?.username,
         label: leader.username ?? 'Joueur',
+        rank: Number(leader.rank ?? 0),
         value:
           leaderFilter === 'credits'
             ? Number(leader.credits ?? leader.value ?? 0)
             : leaderFilter === 'points'
               ? Number(leader.points ?? leader.value ?? 0)
-              : Number(leader.value ?? leader.credits ?? leader.points ?? 0),
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [leaderFilter, leaders]);
+              : Number(leader.score ?? leader.value ?? leader.credits ?? leader.points ?? 0),
+      }));
+  }, [leaderFilter, leaders, user?.username]);
 
   function selectChartPoint(
     series: { color: string; deltas: number[]; key: string; label: string; values: number[] },
@@ -942,8 +947,8 @@ function DashboardContent() {
           <div className="leader-list">
             {leaderRows.length > 0 ? (
               leaderRows.map((leader, index) => (
-                <div className="leader-row" key={`${leader.label}-${index}`}>
-                  <span>#{index + 1}</span>
+                <div className={leader.isCurrentUser ? 'leader-row current-user' : 'leader-row'} key={`${leader.label}-${index}`}>
+                  <span>#{leader.rank || index + 1}</span>
                   <UserAvatar avatarUrl={leader.avatarUrl} className="leader-avatar" label={leader.label} />
                   <strong>{leader.label}</strong>
                   <em>{formatLeaderValue(leader.value, leaderFilter)}</em>

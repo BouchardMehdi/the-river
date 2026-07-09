@@ -7,6 +7,7 @@ import { UsersService } from '../../users/users.service';
 import { UserEntity } from '../../users/entities/user.entity';
 
 export type StatsPeriod = 'day' | 'week' | 'month' | 'year';
+export type DashboardLeaderboardMetric = 'credits' | 'points' | 'score';
 
 export type RecordEventPayload = {
   game: string; // 'POKER' | 'BLACKJACK' | 'ROULETTE' | 'SLOTS'
@@ -417,5 +418,86 @@ export class StatsService {
       avatarUrl: (u as any).avatarUrl ?? null,
       value: Number((u as any).credits ?? 0),
     }));
+  }
+
+  async getDashboardGlobalLeaderboard(args: {
+    metric: DashboardLeaderboardMetric;
+    username: string;
+    limit?: number;
+  }) {
+    const take = this.clamp(Math.floor(Number(args.limit) || 10), 1, 50);
+    const currentUsername = String(args.username ?? '').trim();
+
+    const users = await this.usersRepo.find({
+      select: ['username', 'credits', 'points', 'avatarUrl'] as any,
+    });
+
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+
+    const recentRows = await this.eventsRepo
+      .createQueryBuilder('e')
+      .select('e.username', 'username')
+      .addSelect('SUM(e.deltaCredits)', 'netCredits')
+      .addSelect('SUM(CASE WHEN e.deltaCredits > 0 THEN e.deltaCredits ELSE 0 END)', 'gains')
+      .addSelect('COUNT(*)', 'events')
+      .addSelect('COUNT(DISTINCT e.game)', 'games')
+      .where('e.createdAt >= :since', { since: since.toISOString() })
+      .groupBy('e.username')
+      .getRawMany();
+
+    const recent = new Map(
+      recentRows.map((row: any) => [
+        String(row.username ?? ''),
+        {
+          events: Number(row.events ?? 0),
+          games: Number(row.games ?? 0),
+          gains: Number(row.gains ?? 0),
+          netCredits: Number(row.netCredits ?? 0),
+        },
+      ]),
+    );
+
+    const rows = users
+      .map((user: any) => {
+        const stats = recent.get(String(user.username ?? '')) ?? {
+          events: 0,
+          games: 0,
+          gains: 0,
+          netCredits: 0,
+        };
+        const credits = Number(user.credits ?? 0);
+        const points = Number(user.points ?? 0);
+        const score = Math.round(
+          points * 100 +
+            Math.max(-300, Math.min(500, stats.netCredits)) * 0.35 +
+            Math.min(60, stats.events) * 4 +
+            Math.min(12, stats.games) * 15 +
+            Math.min(1000, stats.gains) * 0.03,
+        );
+
+        return {
+          avatarUrl: user.avatarUrl ?? null,
+          credits,
+          isCurrentUser: String(user.username ?? '') === currentUsername,
+          points,
+          score,
+          username: user.username,
+          value: args.metric === 'credits' ? credits : args.metric === 'points' ? points : score,
+        };
+      })
+      .filter((row) => row.username)
+      .sort((a, b) => b.value - a.value || String(a.username).localeCompare(String(b.username)));
+
+    const ranked = rows.map((row, index) => ({
+      ...row,
+      rank: index + 1,
+    }));
+
+    const top = ranked.slice(0, take);
+    const me = currentUsername ? ranked.find((row) => row.username === currentUsername) : undefined;
+    const shouldAppendMe = me && !top.some((row) => row.username === me.username);
+
+    return shouldAppendMe ? [...top, me] : top;
   }
 }

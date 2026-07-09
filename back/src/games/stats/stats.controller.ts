@@ -5,7 +5,7 @@ import { CurrentUser } from '../../auth/current-user.decorator';
 import type { JwtUser } from '../../auth/jwt.strategy';
 
 import { StatsService } from './stats.service';
-import type { StatsPeriod } from './stats.service';
+import type { DashboardLeaderboardMetric, StatsPeriod } from './stats.service';
 
 @Controller()
 export class StatsController {
@@ -67,6 +67,24 @@ export class StatsController {
       metric: m,
       period: p,
       game: g,
+      limit: n,
+    });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('dashboard/global-leaderboard')
+  async dashboardGlobalLeaderboard(
+    @CurrentUser() user: JwtUser,
+    @Query('metric') metric?: DashboardLeaderboardMetric,
+    @Query('limit') limit?: string,
+  ) {
+    const m: DashboardLeaderboardMetric =
+      metric === 'points' || metric === 'score' || metric === 'credits' ? metric : 'credits';
+    const n = limit ? Number(limit) : 10;
+
+    return this.stats.getDashboardGlobalLeaderboard({
+      metric: m,
+      username: user.username,
       limit: n,
     });
   }

@@ -3952,6 +3952,20 @@ main {
   font-style: normal;
 }
 
+.leader-row.current-user {
+  border-color: var(--color-border-strong);
+  background:
+    linear-gradient(135deg, var(--color-gold-soft), transparent 70%),
+    var(--surface-bg);
+  box-shadow: 0 0 0 1px var(--color-gold-soft), var(--shadow);
+}
+
+.leader-row.current-user span,
+.leader-row.current-user strong,
+.leader-row.current-user em {
+  color: var(--color-text);
+}
+
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
@@ -7786,7 +7800,7 @@ main {
 
 .poker-lobby-grid {
   display: grid;
-  grid-template-columns: minmax(290px, 0.72fr) minmax(280px, 0.54fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(290px, 0.9fr) minmax(360px, 1.15fr) minmax(360px, 1.15fr);
   gap: 18px;
   margin-top: 18px;
 }
@@ -7860,6 +7874,7 @@ main {
 }
 
 .poker-public-panel {
+  grid-column: 1 / -1;
   min-height: 290px;
 }
 

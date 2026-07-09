@@ -97,7 +97,8 @@ function tablePlayersLabel(table: BlackjackTable) {
 function blackjackSocketUrl() {
   const base = apiBaseUrl();
   if (base.startsWith('http')) return base.replace(/\/api\/?$/, '');
-  return 'http://127.0.0.1:3000';
+  if (typeof window !== 'undefined') return window.location.origin;
+  return '';
 }
 
 function BlackjackContent() {

@@ -46,6 +46,8 @@ async function bootstrap() {
   const nodeEnv = configService.get<string>('NODE_ENV') ?? 'development';
   const isProduction = nodeEnv === 'production';
 
+  app.setGlobalPrefix('api');
+
   app.use((_: unknown, res: any, next: () => void) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');

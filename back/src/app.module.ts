@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { join } from 'path';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -68,6 +70,11 @@ function envFlag(config: ConfigService, key: string, fallback = false): boolean 
           ssl: envFlag(config, 'DB_SSL', false) ? { rejectUnauthorized: false } : undefined,
         };
       },
+    }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public'),
+      exclude: ['/api*', '/uploads*', '/socket.io*'],
     }),
 
     AuthModule,

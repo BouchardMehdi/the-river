@@ -2,8 +2,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, CircleDot, Sparkles } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-
 const games = [
   {
     href: '/games/slots',

@@ -7,6 +7,7 @@ const rootDir = path.resolve(__dirname, '..', '..');
 const backDir = path.join(rootDir, 'back');
 const frontDir = path.join(rootDir, 'front');
 const frontOutDir = path.join(frontDir, 'out');
+const frontNextBuildDir = path.join(frontDir, '.next-build');
 const publicDir = path.join(backDir, 'public');
 
 function run(command, args, options = {}) {
@@ -35,6 +36,19 @@ function copyDir(source, target) {
   }
 }
 
+function resolveFrontOutputDir() {
+  const candidates = [frontOutDir, frontNextBuildDir];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(path.join(candidate, 'index.html'))) {
+      return candidate;
+    }
+  }
+
+  const checked = candidates.map((candidate) => path.relative(rootDir, candidate)).join(', ');
+  throw new Error(`Le build front n'a pas genere de sortie statique valide. Dossiers verifies: ${checked}.`);
+}
+
 if (!fs.existsSync(frontDir)) {
   throw new Error('Le dossier front est introuvable. Le depot complet doit etre disponible pendant le build.');
 }
@@ -53,13 +67,11 @@ run(npm, ['run', 'build'], {
   },
 });
 
-if (!fs.existsSync(frontOutDir)) {
-  throw new Error("Le build front n'a pas genere le dossier front/out.");
-}
+const staticFrontDir = resolveFrontOutputDir();
 
-console.log('[build] Copie du front compile dans back/public...');
+console.log(`[build] Copie du front compile depuis ${path.relative(rootDir, staticFrontDir)} dans back/public...`);
 fs.rmSync(publicDir, { recursive: true, force: true });
-copyDir(frontOutDir, publicDir);
+copyDir(staticFrontDir, publicDir);
 
 console.log('[build] Build du back NestJS...');
 run(npm, ['run', 'build:api'], { cwd: backDir });

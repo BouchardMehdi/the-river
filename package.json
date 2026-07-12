@@ -1,0 +1,12 @@
+{
+  "name": "the-river",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix back ci --include=dev && npm --prefix back run build && npm --prefix front ci && npm --prefix front run build",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

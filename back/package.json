@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "node scripts/build-hostinger.js",
-    "build:api": "node ./node_modules/@nestjs/cli/bin/nest.js build",
+    "build:api": "node scripts/build-api.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",

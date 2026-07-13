@@ -1,1 +1,1 @@
-require('./back/dist/main.js');
+require('./dist/main.js');

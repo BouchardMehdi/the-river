@@ -8,7 +8,10 @@ const backDir = path.join(rootDir, 'back');
 const frontDir = path.join(rootDir, 'front');
 const frontOutDir = path.join(frontDir, 'out');
 const frontNextBuildDir = path.join(frontDir, '.next-build');
-const publicDir = path.join(backDir, 'public');
+const backPublicDir = path.join(backDir, 'public');
+const rootPublicDir = path.join(rootDir, 'public');
+const backDistDir = path.join(backDir, 'dist');
+const rootDistDir = path.join(rootDir, 'dist');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -70,8 +73,18 @@ run(npm, ['run', 'build'], {
 const staticFrontDir = resolveFrontOutputDir();
 
 console.log(`[build] Copie du front compile depuis ${path.relative(rootDir, staticFrontDir)} dans back/public...`);
-fs.rmSync(publicDir, { recursive: true, force: true });
-copyDir(staticFrontDir, publicDir);
+fs.rmSync(backPublicDir, { recursive: true, force: true });
+copyDir(staticFrontDir, backPublicDir);
 
 console.log('[build] Build du back NestJS...');
 run(npm, ['run', 'build:api'], { cwd: backDir });
+
+console.log('[build] Copie des artefacts pour Hostinger...');
+fs.rmSync(rootDistDir, { recursive: true, force: true });
+fs.rmSync(rootPublicDir, { recursive: true, force: true });
+copyDir(backDistDir, rootDistDir);
+copyDir(backPublicDir, rootPublicDir);
+
+if (!fs.existsSync(path.join(rootDistDir, 'main.js'))) {
+  throw new Error('Le fichier dist/main.js attendu par Hostinger est introuvable apres la copie.');
+}

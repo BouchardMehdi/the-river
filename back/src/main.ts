@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { mkdirSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
@@ -32,6 +32,27 @@ function parseCorsOrigin(raw: string | undefined, isProduction: boolean): string
   return isProduction ? configured : Array.from(new Set([...configured, ...LOCAL_DEV_ORIGINS]));
 }
 
+function maskPresence(key: string): string {
+  const value = process.env[key];
+  return value && value.trim() ? 'set' : 'missing';
+}
+
+function logStartupDiagnostics() {
+  const publicDir = join(process.cwd(), 'public');
+  console.log('[startup] cwd:', process.cwd());
+  console.log('[startup] node:', process.version);
+  console.log('[startup] NODE_ENV:', process.env.NODE_ENV ?? 'missing');
+  console.log('[startup] PORT:', process.env.PORT ?? 'missing');
+  console.log('[startup] public dir:', existsSync(publicDir) ? 'found' : 'missing');
+  console.log(
+    '[startup] required env:',
+    `DB_HOST=${maskPresence('DB_HOST')}`,
+    `DB_USER=${maskPresence('DB_USER')}`,
+    `DB_DATABASE=${maskPresence('DB_DATABASE')}`,
+    `JWT_SECRET=${maskPresence('JWT_SECRET')}`,
+  );
+}
+
 async function bootstrap() {
   process.on('unhandledRejection', (reason: unknown) => {
     console.error('[fatal] unhandledRejection:', reason);
@@ -40,6 +61,8 @@ async function bootstrap() {
   process.on('uncaughtException', (err: unknown) => {
     console.error('[fatal] uncaughtException:', err);
   });
+
+  logStartupDiagnostics();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
@@ -94,11 +117,15 @@ async function bootstrap() {
     });
   }
 
-  const port = Number(configService.get<string>('PORT') ?? 3000);
+  const port = Number(process.env.PORT ?? configService.get<string>('PORT') ?? 3000);
   await app.listen(port);
 
   console.log(`API running on http://127.0.0.1:${port}`);
   if (swaggerEnabled) console.log(`Swagger UI on http://127.0.0.1:${port}/api`);
 }
 
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  const error = err as Error;
+  console.error('[fatal] bootstrap failed:', error?.stack || error?.message || err);
+  process.exit(1);
+});

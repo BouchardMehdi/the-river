@@ -2,7 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmExecPath = process.env.npm_execpath;
+const npmCommand = npmExecPath ? process.execPath : process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const npmBaseArgs = npmExecPath ? [npmExecPath] : [];
 const rootDir = path.resolve(__dirname, '..', '..');
 const backDir = path.join(rootDir, 'back');
 const frontDir = path.join(rootDir, 'front');
@@ -22,6 +24,10 @@ function run(command, args, options = {}) {
       ...(options.env || {}),
     },
   });
+}
+
+function runNpm(args, options = {}) {
+  run(npmCommand, [...npmBaseArgs, ...args], options);
 }
 
 function copyDir(source, target) {
@@ -57,13 +63,13 @@ if (!fs.existsSync(frontDir)) {
 }
 
 console.log('[build] Installation des dependances du back avec les devDependencies...');
-run(npm, ['install', '--include=dev', '--no-audit', '--no-fund'], { cwd: backDir });
+runNpm(['install', '--include=dev', '--no-audit', '--no-fund'], { cwd: backDir });
 
 console.log('[build] Installation des dependances du front...');
-run(npm, ['ci', '--no-audit', '--no-fund'], { cwd: frontDir });
+runNpm(['ci', '--no-audit', '--no-fund'], { cwd: frontDir });
 
 console.log('[build] Build statique du front Next.js...');
-run(npm, ['run', 'build'], {
+runNpm(['run', 'build'], {
   cwd: frontDir,
   env: {
     STATIC_EXPORT: '1',
@@ -77,7 +83,7 @@ fs.rmSync(backPublicDir, { recursive: true, force: true });
 copyDir(staticFrontDir, backPublicDir);
 
 console.log('[build] Build du back NestJS...');
-run(npm, ['run', 'build:api'], { cwd: backDir });
+runNpm(['run', 'build:api'], { cwd: backDir });
 
 console.log('[build] Copie des artefacts a la racine pour Hostinger...');
 fs.rmSync(rootDistDir, { recursive: true, force: true });

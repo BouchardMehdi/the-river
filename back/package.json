@@ -9,7 +9,7 @@
     "build": "node scripts/build-hostinger.js",
     "build:api": "node scripts/build-api.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "node server.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",

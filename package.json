@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "npm --prefix back run build",
-    "start": "node dist/main.js"
+    "start": "node back/dist/main.js"
   },
   "engines": {
     "node": "22.x"

@@ -11,9 +11,6 @@ const frontDir = path.join(rootDir, 'front');
 const frontOutDir = path.join(frontDir, 'out');
 const frontNextBuildDir = path.join(frontDir, '.next-build');
 const backPublicDir = path.join(backDir, 'public');
-const rootPublicDir = path.join(rootDir, 'public');
-const backDistDir = path.join(backDir, 'dist');
-const rootDistDir = path.join(rootDir, 'dist');
 
 function run(command, args, options = {}) {
   execFileSync(command, args, {
@@ -84,13 +81,3 @@ copyDir(staticFrontDir, backPublicDir);
 
 console.log('[build] Build du back NestJS...');
 runNpm(['run', 'build:api'], { cwd: backDir });
-
-console.log('[build] Copie des artefacts a la racine pour Hostinger...');
-fs.rmSync(rootDistDir, { recursive: true, force: true });
-fs.rmSync(rootPublicDir, { recursive: true, force: true });
-copyDir(backDistDir, rootDistDir);
-copyDir(backPublicDir, rootPublicDir);
-
-if (!fs.existsSync(path.join(rootDistDir, 'main.js'))) {
-  throw new Error('Le fichier dist/main.js attendu par Hostinger est introuvable apres la copie.');
-}

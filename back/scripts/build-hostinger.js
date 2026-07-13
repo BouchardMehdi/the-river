@@ -53,9 +53,6 @@ if (!fs.existsSync(frontDir)) {
   throw new Error('Le dossier front est introuvable. Le depot complet doit etre disponible pendant le build.');
 }
 
-console.log('[build] Installation des dependances du back avec les devDependencies...');
-run(npm, ['ci', '--include=dev'], { cwd: backDir });
-
 console.log('[build] Installation des dependances du front...');
 run(npm, ['ci'], { cwd: frontDir });
 
